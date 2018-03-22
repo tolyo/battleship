@@ -20,6 +20,7 @@ export default class Ship {
     this.shiftY = 0
     this.shipElement = document.getElementById(id)
     this.shipElement.position = 'absolute'
+    this.placed = false
 
     // set event hadlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
@@ -30,6 +31,7 @@ export default class Ship {
 
 
   onmousedown (e) {
+    if (this.placed) return
     document.onmousemove = (e) => this.onmousemove(e)
     this.shipElement.onmouseup = (e) => this.onmouseup(e)
     const shipCoordinates = this.getShipCoordinates()
