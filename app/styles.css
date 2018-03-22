@@ -1,0 +1,37 @@
+.battleshipboard {
+  border: 0.5px solid #2d6ca0;
+  width: 300px;
+  height: 300px;
+}
+
+.tileRow {
+  float: left;
+}
+
+.tile {
+  background-color: #4ba9ff;
+  float: left;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #2d6ca0;
+  box-sizing: border-box;
+}
+
+.tile:hover {
+  border: 2px solid #fff757;
+}
+
+.tile.hit,.tile.hit:hover {
+  background-color: #FF6C64;
+  border: 1px solid #2d6ca0;
+}
+
+.tile.miss, .tile.miss:hover {
+  background-color: #C0CC28;
+  border: 1px solid #2d6ca0;
+}
+
+.clearfix {
+  overflow: auto;
+}
