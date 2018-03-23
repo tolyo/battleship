@@ -57,6 +57,7 @@ export default class Ship {
     // set offsets for the click event
     this.shiftX = e.pageX - shipCoordinates.left
     this.shiftY = e.pageY - shipCoordinates.top
+    this.shipElement.classList.add('dragged')
   }
 
   onmousemove (e) {
@@ -71,6 +72,7 @@ export default class Ship {
     // clear event bindings
     document.onmousemove = null
     this.shipElement.onmouseup = null
+    this.shipElement.classList.remove('dragged')
     this.attachShipToClosestTile()
     console.log(this.domState)
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
