@@ -23,6 +23,7 @@ export default class Ship {
     this.orientation = orientation
     this.hitcount = 0
     this.size = size
+    this.domState = [] // reference to dom elements occupied by a ship
 
     this.shiftX = 0     // offset holders
     this.shiftY = 0
@@ -57,9 +58,6 @@ export default class Ship {
     // set offsets for the click event
     this.shiftX = e.pageX - shipCoordinates.left
     this.shiftY = e.pageY - shipCoordinates.top
-
-    const shipCenterCoordinates = this.getShipCenterCoordinates()
-    console.log(shipCenterCoordinates)
   }
 
   onmousemove (e) {
@@ -78,8 +76,8 @@ export default class Ship {
     document.onmousemove = null
     this.shipElement.onmouseup = null
     this.attachShipToClosestTile()
-    console.log(this.getShipTiles())
-    Array.from(this.getShipTiles()).forEach(tile => tile.className = 'tile hit')
+    console.log(this.domState)
+    Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
   }
 
   getEventCoordinates(e) {
@@ -134,6 +132,7 @@ export default class Ship {
 
       this.row = parseInt(tile.getAttribute('data-row'))
       this.column = parseInt(tile.getAttribute('data-column'))
+      this.updateDomState() // always update dom state on ship attachment
     } else {
       this.attachShipToLastTile()
     }
@@ -156,21 +155,18 @@ export default class Ship {
     tile.dispatchEvent(new Event('dragEnter'))
   }
 
-  /**
-   * Get all tiles occupied by a ship
-   */
-  getShipTiles() {
-    // console.log(this)
-    // console.log(State.grid)
-    const tiles = []
+  updateDomState() {
+    this.domState = []
+    // domState must always be the same size as the grid state
     this.gridState.forEach((val, indx) => {
       if (this.orientation == ShipOrientation.HORIZONTAL) {
-        tiles.push(State.grid[this.column - 1][this.row - 1 + indx].elem)
+        this.domState.push(State.grid[this.column - 1][this.row - 1 + indx].elem)
       } else {
-        tiles.push(State.grid[this.column - 1 + indx][this.row - 1].elem)
+        this.domState.push(State.grid[this.column - 1 + indx][this.row - 1].elem)
       }
 
     })
-    return tiles
   }
+
+
 }

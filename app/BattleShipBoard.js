@@ -21,10 +21,9 @@ export default class BattleShipBoard {
   }
 
   addTiles() {
-    const rows = [1,2,3,4,5,6,7,8,9,10]
-    const columns = [1,2,3,4,5,6,7,8,9,10]
+    const size = [1,2,3,4,5,6,7,8,9,10]
 
-    rows.forEach((y) => {
+    size.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
       tileRow.className = 'tileRow'
@@ -33,7 +32,7 @@ export default class BattleShipBoard {
       State.grid.push([])
 
       // create tiles
-      columns.forEach((x) => {
+      size.forEach((x) => {
         const tile = document.createElement('div')
         tile.className = 'tile'
         tile.id = y + '-' + x
