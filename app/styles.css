@@ -18,6 +18,10 @@
   box-sizing: border-box;
 }
 
+.tile.droppable-target {
+  background-color: #92d2ff;
+}
+
 .tile:hover {
   border: 2px solid #fff757;
 }
@@ -41,4 +45,5 @@
   position: absolute;
   width: 30px;
   height: 30px;
+  z-index: 1000;
 }

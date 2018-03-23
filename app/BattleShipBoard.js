@@ -32,10 +32,14 @@ const addTiles = (board) => {
     // create tiles
     columns.forEach((j) => {
       const tile = document.createElement('div')
-      tile.className = 'tile droppable-target'
+      tile.className = 'tile'
       tile.id = i + '-' + j
       tile.setAttribute('data-column', i)
       tile.setAttribute('data-row', j)
+
+      tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
+      tile.addEventListener('dragLeave', () => tile.className = 'tile')
+
       tileRow.appendChild(tile)
     })
 

@@ -65,6 +65,7 @@ export default class Ship {
     this.moved = true
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
+    this.notifyClosestTiles()
   }
 
   onmouseup (e) {
@@ -121,10 +122,7 @@ export default class Ship {
   }
 
   attachShipToClosestTile () {
-    const shipCenter = this.getShipCenterCoordinates()
-    this.shipElement.hidden = true
-    const tile = document.elementFromPoint(shipCenter.left, shipCenter.top)
-    this.shipElement.hidden = false
+    const tile = this.findClosestTile()
     if (tile.className.split(' ').indexOf('tile') != -1) {
       tile.className = 'tile hit'
       this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
@@ -140,5 +138,22 @@ export default class Ship {
     } else {
       this.attachShipToLastTile()
     }
+  }
+
+  findClosestTile() {
+    const shipCenter = this.getShipCenterCoordinates()
+    this.shipElement.hidden = true
+    const tile = document.elementFromPoint(shipCenter.left, shipCenter.top)
+    this.shipElement.hidden = false
+    return tile
+  }
+
+  notifyClosestTiles () {
+    const elements = document.getElementsByClassName('droppable-target')
+    console.log(elements)
+    Array.from(elements).forEach((el) => el.dispatchEvent(new Event('dragLeave')))
+
+    const tile = this.findClosestTile()
+    tile.dispatchEvent(new Event('dragEnter'))
   }
 }
