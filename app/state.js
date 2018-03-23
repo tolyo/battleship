@@ -1,12 +1,12 @@
 
-export const State = {
+export const State = Object.freeze({
   grid : []
-}
+})
 
-export const GridState = {
+export const GridState = Object.freeze({
   EMPTY   : 0,
   FILLED  : 1
-}
+})
 
 export class GridSquare {
 

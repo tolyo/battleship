@@ -48,8 +48,7 @@ export default class Ship {
   }
 
   onmousedown (e) {
-    this.moved = false
-    //console.log(e)
+    console.log('onmousedown')
     if (this.placed) return
     document.onmousemove = (e) => this.onmousemove(e)
     this.shipElement.onmouseup = (e) => this.onmouseup(e)
@@ -61,17 +60,14 @@ export default class Ship {
   }
 
   onmousemove (e) {
-    //console.log(e)
-    this.moved = true
+    console.log('onmousemove')
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
     this.notifyClosestTiles()
   }
 
   onmouseup (e) {
-    //console.log(e)
-    // prevent firing on clicks
-    if (!this.moved) return
+    console.log('onmouseup')
     // clear event bindings
     document.onmousemove = null
     this.shipElement.onmouseup = null
@@ -146,27 +142,42 @@ export default class Ship {
     return tile
   }
 
-  notifyClosestTiles () {
+  notifyClosestTiles() {
     const elements = document.getElementsByClassName('droppable-target')
     console.log(elements)
     Array.from(elements).forEach((el) => el.dispatchEvent(new Event('dragLeave')))
+    this.getShipTiles().forEach(tile =>tile.dispatchEvent(new Event('dragEnter')))
+  }
 
+  getShipTiles() {
+    const tiles = []
     const tile = this.findClosestTile()
-    tile.dispatchEvent(new Event('dragEnter'))
+    tiles.push(tile)
+    const coordinates = getTileCoordinates(tile)
+    const row = parseInt(tile.getAttribute('data-row'))
+    const column = parseInt(tile.getAttribute('data-column'))
+    this.gridState.forEach((val, indx) => {
+      if (this.orientation == ShipOrientation.HORIZONTAL) {
+        tiles.push(State.grid[coordinates.column - 1][coordinates.row - 1 + indx].elem)
+      } else {
+        tiles.push(State.grid[coordinates.column - 1 + indx][coordinates.row - 1].elem)
+      }
+    })
+    tiles.push(tile)
+    return tiles
   }
 
   updateDomState() {
     this.domState = []
     // domState must always be the same size as the grid state
-    this.gridState.forEach((val, indx) => {
-      if (this.orientation == ShipOrientation.HORIZONTAL) {
-        this.domState.push(State.grid[this.column - 1][this.row - 1 + indx].elem)
-      } else {
-        this.domState.push(State.grid[this.column - 1 + indx][this.row - 1].elem)
-      }
-
-    })
+    this.getShipTiles().forEach(el => this.domState.push(el))
   }
 
+}
 
+const getTileCoordinates = (tile) => {
+  return {
+    row: parseInt(tile.getAttribute('data-row')),
+    column: parseInt(tile.getAttribute('data-column'))
+  }
 }

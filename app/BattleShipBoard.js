@@ -39,8 +39,8 @@ export default class BattleShipBoard {
         tile.setAttribute('data-column', y)
         tile.setAttribute('data-row', x)
         //
-        // tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
-        // tile.addEventListener('dragLeave', () => tile.className = 'tile')
+        tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
+        tile.addEventListener('dragLeave', () => tile.className = 'tile')
 
         tileRow.appendChild(tile)
         State.grid[y - 1].push(new GridSquare(x, y, tile))
