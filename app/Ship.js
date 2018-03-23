@@ -56,8 +56,6 @@ export default class Ship {
 
     const shipCenterCoordinates = this.getShipCenterCoordinates()
     console.log(shipCenterCoordinates)
-    this.originalX = shipCoordinates.left
-    this.originalY = shipCoordinates.top
   }
 
   onmousemove (e) {
@@ -130,11 +128,6 @@ export default class Ship {
 
       this.row = tile.getAttribute('data-row')
       this.column = tile.getAttribute('data-column')
-
-      console.log(this)
-
-      this.originalX = this.shipElement.style.left
-      this.originalY = this.shipElement.style.top
     } else {
       this.attachShipToLastTile()
     }

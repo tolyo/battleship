@@ -1,6 +1,7 @@
 
 import { Destroyer } from './ships'
 import { ShipOrientation } from './Ship'
+import { GameState, GridSquare } from './state';
 
 export default class BattleShipBoard {
 
@@ -9,7 +10,10 @@ export default class BattleShipBoard {
     this.fleetboard = window.document.getElementById(id);
     if (!this.fleetboard) throw new Error('Board id not found');
     this.fleetboard.setAttribute('class', 'battleshipboard')
-    addTiles(this.fleetboard)
+
+    this.state = new GameState()
+
+    this.addTiles()
 
     this.addShips()
   }
@@ -17,31 +21,35 @@ export default class BattleShipBoard {
   addShips() {
     new Destroyer('dest1', ShipOrientation.HORIZONTAL)
   }
-}
 
-const addTiles = (board) => {
-  const rows = [1,2,3,4,5,6,7,8,9,10]
-  const columns = [1,2,3,4,5,6,7,8,9,10]
+  addTiles() {
+    const rows = [1,2,3,4,5,6,7,8,9,10]
+    const columns = [1,2,3,4,5,6,7,8,9,10]
 
-  rows.forEach((i) => {
-    // create row
-    const tileRow = document.createElement('div')
-    tileRow.className = 'tileRow'
-    board.appendChild(tileRow)
+    rows.forEach((y) => {
+      // create row
+      const tileRow = document.createElement('div')
+      tileRow.className = 'tileRow'
+      this.fleetboard.appendChild(tileRow)
 
-    // create tiles
-    columns.forEach((j) => {
-      const tile = document.createElement('div')
-      tile.className = 'tile'
-      tile.id = i + '-' + j
-      tile.setAttribute('data-column', i)
-      tile.setAttribute('data-row', j)
+      this.state.grid.push([])
 
-      tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
-      tile.addEventListener('dragLeave', () => tile.className = 'tile')
+      // create tiles
+      columns.forEach((x) => {
+        const tile = document.createElement('div')
+        tile.className = 'tile'
+        tile.id = y + '-' + x
+        tile.setAttribute('data-column', y)
+        tile.setAttribute('data-row', x)
 
-      tileRow.appendChild(tile)
+        tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
+        tile.addEventListener('dragLeave', () => tile.className = 'tile')
+
+        tileRow.appendChild(tile)
+        this.state.grid[y - 1].push(new GridSquare(x, y, tile))
+      })
     })
-
-  })
+  }
 }
+
+
