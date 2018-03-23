@@ -1,7 +1,8 @@
 
 export const State = Object.freeze({
-  grid : []
+  grid : [],
 })
+
 
 export const GridState = Object.freeze({
   EMPTY   : 0,

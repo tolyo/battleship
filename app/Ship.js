@@ -123,6 +123,9 @@ export default class Ship {
 
   attachShipToClosestTile () {
     const tile = this.findClosestTile()
+    this.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter')))
+
+    console.log(this.getAdjacentTiles())
     if (tile.className.split(' ').indexOf('tile') != -1) {
       //tile.className = 'tile hit'
       this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
@@ -170,6 +173,19 @@ export default class Ship {
     return tiles
   }
 
+  getAdjacentTiles() {
+    const tiles = []
+    this.getShipTiles().forEach(tile => {
+      getAdjacentForTile(tile).forEach(adjacentTile => {
+        if (tiles.map(x => x.id).indexOf(adjacentTile.id) == -1) {
+          tiles.push(adjacentTile)
+        }
+      })
+    })
+
+    return tiles
+  }
+
   updateDomState() {
     this.domState = []
     // domState must always be the same size as the grid state
@@ -183,4 +199,61 @@ const getTileCoordinates = (tile) => {
     row: parseInt(tile.getAttribute('data-row')),
     column: parseInt(tile.getAttribute('data-column'))
   }
+}
+
+const getAdjacentForTile = (tile) => {
+
+  const tiles = []
+  const coordinates = getTileCoordinates(tile)
+  const y = coordinates.column
+  const x = coordinates.row
+
+  // top left
+  if (y !== 1 && x !== 1) {
+    tiles.push(getStateElement(y - 1, x - 1))
+  }
+
+  // top mid
+  if (y !== 1) {
+    tiles.push(getStateElement(y - 1, x))
+  }
+
+  // top right
+  if (y !== 1 && x !== 10) {
+      tiles.push(getStateElement(y - 1,x + 1))
+  }
+
+  // mid left
+  if (x !== 1) {
+    tiles.push(getStateElement(y,x - 1))
+  }
+
+  // mid right
+  if (x !== 10) {
+    tiles.push(getStateElement(y,x + 1))
+  }
+
+  // bot left
+  if (y !== 10 && x !== 1) {
+      tiles.push(getStateElement(y + 1,x - 1))
+  }
+
+  // bot mid
+  if (y !== 10) {
+    tiles.push(getStateElement(y + 1,x))
+  }
+
+  // bot right
+  if (y !== 10 && x !== 10) {
+    tiles.push(getStateElement(y + 1,x + 1))
+  }
+
+  return tiles
+}
+
+
+
+const getStateElement = (y, x) => {
+  console.log(`y : ${y}, x : ${x} `)
+  return State.grid[y - 1][x - 1].elem
 }
