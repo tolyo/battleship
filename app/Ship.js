@@ -126,8 +126,11 @@ export default class Ship {
       this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
       this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
 
-      this.row = parseInt(tile.getAttribute('data-row'))
-      this.column = parseInt(tile.getAttribute('data-column'))
+      // ship should remember its coordinates
+      const coordinates = getTileCoordinates(tile)
+      this.row = coordinates.row
+      this.column = coordinates.column
+
       this.updateDomState() // always update dom state on ship attachment
     } else {
       this.attachShipToLastTile()
@@ -154,8 +157,6 @@ export default class Ship {
     const tile = this.findClosestTile()
     tiles.push(tile)
     const coordinates = getTileCoordinates(tile)
-    const row = parseInt(tile.getAttribute('data-row'))
-    const column = parseInt(tile.getAttribute('data-column'))
     this.gridState.forEach((val, indx) => {
       if (this.orientation == ShipOrientation.HORIZONTAL) {
         tiles.push(State.grid[coordinates.column - 1][coordinates.row - 1 + indx].elem)
