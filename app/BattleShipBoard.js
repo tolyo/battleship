@@ -1,7 +1,7 @@
 
 import { Destroyer } from './ships'
 import { ShipOrientation } from './Ship'
-import { GameState, GridSquare } from './state';
+import { GridSquare, State } from './state'
 
 export default class BattleShipBoard {
 
@@ -10,8 +10,6 @@ export default class BattleShipBoard {
     this.fleetboard = window.document.getElementById(id);
     if (!this.fleetboard) throw new Error('Board id not found');
     this.fleetboard.setAttribute('class', 'battleshipboard')
-
-    this.state = new GameState()
 
     this.addTiles()
 
@@ -32,7 +30,7 @@ export default class BattleShipBoard {
       tileRow.className = 'tileRow'
       this.fleetboard.appendChild(tileRow)
 
-      this.state.grid.push([])
+      State.grid.push([])
 
       // create tiles
       columns.forEach((x) => {
@@ -41,14 +39,16 @@ export default class BattleShipBoard {
         tile.id = y + '-' + x
         tile.setAttribute('data-column', y)
         tile.setAttribute('data-row', x)
-
-        tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
-        tile.addEventListener('dragLeave', () => tile.className = 'tile')
+        //
+        // tile.addEventListener('dragEnter', () => tile.className = 'tile droppable-target')
+        // tile.addEventListener('dragLeave', () => tile.className = 'tile')
 
         tileRow.appendChild(tile)
-        this.state.grid[y - 1].push(new GridSquare(x, y, tile))
+        State.grid[y - 1].push(new GridSquare(x, y, tile))
       })
     })
+
+    console.log(State)
   }
 }
 

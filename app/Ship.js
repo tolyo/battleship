@@ -1,3 +1,5 @@
+import { State } from './state'
+
 export const ShipState = Object.freeze({
   ACTIVE:   Symbol('ACTIVE'),
   WOUNDED:  Symbol('WOUNDED'),
@@ -14,13 +16,15 @@ const SQUARE_SIZE = 30;
 export default class Ship {
 
   constructor(id, size = 1, orientation = ShipOrientation.HORIZONTAL) {
-    this.state = ShipState.ACTIVE
+    this.health = ShipState.ACTIVE
+    this.gridState = []
     this.row = null
     this.column = null
     this.orientation = orientation
     this.hitcount = 0
     this.size = size
-    this.shiftX = 0
+
+    this.shiftX = 0     // offset holders
     this.shiftY = 0
     this.shipElement = document.createElement('div')
 
@@ -74,6 +78,8 @@ export default class Ship {
     document.onmousemove = null
     this.shipElement.onmouseup = null
     this.attachShipToClosestTile()
+    console.log(this.getShipTiles())
+    Array.from(this.getShipTiles()).forEach(tile => tile.className = 'tile hit')
   }
 
   getEventCoordinates(e) {
@@ -122,12 +128,12 @@ export default class Ship {
   attachShipToClosestTile () {
     const tile = this.findClosestTile()
     if (tile.className.split(' ').indexOf('tile') != -1) {
-      tile.className = 'tile hit'
+      //tile.className = 'tile hit'
       this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
       this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
 
-      this.row = tile.getAttribute('data-row')
-      this.column = tile.getAttribute('data-column')
+      this.row = parseInt(tile.getAttribute('data-row'))
+      this.column = parseInt(tile.getAttribute('data-column'))
     } else {
       this.attachShipToLastTile()
     }
@@ -148,5 +154,23 @@ export default class Ship {
 
     const tile = this.findClosestTile()
     tile.dispatchEvent(new Event('dragEnter'))
+  }
+
+  /**
+   * Get all tiles occupied by a ship
+   */
+  getShipTiles() {
+    // console.log(this)
+    // console.log(State.grid)
+    const tiles = []
+    this.gridState.forEach((val, indx) => {
+      if (this.orientation == ShipOrientation.HORIZONTAL) {
+        tiles.push(State.grid[this.column - 1][this.row - 1 + indx].elem)
+      } else {
+        tiles.push(State.grid[this.column - 1 + indx][this.row - 1].elem)
+      }
+
+    })
+    return tiles
   }
 }

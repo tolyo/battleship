@@ -1,9 +1,6 @@
 
-export class GameState {
-
-  constructor() {
-    this.grid = []
-  }
+export const State = {
+  grid : []
 }
 
 export class GridSquare {
