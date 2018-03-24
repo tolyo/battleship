@@ -30,8 +30,7 @@ export default class Ship {
     this.shipElement = document.createElement('div')
 
     // set ship size
-    this.shipElement.style.width = (this.orientation == ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
-    this.shipElement.style.height = (this.orientation == ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    this.setShipSize()
 
     const board = document.getElementById('board')
     board.appendChild(this.shipElement)
@@ -47,9 +46,15 @@ export default class Ship {
     this.shipElement.ondragstart = () => false
   }
 
+  setShipSize() {
+    this.shipElement.style.width = (this.orientation == ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    this.shipElement.style.height = (this.orientation == ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+  }
+
   onmousedown (e) {
     console.log('onmousedown')
     if (this.placed) return
+    this.moved = false
     document.onmousemove = (e) => this.onmousemove(e)
     this.shipElement.onmouseup = (e) => this.onmouseup(e)
     const shipCoordinates = this.getShipCoordinates()
@@ -62,6 +67,7 @@ export default class Ship {
 
   onmousemove (e) {
     console.log('onmousemove')
+    this.moved = true
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
     this.notifyClosestTiles()
@@ -73,6 +79,17 @@ export default class Ship {
     document.onmousemove = null
     this.shipElement.onmouseup = null
     this.shipElement.classList.remove('dragged')
+    if (!this.moved) {
+      console.log('rotating ship')
+      if (this.orientation == ShipOrientation.VERTICAL) {
+        this.orientation = ShipOrientation.HORIZONTAL
+      } else {
+        this.orientation = ShipOrientation.VERTICAL
+      }
+      console.log(this.orientation)
+      this.setShipSize()
+      this.notifyClosestTiles()
+    }
     this.attachShipToClosestTile()
     console.log(this.domState)
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
@@ -254,6 +271,9 @@ const getAdjacentForTile = (tile) => {
 
 
 const getStateElement = (y, x) => {
-  console.log(`y : ${y}, x : ${x} `)
-  return State.grid[y - 1][x - 1].elem
+  return getGridElement(y, x).elem
+}
+
+const getGridElement = (y, x) => {
+  return State.grid[y - 1][x - 1]
 }

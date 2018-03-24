@@ -6,7 +6,8 @@ export const State = Object.freeze({
 
 export const GridState = Object.freeze({
   EMPTY   : 0,
-  FILLED  : 1
+  FILLED  : 1,
+  BLOCKED : 2
 })
 
 export class GridSquare {

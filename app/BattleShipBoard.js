@@ -17,7 +17,7 @@ export default class BattleShipBoard {
   }
 
   addShips() {
-    new Destroyer('dest1', ShipOrientation.HORIZONTAL)
+    new Destroyer('dest1', ShipOrientation.VERTICAL)
   }
 
   addTiles() {
