@@ -27,17 +27,23 @@ export default class Ship {
 
     this.shiftX = 0     // offset holders
     this.shiftY = 0
+  }
+
+  attachToBoard() {
     this.shipElement = document.createElement('div')
 
     // set ship size
-    //this.setShipSize()
+    this.setShipSize()
 
     const board = document.getElementById('board')
     board.appendChild(this.shipElement)
     this.shipElement.id = 'ship'
     this.shipElement.position = 'absolute'
     this.placed = false
-    //this.attachShipToClosestTile()
+    this.attachShipToTile(this.column, this.row)
+    this.updateDomState()
+    console.log(this.domState)
+    this.notifyClosestTiles()
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
@@ -45,6 +51,7 @@ export default class Ship {
     // override default browser behavior
     this.shipElement.ondragstart = () => false
     document.dispatchEvent(new Event('hello'))
+
   }
 
   setShipSize() {
@@ -116,7 +123,7 @@ export default class Ship {
   getShipCenterCoordinates() {
     const box = this.shipElement.getBoundingClientRect()
     const width = (this.orientation == ShipOrientation.HORIZONTAL) ? this.shipElement.offsetWidth / this.size : this.shipElement.offsetWidth
-    const height = (this.orientation == ShipOrientation.VERTICAL) ? this.shipElement.offsetHeight/ this.size : this.shipElement.offsetHeight
+    const height = (this.orientation == ShipOrientation.VERTICAL) ? this.shipElement.offsetHeight / this.size : this.shipElement.offsetHeight
     return {
       left: box.left + width / 2,
       top: box.top + height / 2
@@ -134,6 +141,14 @@ export default class Ship {
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
+
+  attachShipToTile(column, row) {
+    const tile = document.getElementById(`${column}-${row}`)
+    tile.className = 'tile hit'
+    this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
+    this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+  }
+
 
   getShipTileId () {
     return `${this.column}-${this.row}`
@@ -182,9 +197,9 @@ export default class Ship {
     const coordinates = getTileCoordinates(tile)
     this.gridState.forEach((val, indx) => {
       if (this.orientation == ShipOrientation.HORIZONTAL) {
-        tiles.push(State.grid[coordinates.column - 1][coordinates.row - 1 + indx].elem)
+        tiles.push(State.grid[coordinates.column][coordinates.row + indx].elem)
       } else {
-        tiles.push(State.grid[coordinates.column - 1 + indx][coordinates.row - 1].elem)
+        tiles.push(State.grid[coordinates.column + indx][coordinates.row].elem)
       }
     })
     tiles.push(tile)
@@ -227,42 +242,42 @@ const getAdjacentForTile = (tile) => {
   const x = coordinates.row
 
   // top left
-  if (y !== 1 && x !== 1) {
+  if (y !== 0 && x !== 0) {
     tiles.push(getStateElement(y - 1, x - 1))
   }
 
   // top mid
-  if (y !== 1) {
+  if (y !== 0) {
     tiles.push(getStateElement(y - 1, x))
   }
 
   // top right
-  if (y !== 1 && x !== 10) {
+  if (y !== 0 && x !== 9) {
       tiles.push(getStateElement(y - 1,x + 1))
   }
 
   // mid left
-  if (x !== 1) {
+  if (x !== 0) {
     tiles.push(getStateElement(y,x - 1))
   }
 
   // mid right
-  if (x !== 10) {
+  if (x !== 9) {
     tiles.push(getStateElement(y,x + 1))
   }
 
   // bot left
-  if (y !== 10 && x !== 1) {
+  if (y !== 9 && x !== 0) {
       tiles.push(getStateElement(y + 1,x - 1))
   }
 
   // bot mid
-  if (y !== 10) {
+  if (y !== 9) {
     tiles.push(getStateElement(y + 1,x))
   }
 
   // bot right
-  if (y !== 10 && x !== 10) {
+  if (y !== 9 && x !== 9) {
     tiles.push(getStateElement(y + 1,x + 1))
   }
 
@@ -276,5 +291,5 @@ const getStateElement = (y, x) => {
 }
 
 const getGridElement = (y, x) => {
-  return State.grid[y - 1][x - 1]
+  return State.grid[y][x]
 }

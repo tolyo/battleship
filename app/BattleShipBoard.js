@@ -4,7 +4,7 @@ import { ShipOrientation } from './Ship'
 import { GridSquare, MapTile, State } from './state'
 import { BOARD_SIZE } from './constants'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
-import BoardMap from './BoardMap'
+import BoardMap, { GRID } from './BoardMap'
 
 export default class BattleShipBoard {
 
@@ -28,7 +28,7 @@ export default class BattleShipBoard {
 
   addTiles() {
 
-    BOARD_SIZE.forEach((y) => {
+    GRID.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
       tileRow.className = 'tileRow'
@@ -37,7 +37,7 @@ export default class BattleShipBoard {
       State.grid.push([])
 
       // create tiles
-      BOARD_SIZE.forEach((x) => {
+      GRID.forEach((x) => {
         const tile = document.createElement('div')
         tile.className = 'tile'
         tile.id = y + '-' + x
@@ -48,7 +48,7 @@ export default class BattleShipBoard {
         tile.addEventListener('dragLeave', () => tile.className = 'tile')
 
         tileRow.appendChild(tile)
-        State.grid[y - 1].push(new GridSquare(x, y, tile))
+        State.grid[y].push(new GridSquare(x, y, tile))
       })
     })
 
@@ -65,6 +65,7 @@ export default class BattleShipBoard {
 
     if (this.map.isLegal(destoyer)) {
       this.map.add(destoyer)
+      destoyer.attachToBoard()
     } else {
       this.placeShipsAtRandom()
     }
