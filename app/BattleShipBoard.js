@@ -1,11 +1,15 @@
 
-import { Destroyer } from './ships'
+import { Carrier, Destroyer } from './ships'
 import { ShipOrientation } from './Ship'
-import { GridSquare, State } from './state'
+import { GridSquare, MapTile, State } from './state'
+import { BOARD_SIZE } from './constants'
+import { getRandomOrientation, getRandomTileCoordinate } from './utils'
+import BoardMap from './BoardMap'
 
 export default class BattleShipBoard {
 
   constructor(id) {
+    this.map = new BoardMap()
     if (!id) throw new Error('Board id required');
     this.fleetboard = window.document.getElementById(id);
     if (!this.fleetboard) throw new Error('Board id not found');
@@ -14,16 +18,17 @@ export default class BattleShipBoard {
     this.addTiles()
 
     this.addShips()
+
+    console.log(this.map.showGrid())
   }
 
   addShips() {
-    new Destroyer('dest1', ShipOrientation.VERTICAL)
+    this.placeShipsAtRandom()
   }
 
   addTiles() {
-    const size = [1,2,3,4,5,6,7,8,9,10]
 
-    size.forEach((y) => {
+    BOARD_SIZE.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
       tileRow.className = 'tileRow'
@@ -32,7 +37,7 @@ export default class BattleShipBoard {
       State.grid.push([])
 
       // create tiles
-      size.forEach((x) => {
+      BOARD_SIZE.forEach((x) => {
         const tile = document.createElement('div')
         tile.className = 'tile'
         tile.id = y + '-' + x
@@ -48,6 +53,21 @@ export default class BattleShipBoard {
     })
 
     console.log(State)
+
+  }
+
+  placeShipsAtRandom() {
+    const { column, row } = getRandomTileCoordinate()
+    console.log(location)
+    const destoyer = new Carrier('dest1', column, row, getRandomOrientation())
+
+    console.log(this.map.isLegal(destoyer))
+
+    if (this.map.isLegal(destoyer)) {
+      this.map.add(destoyer)
+    } else {
+      this.placeShipsAtRandom()
+    }
   }
 }
 

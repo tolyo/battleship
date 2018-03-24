@@ -7,8 +7,8 @@ export const ShipGrid = {
 
 export class Carrier extends Ship {
 
-  constructor(id, orientation) {
-    super(id, 4, orientation)
+  constructor(id,column, row, orientation) {
+    super(id, column, row, 4, orientation)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
 
@@ -16,8 +16,8 @@ export class Carrier extends Ship {
 
 export class Cruiser extends Ship {
 
-  constructor(id, orientation) {
-    super(id, 3, orientation)
+  constructor(id, column, row, orientation) {
+    super(id, column, row, 3, orientation)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
 
@@ -25,8 +25,8 @@ export class Cruiser extends Ship {
 
 export class Destroyer extends Ship {
 
-  constructor(id, orientation) {
-    super(id, 2, orientation)
+  constructor(id, column, row, orientation) {
+    super(id, column, row, 2, orientation)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
 
@@ -34,8 +34,8 @@ export class Destroyer extends Ship {
 
 export class TorpedoBoat extends Ship {
 
-  constructor(id, orientation) {
-    super(id, 1, orientation)
+  constructor(id, column, row, orientation) {
+    super(id, column, row, 1, orientation)
     this.gridState = [ShipGrid.ALIVE]
   }
 

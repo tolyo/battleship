@@ -1,7 +1,32 @@
 
-export const State = Object.freeze({
-  grid : [],
+import { BOARD_SIZE } from './constants'
+
+export const State = {
+  grid : [],    // dynamic map of dom elements
+  mapGrid : []  // static map of ship placement
+}
+
+export const MapTile = Object.freeze({
+  EMPTY   : '_',
+  FILLED  : 'X'
 })
+
+// init mapgrid
+BOARD_SIZE.forEach(col => {
+  State.mapGrid.push([])
+  BOARD_SIZE.forEach(row => State.mapGrid[col - 1].push(MapTile.EMPTY))
+})
+
+State.showGrid = () => {
+  let grid = ``
+  State.mapGrid.forEach(column => {
+    column.forEach(row => {
+      grid = grid + `${row} `
+    })
+    grid = grid + `\n`
+  })
+  return grid
+}
 
 
 export const GridState = Object.freeze({
@@ -19,3 +44,4 @@ export class GridSquare {
     this.state = GridState.EMPTY
   }
 }
+

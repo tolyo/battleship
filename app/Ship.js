@@ -1,25 +1,25 @@
 import { State } from './state'
 
 export const ShipState = Object.freeze({
-  ACTIVE:   Symbol('ACTIVE'),
-  WOUNDED:  Symbol('WOUNDED'),
-  KILLED:   Symbol('KILLED')
+  ACTIVE:   'ACTIVE',
+  WOUNDED:  'WOUNDED',
+  KILLED:   'KILLED'
 });
 
 export const ShipOrientation = Object.freeze({
-  VERTICAL:   Symbol('VERTICAL'),
-  HORIZONTAL:  Symbol('HORIZONTAL')
+  VERTICAL:   'VERTICAL',
+  HORIZONTAL: 'HORIZONTAL'
 });
 
 const SQUARE_SIZE = 30;
 
 export default class Ship {
 
-  constructor(id, size = 1, orientation = ShipOrientation.HORIZONTAL) {
+  constructor(id, colum, row, size, orientation = ShipOrientation.HORIZONTAL) {
     this.health = ShipState.ACTIVE
     this.gridState = []
-    this.row = null
-    this.column = null
+    this.column = colum
+    this.row = row
     this.orientation = orientation
     this.hitcount = 0
     this.size = size
@@ -30,20 +30,21 @@ export default class Ship {
     this.shipElement = document.createElement('div')
 
     // set ship size
-    this.setShipSize()
+    //this.setShipSize()
 
     const board = document.getElementById('board')
     board.appendChild(this.shipElement)
     this.shipElement.id = 'ship'
     this.shipElement.position = 'absolute'
     this.placed = false
-    this.attachShipToClosestTile()
+    //this.attachShipToClosestTile()
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
 
     // override default browser behavior
     this.shipElement.ondragstart = () => false
+    document.dispatchEvent(new Event('hello'))
   }
 
   setShipSize() {
