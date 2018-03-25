@@ -80,7 +80,7 @@ export default class Ship {
     this.moved = true
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
-    this.notifyClosestTiles()
+    this.triggerDragEvent()
   }
 
   onmouseup (e) {
@@ -90,19 +90,18 @@ export default class Ship {
     this.shipElement.onmouseup = null
     this.shipElement.classList.remove('dragged')
     if (!this.moved) {
-      console.log('rotating ship')
+
+      this.triggerDragEvent()
       if (this.orientation == ShipOrientation.VERTICAL) {
         this.orientation = ShipOrientation.HORIZONTAL
       } else {
         this.orientation = ShipOrientation.VERTICAL
+
       }
-      console.log(this.orientation)
       this.setShipSize()
-      this.notifyClosestTiles()
+      this.triggerDragEvent()
     }
     this.attachShipToClosestTile()
-
-    console.log(this.domState)
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
   }
 
@@ -185,7 +184,7 @@ export default class Ship {
     return tile
   }
 
-  notifyClosestTiles() {
+  triggerDragEvent() {
     const elements = document.getElementsByClassName('droppable-target')
     console.log(elements)
     Array.from(elements).forEach((el) => el.dispatchEvent(new Event('dragLeave')))
