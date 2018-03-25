@@ -43,7 +43,9 @@ export default class Ship {
     this.attachShipToTile(this.column, this.row)
     this.updateDomState()
     console.log(this.domState)
-    this.notifyClosestTiles()
+    this.attachShipToClosestTile()
+    console.log(this.domState)
+    Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
@@ -99,6 +101,7 @@ export default class Ship {
       this.notifyClosestTiles()
     }
     this.attachShipToClosestTile()
+
     console.log(this.domState)
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
   }
@@ -144,7 +147,6 @@ export default class Ship {
 
   attachShipToTile(column, row) {
     const tile = document.getElementById(`${column}-${row}`)
-    tile.className = 'tile hit'
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
