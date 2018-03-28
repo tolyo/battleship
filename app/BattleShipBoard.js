@@ -1,8 +1,5 @@
-
-import { Carrier, Destroyer } from './ships'
-import { ShipOrientation } from './Ship'
-import { GridSquare, MapTile, State } from './state'
-import { BOARD_SIZE } from './constants'
+import { Carrier } from './ships'
+import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import BoardMap, { GRID } from './BoardMap'
 
@@ -59,7 +56,8 @@ export default class BattleShipBoard {
   placeShipsAtRandom() {
     const { column, row } = getRandomTileCoordinate()
     console.log(location)
-    const destoyer = new Carrier('dest1', column, row, getRandomOrientation())
+    const destoyer = new Carrier('1')
+    destoyer.setLocation(column, row, getRandomOrientation())
 
     console.log(this.map.isLegal(destoyer))
 

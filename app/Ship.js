@@ -15,18 +15,23 @@ const SQUARE_SIZE = 30;
 
 export default class Ship {
 
-  constructor(id, colum, row, size, orientation = ShipOrientation.HORIZONTAL) {
+  constructor(id, size) {
+    this.id = id
     this.health = ShipState.ACTIVE
     this.gridState = []
-    this.column = colum
-    this.row = row
-    this.orientation = orientation
+
     this.hitcount = 0
     this.size = size
     this.domState = [] // reference to dom elements occupied by a ship
 
     this.shiftX = 0     // offset holders
     this.shiftY = 0
+  }
+
+  setLocation(column, row, orientation = ShipOrientation.HORIZONTAL) {
+    this.column = column
+    this.row = row
+    this.orientation = orientation
   }
 
   attachToBoard() {
