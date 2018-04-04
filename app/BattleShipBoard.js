@@ -2,6 +2,7 @@ import { Carrier } from './ships'
 import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import BoardMap, { GRID } from './BoardMap'
+import { Fleet } from './Fleet'
 
 export default class BattleShipBoard {
 
@@ -13,6 +14,7 @@ export default class BattleShipBoard {
     this.fleetboard.setAttribute('class', 'battleshipboard')
 
     this.addTiles()
+    this.addControls()
 
     this.addShips()
 
@@ -53,20 +55,41 @@ export default class BattleShipBoard {
 
   }
 
+  addControls() {
+    const clearButton = document.createElement('button')
+    clearButton.appendChild(document.createTextNode('Clear'))
+    clearButton.className = 'clear-button'
+    clearButton.onclick = () => this.clearShips();
+    this.fleetboard.appendChild(clearButton)
+  }
+
   placeShipsAtRandom() {
-    const { column, row } = getRandomTileCoordinate()
-    console.log(location)
-    const destoyer = new Carrier('1')
-    destoyer.setLocation(column, row, getRandomOrientation())
 
-    console.log(this.map.isLegal(destoyer))
+    Fleet.forEach(ship => {
+      const { column, row } = getRandomTileCoordinate()
+      console.log(location)
+      ship.setLocation(column, row, getRandomOrientation())
 
-    if (this.map.isLegal(destoyer)) {
-      this.map.add(destoyer)
-      destoyer.attachToBoard()
-    } else {
-      this.placeShipsAtRandom()
-    }
+      console.log(this.map.isLegal(ship))
+
+      if (this.map.isLegal(ship)) {
+        this.map.add(ship)
+        ship.attachToBoard()
+      } else {
+        this.placeShipsAtRandom()
+      }
+    })
+  }
+
+
+  clearShips() {
+    console.log('clear ship')
+    // remove ship from grid
+    Fleet.forEach(ship => {
+      this.map.remove(ship)
+    })
+
+    console.log(this.map.showGrid())
   }
 }
 

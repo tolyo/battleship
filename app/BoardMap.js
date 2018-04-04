@@ -26,12 +26,20 @@ export default class BoardMap {
   }
 
   add(ship) {
+    this.updateShipTiles(ship, MapTile.FILLED)
+  }
+
+  remove(ship) {
+    this.updateShipTiles(ship, MapTile.EMPTY)
+  }
+
+  updateShipTiles(ship, tileState) {
     const { column, row, size, orientation } = ship
     for (let i = 0; i < size; i++) {
       if (orientation == ShipOrientation.HORIZONTAL) {
-        this.map[column][row + i] = MapTile.FILLED
+        this.map[column][row + i] = tileState
       } else {
-        this.map[column + i][row] = MapTile.FILLED
+        this.map[column + i][row] = tileState
       }
     }
   }
