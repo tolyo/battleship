@@ -1,7 +1,7 @@
 import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './ships'
 
 // Fleet representation
-export const Fleet = Object.freeze([
+export const Fleet = [
   // 1 carrier
   new Carrier("0"),
 
@@ -19,4 +19,4 @@ export const Fleet = Object.freeze([
   // new TorpedoBoat("7"),
   // new TorpedoBoat("8"),
   // new TorpedoBoat("9")
-])
+]

@@ -19,6 +19,7 @@ export default class Ship {
     this.id = id
     this.health = ShipState.ACTIVE
     this.gridState = []
+    this.placed = false
 
     this.hitcount = 0
     this.size = size
@@ -35,6 +36,7 @@ export default class Ship {
   }
 
   attachToBoard() {
+    console.log('attach to board')
     this.shipElement = document.createElement('div')
 
     // set ship size
@@ -44,7 +46,7 @@ export default class Ship {
     board.appendChild(this.shipElement)
     this.shipElement.id = 'ship'
     this.shipElement.position = 'absolute'
-    this.placed = false
+    this.placed = true
     this.attachShipToTile(this.column, this.row)
     this.updateDomState()
     console.log(this.domState)
@@ -199,7 +201,6 @@ export default class Ship {
   getShipTiles() {
     const tiles = []
     const tile = this.findClosestTile()
-    tiles.push(tile)
     const coordinates = getTileCoordinates(tile)
     this.gridState.forEach((val, indx) => {
       if (this.orientation === ShipOrientation.HORIZONTAL) {
@@ -208,7 +209,6 @@ export default class Ship {
         tiles.push(State.grid[coordinates.column + indx][coordinates.row].elem)
       }
     })
-    tiles.push(tile)
     return tiles
   }
 
@@ -226,6 +226,7 @@ export default class Ship {
   }
 
   updateDomState() {
+    console.log('updateDomState')
     this.domState = []
     // domState must always be the same size as the grid state
     this.getShipTiles().forEach(el => this.domState.push(el))
@@ -233,7 +234,8 @@ export default class Ship {
 
   // Reset all tiles to initial state
   clear() {
-    console.log('clear')
+    console.log(`crearing ship ${this}`)
+
     // notify tiles
     this.getShipTiles().forEach(el => {
       el.className = 'tile'
@@ -241,6 +243,7 @@ export default class Ship {
     })
 
     window.document.getElementById('board').removeChild(this.shipElement)
+    this.placed = false
   }
 }
 

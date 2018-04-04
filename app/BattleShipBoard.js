@@ -22,7 +22,9 @@ export default class BattleShipBoard {
   }
 
   addShips() {
-    this.placeShipsAtRandom()
+    while (!this.placeShipsAtRandom()) {
+
+    }
   }
 
   addTiles() {
@@ -64,22 +66,24 @@ export default class BattleShipBoard {
   }
 
   placeShipsAtRandom() {
+    console.log('PLACING SHIPS')
+    this.map.clearBoard()
+    let isValidPlacement = true
 
     Fleet.forEach(ship => {
       const { column, row } = getRandomTileCoordinate()
-      console.log(location)
       ship.setLocation(column, row, getRandomOrientation())
 
-      console.log(this.map.isLegal(ship))
+      console.log("Is legal to place " + this.map.isLegal(ship))
 
       if (this.map.isLegal(ship)) {
         this.map.add(ship)
-        ship.attachToBoard()
       } else {
-        this.clearShips()
-        this.placeShipsAtRandom()
+        isValidPlacement = false
       }
     })
+    return isValidPlacement
+
   }
 
 
@@ -87,7 +91,7 @@ export default class BattleShipBoard {
     console.log('clear ship')
     // remove ship from grid
     Fleet.forEach(ship => {
-      this.map.remove(ship)
+      if (ship.placed === true) this.map.remove(ship)
     })
 
     console.log(this.map.showGrid())

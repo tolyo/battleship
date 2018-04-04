@@ -31,25 +31,33 @@ export default class BoardMap {
 
   remove(ship) {
     this.updateShipTiles(ship, MapTile.EMPTY)
-    ship.clear()
+  }
+
+  clearBoard() {
+    GRID.forEach(col => {
+      GRID.forEach(row => this.map[col][row] = MapTile.EMPTY)
+    })
   }
 
   updateShipTiles(ship, tileState) {
     const { column, row, size, orientation } = ship
+    console.log(`${column} ${row} ${size} ${orientation}`)
     for (let i = 0; i < size; i++) {
-      if (orientation == ShipOrientation.HORIZONTAL) {
+      if (orientation == ShipOrientation.HORIZONTAL && this.map[column] && this.map[column][row + i]) {
         this.map[column][row + i] = tileState
-      } else {
+      } else if (this.map[column + i] && this.map[column + i][row]) {
         this.map[column + i][row] = tileState
+      } else {
+        throw new Error(`Unable to set tile for ${column} ${row} ${size} ${orientation}`)
       }
     }
   }
 
   isLegal(ship) {
-    console.log(ship)
+    console.log(JSON.parse(JSON.stringify(ship)))
     const { column, row, size, orientation } = ship
     // check if grid exceeded
-    console.log(orientation)
+    console.log(`${column} ${row} ${size} ${orientation}`)
     // size decrease by one to account for head of ship being row or column
     if (orientation == ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
