@@ -76,6 +76,7 @@ export default class BattleShipBoard {
         this.map.add(ship)
         ship.attachToBoard()
       } else {
+        this.clearShips()
         this.placeShipsAtRandom()
       }
     })

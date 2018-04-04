@@ -31,6 +31,7 @@ export default class BoardMap {
 
   remove(ship) {
     this.updateShipTiles(ship, MapTile.EMPTY)
+    ship.clear()
   }
 
   updateShipTiles(ship, tileState) {

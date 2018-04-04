@@ -62,8 +62,8 @@ export default class Ship {
   }
 
   setShipSize() {
-    this.shipElement.style.width = (this.orientation == ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
-    this.shipElement.style.height = (this.orientation == ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    this.shipElement.style.width = (this.orientation === ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    this.shipElement.style.height = (this.orientation === ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
   }
 
   onmousedown (e) {
@@ -97,7 +97,7 @@ export default class Ship {
     if (!this.moved) {
 
       this.triggerDragEvent()
-      if (this.orientation == ShipOrientation.VERTICAL) {
+      if (this.orientation === ShipOrientation.VERTICAL) {
         this.orientation = ShipOrientation.HORIZONTAL
       } else {
         this.orientation = ShipOrientation.VERTICAL
@@ -129,8 +129,8 @@ export default class Ship {
 
   getShipCenterCoordinates() {
     const box = this.shipElement.getBoundingClientRect()
-    const width = (this.orientation == ShipOrientation.HORIZONTAL) ? this.shipElement.offsetWidth / this.size : this.shipElement.offsetWidth
-    const height = (this.orientation == ShipOrientation.VERTICAL) ? this.shipElement.offsetHeight / this.size : this.shipElement.offsetHeight
+    const width = (this.orientation === ShipOrientation.HORIZONTAL) ? this.shipElement.offsetWidth / this.size : this.shipElement.offsetWidth
+    const height = (this.orientation === ShipOrientation.VERTICAL) ? this.shipElement.offsetHeight / this.size : this.shipElement.offsetHeight
     return {
       left: box.left + width / 2,
       top: box.top + height / 2
@@ -138,7 +138,7 @@ export default class Ship {
   }
 
   isKilled() {
-    return this.hitcount == this.size
+    return this.hitcount === this.size
   }
 
   attachShipToLastTile() {
@@ -202,7 +202,7 @@ export default class Ship {
     tiles.push(tile)
     const coordinates = getTileCoordinates(tile)
     this.gridState.forEach((val, indx) => {
-      if (this.orientation == ShipOrientation.HORIZONTAL) {
+      if (this.orientation === ShipOrientation.HORIZONTAL) {
         tiles.push(State.grid[coordinates.column][coordinates.row + indx].elem)
       } else {
         tiles.push(State.grid[coordinates.column + indx][coordinates.row].elem)
@@ -216,7 +216,7 @@ export default class Ship {
     const tiles = []
     this.getShipTiles().forEach(tile => {
       getAdjacentForTile(tile).forEach(adjacentTile => {
-        if (tiles.map(x => x.id).indexOf(adjacentTile.id) == -1) {
+        if (tiles.map(x => x.id).indexOf(adjacentTile.id) === -1) {
           tiles.push(adjacentTile)
         }
       })
@@ -231,6 +231,17 @@ export default class Ship {
     this.getShipTiles().forEach(el => this.domState.push(el))
   }
 
+  // Reset all tiles to initial state
+  clear() {
+    console.log('clear')
+    // notify tiles
+    this.getShipTiles().forEach(el => {
+      el.className = 'tile'
+      getAdjacentForTile(el).forEach(el => el.className = 'tile')
+    })
+
+    window.document.getElementById('board').removeChild(this.shipElement)
+  }
 }
 
 const getTileCoordinates = (tile) => {
