@@ -46,6 +46,15 @@ export default class BoardMap {
     })
   }
 
+  clearBlocked() {
+    GRID.forEach(col => {
+      GRID.forEach(row => {
+        if (this.map[col][row] === MapTile.BLOCKED) this.map[col][row] = MapTile.EMPTY
+      })
+    })
+  }
+
+
   updateShipTiles(ship, tileState) {
     const { column, row, size, orientation } = ship
     console.log(`${column} ${row} ${size} ${orientation}`)

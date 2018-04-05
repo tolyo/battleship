@@ -101,6 +101,7 @@ export default class Ship {
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
     this.triggerDragEvent()
     window.BattleShipBoard.map.remove(this)
+    window.BattleShipBoard.map.clearBlocked()
     console.log(window.BattleShipBoard.map.showGrid())
   }
 
@@ -110,8 +111,11 @@ export default class Ship {
     document.onmousemove = null
     this.shipElement.onmouseup = null
     this.shipElement.classList.remove('dragged')
-    if (!this.moved) {
+    if (this.moved === false) {
+      console.log('rotate ship')
       this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
+      window.BattleShipBoard.map.remove(this)
+      window.BattleShipBoard.map.clearBlocked()
       this.triggerDragEvent()
       if (this.orientation === ShipOrientation.VERTICAL) {
         this.orientation = ShipOrientation.HORIZONTAL
