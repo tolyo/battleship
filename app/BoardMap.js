@@ -61,11 +61,19 @@ export default class BoardMap {
     // size decrease by one to account for head of ship being row or column
     if (orientation == ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
+      for (let i = 0; i < size; i++) {
+        if (this.map[column][row + i] != MapTile.EMPTY) return false
+      }
     }
 
     if (orientation == ShipOrientation.VERTICAL) {
       if (column + size - 1 >= 10) return false
+      for (let i = 0; i < size; i++) {
+        if (this.map[column + i][row] != MapTile.EMPTY) return false
+      }
     }
+
+
 
     return true
   }
