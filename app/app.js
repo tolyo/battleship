@@ -6,7 +6,7 @@ import { Fleet } from './Fleet'
 document.addEventListener('DOMContentLoaded', () => {
   // do your setup here
   console.log('Initialized board');
-  new BattleShipBoard('board');
+  window.BattleShipBoard = new BattleShipBoard('board');
 
 });
 

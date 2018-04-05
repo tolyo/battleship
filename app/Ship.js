@@ -1,4 +1,5 @@
 import { State } from './state'
+import BoardMap from './BoardMap'
 
 export const ShipState = Object.freeze({
   ACTIVE:   'ACTIVE',
@@ -99,6 +100,8 @@ export default class Ship {
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
     this.triggerDragEvent()
+    window.BattleShipBoard.map.remove(this)
+    console.log(window.BattleShipBoard.map.showGrid())
   }
 
   onmouseup (e) {
@@ -114,13 +117,14 @@ export default class Ship {
         this.orientation = ShipOrientation.HORIZONTAL
       } else {
         this.orientation = ShipOrientation.VERTICAL
-
       }
       this.setShipSize()
       this.triggerDragEvent()
     }
     this.attachShipToClosestTile()
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
+    window.BattleShipBoard.map.add(this)
+    console.log(window.BattleShipBoard.map.showGrid())
   }
 
   getEventCoordinates(e) {
