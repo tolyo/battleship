@@ -8,17 +8,26 @@ export default class BattleShipBoard {
 
   constructor(id) {
     this.map = new BoardMap()
-    if (!id) throw new Error('Board id required');
-    this.fleetboard = window.document.getElementById(id);
-    if (!this.fleetboard) throw new Error('Board id not found');
+    if (!id) throw new Error('Board id required')
+    const gameboard = window.document.getElementById(id)
+    const fleetBoard = document.createElement('div')
+    fleetBoard.setAttribute('class', 'battleshipboard')
+    gameboard.appendChild(fleetBoard)
+    this.fleetboard = fleetBoard
     this.fleetboard.setAttribute('class', 'battleshipboard')
 
+    const hitBoard = document.createElement('div')
+    gameboard.appendChild(hitBoard)
+    this.hitBoard = hitBoard
+    this.hitBoard.setAttribute('class', 'hitboard')
+
     this.addTiles()
+
     this.addControls()
 
     this.addShips()
 
-    console.log(this.map.showGrid())
+
   }
 
   addShips() {
@@ -28,11 +37,19 @@ export default class BattleShipBoard {
 
   addTiles() {
 
+    this.addTilesToBoard(this.fleetboard)
+    this.addTilesToBoard(this.hitBoard)
+
+    console.log(State)
+
+  }
+
+  addTilesToBoard(elem) {
     GRID.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
       tileRow.className = 'tileRow'
-      this.fleetboard.appendChild(tileRow)
+      elem.appendChild(tileRow)
 
       State.grid.push([])
 
@@ -51,16 +68,13 @@ export default class BattleShipBoard {
         State.grid[y].push(new GridSquare(x, y, tile))
       })
     })
-
-    console.log(State)
-
   }
 
   addControls() {
     const clearButton = document.createElement('button')
     clearButton.appendChild(document.createTextNode('Clear'))
     clearButton.className = 'clear-button'
-    clearButton.onclick = () => this.clearShips();
+    clearButton.onclick = () => this.clearShips()
     this.fleetboard.appendChild(clearButton)
 
     const randomButton = document.createElement('button')

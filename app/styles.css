@@ -1,7 +1,12 @@
-.battleshipboard {
+.battleshipboard, .hitboard {
   border: 0.5px solid #2d6ca0;
   width: 300px;
   height: 300px;
+  float: left;
+}
+
+.battleshipboard {
+  margin-right: 10px;
 }
 
 .tileRow {
@@ -22,9 +27,9 @@
   background-color: #92d2ff;
 }
 
-/*.tile:hover {*/
-  /*border: 2px solid #fff757;*/
-/*}*/
+.hitboard .tile:hover {
+  border: 2px solid #fff757;
+}
 
 .tile.hit,.tile.hit:hover {
   background-color: #C0CC28;
