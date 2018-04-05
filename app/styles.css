@@ -22,9 +22,9 @@
   background-color: #92d2ff;
 }
 
-.tile:hover {
-  border: 2px solid #fff757;
-}
+/*.tile:hover {*/
+  /*border: 2px solid #fff757;*/
+/*}*/
 
 .tile.hit,.tile.hit:hover {
   background-color: #C0CC28;
@@ -38,6 +38,10 @@
 
 .clear-button {
   margin-top: 10px;
+  -webkit-user-select: none;  /* Provent button highlighinng Chrome all / Safari all */
+  -moz-user-select: none;     /* Firefox all */
+  -ms-user-select: none;      /* IE 10+ */
+  user-select: none;          /* Likely future */
 }
 
 .clearfix {
@@ -67,3 +71,4 @@
   opacity: 0.6;
   border: 2px solid #02ff00;
 }
+

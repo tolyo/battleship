@@ -3,6 +3,7 @@ import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import BoardMap, { GRID } from './BoardMap'
 import { Fleet } from './Fleet'
+import pubSubService from './PubSubService'
 
 export default class BattleShipBoard {
 
@@ -90,6 +91,7 @@ export default class BattleShipBoard {
       // attach ship only when valid location is found
       ship.setLocation(column, row, orientation)
       this.map.add(ship)
+      pubSubService.subscribe('markAdjacent', () => this.map.markAdjacent(ship))
     })
   }
 

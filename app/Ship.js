@@ -1,5 +1,6 @@
 import { State } from './state'
 import BoardMap from './BoardMap'
+import pubsubService from './PubSubService'
 
 export const ShipState = Object.freeze({
   ACTIVE:   'ACTIVE',
@@ -134,7 +135,10 @@ export default class Ship {
     this.attachShipToClosestTile()
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
     window.BattleShipBoard.map.add(this)
+    //Fleet.forEach(ship => ship.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter'))))
+    pubsubService.publish("markAdjacent", null)
     console.log(window.BattleShipBoard.map.showGrid())
+
   }
 
   alternateShipOrientation() {

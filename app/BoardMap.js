@@ -27,6 +27,10 @@ export default class BoardMap {
 
   add(ship) {
     this.updateShipTiles(ship, MapTile.FILLED)
+    this.markAdjacent(ship)
+  }
+
+  markAdjacent(ship) {
     ship.getShipMapCoordinates().forEach(val => {
       this.getAdjacentCoordinates(val.y, val.x).forEach(j => {
         if (this.map[j.y][j.x] != MapTile.FILLED) {
