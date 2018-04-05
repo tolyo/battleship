@@ -95,12 +95,22 @@ export default class BoardMap {
   isLegal(column, row, size, orientation) {
     // check if grid exceeded
     console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
+
+    let isLegal = true
+
     if (isNaN(column) || isNaN(row)) return false
     // size decrease by one to account for head of ship being row or column
     if (orientation == ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
         if (this.map[column][row + i] != MapTile.EMPTY) return false
+
+        // prevent placement to adjacent ships
+        this.getAdjacentCoordinates(column, row + i).forEach(j => {
+          if (this.map[j.y][j.x] == MapTile.FILLED) {
+            isLegal = false
+          }
+        })
       }
     }
 
@@ -108,10 +118,17 @@ export default class BoardMap {
       if (column + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
         if (this.map[column + i][row] != MapTile.EMPTY) return false
+
+        // prevent placement to adjacent ships
+        this.getAdjacentCoordinates(column + i, row).forEach(j => {
+          if (this.map[j.y][j.x] == MapTile.FILLED) {
+            isLegal = false
+          }
+        })
       }
     }
 
-    return true
+    return isLegal
   }
 
 

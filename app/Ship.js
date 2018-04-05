@@ -21,6 +21,7 @@ export default class Ship {
     this.health = ShipState.ACTIVE
     this.gridState = []
     this.placed = false
+    this.dragged = false
 
     this.hitcount = 0
     this.size = size
@@ -82,7 +83,9 @@ export default class Ship {
   }
 
   onmousedown (e) {
+    if (this.dragged === true) return
     console.log('onmousedown')
+    this.dragged = true
     this.moved = false
     document.onmousemove = (e) => this.onmousemove(e)
     this.shipElement.onmouseup = (e) => this.onmouseup(e)
@@ -108,6 +111,7 @@ export default class Ship {
 
   onmouseup (e) {
     console.log('onmouseup')
+    this.dragged = false
     // clear event bindings
     document.onmousemove = null
     this.shipElement.onmouseup = null
@@ -304,6 +308,7 @@ export default class Ship {
 }
 
 const getTileCoordinates = (tile) => {
+  console.log(tile)
   return {
     row: parseInt(tile.getAttribute('data-row')),
     column: parseInt(tile.getAttribute('data-column'))
