@@ -27,6 +27,13 @@ export default class BoardMap {
 
   add(ship) {
     this.updateShipTiles(ship, MapTile.FILLED)
+    ship.getShipMapCoordinates().forEach(val => {
+      this.getAdjacentCoordinates(val.y, val.x).forEach(j => {
+        if (this.map[j.y][j.x] != MapTile.FILLED) {
+          this.map[j.y][j.x] = MapTile.BLOCKED
+        }
+      })
+    })
   }
 
   remove(ship) {
@@ -73,9 +80,54 @@ export default class BoardMap {
       }
     }
 
-
-
     return true
+  }
+
+  getAdjacentCoordinates(y, x) {
+
+    const coordinates = []
+    //
+    // // top left
+    if (y !== 0 && x !== 0) {
+      coordinates.push({y: y - 1, x: x - 1 })
+    }
+
+    // top mid
+    if (y !== 0) {
+      coordinates.push({y: y - 1, x})
+    }
+
+    // top right
+    if (y !== 0 && x !== 9) {
+      coordinates.push({y: y - 1, x: x + 1})
+    }
+
+    // mid left
+    if (x !== 0) {
+      coordinates.push({y: y, x: x - 1})
+    }
+
+    // mid right
+    if (x !== 9) {
+      coordinates.push({y: y, x: x + 1})
+    }
+
+    // bot left
+    if (y !== 9 && x !== 0) {
+      coordinates.push({y: y + 1, x: x - 1})
+    }
+
+    // bot mid
+    if (y !== 9) {
+      coordinates.push({y: y + 1, x: x})
+    }
+
+    // bot right
+    if (y !== 9 && x !== 9) {
+      coordinates.push({y: y + 1, x: x + 1})
+    }
+
+    return coordinates
   }
 
 }

@@ -22,9 +22,8 @@ export default class BattleShipBoard {
   }
 
   addShips() {
-    while (!this.placeShipsAtRandom()) {
-
-    }
+    this.placeShipsAtRandom()
+    this.attachShipsToBoard()
   }
 
   addTiles() {
@@ -63,37 +62,38 @@ export default class BattleShipBoard {
     clearButton.className = 'clear-button'
     clearButton.onclick = () => this.clearShips();
     this.fleetboard.appendChild(clearButton)
+
+    const randomButton = document.createElement('button')
+    randomButton.appendChild(document.createTextNode('Random map'))
+    randomButton.className = 'clear-button'
+    randomButton.onclick = () => {
+      this.clearShips()
+      this.addShips()
+    }
+    this.fleetboard.appendChild(randomButton)
   }
 
   placeShipsAtRandom() {
-    console.log('PLACING SHIPS')
-    this.map.clearBoard()
-    let isValidPlacement = true
 
     Fleet.forEach(ship => {
       const { column, row } = getRandomTileCoordinate()
       ship.setLocation(column, row, getRandomOrientation())
-
-      console.log("Is legal to place " + this.map.isLegal(ship))
-
-      if (this.map.isLegal(ship)) {
-        this.map.add(ship)
-      } else {
-        isValidPlacement = false
+      // generate a random location until a legal location is found
+      while (this.map.isLegal(ship) == false) {
+        const { column, row } = getRandomTileCoordinate()
+        ship.setLocation(column, row, getRandomOrientation())
       }
+      this.map.add(ship)
     })
-    return isValidPlacement
-
   }
 
+  attachShipsToBoard() {
+    Fleet.forEach(e => e.attachToBoard())
+  }
 
   clearShips() {
-    console.log('clear ship')
-    // remove ship from grid
-    Fleet.forEach(ship => {
-      if (ship.placed === true) this.map.remove(ship)
-    })
-
+    this.map.clearBoard()
+    Fleet.forEach(e => e.removeFromBoard())
     console.log(this.map.showGrid())
   }
 }

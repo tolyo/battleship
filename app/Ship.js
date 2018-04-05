@@ -63,6 +63,17 @@ export default class Ship {
 
   }
 
+  removeFromBoard() {
+    if (this.placed == false) return
+    const board = document.getElementById('board')
+    board.removeChild(this.shipElement)
+    this.domState.forEach(elem => {
+      elem.className = 'tile'
+      getAdjacentForTile(elem).forEach(elem => elem.className = 'tile')
+    })
+    this.placed = false
+  }
+
   setShipSize() {
     this.shipElement.style.width = (this.orientation === ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
     this.shipElement.style.height = (this.orientation === ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
@@ -245,6 +256,18 @@ export default class Ship {
     window.document.getElementById('board').removeChild(this.shipElement)
     this.placed = false
   }
+
+  getShipMapCoordinates() {
+    const coordinates = []
+    for (let i = 0; i < this.size; i++) {
+      if (this.orientation === ShipOrientation.HORIZONTAL) {
+        coordinates.push({y : this.column, x: this.row + i})
+      } else {
+        coordinates.push({y : this.column + i, x: this.row})
+      }
+    }
+    return coordinates
+  }
 }
 
 const getTileCoordinates = (tile) => {
@@ -253,6 +276,8 @@ const getTileCoordinates = (tile) => {
     column: parseInt(tile.getAttribute('data-column'))
   }
 }
+
+
 
 const getAdjacentForTile = (tile) => {
 

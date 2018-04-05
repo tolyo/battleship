@@ -5,7 +5,8 @@ export const State = {
 
 export const MapTile = Object.freeze({
   EMPTY   : '_',
-  FILLED  : 'X'
+  FILLED  : 'X',
+  BLOCKED : 'o'
 })
 
 export const GridState = Object.freeze({
