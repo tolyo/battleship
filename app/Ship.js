@@ -47,6 +47,7 @@ export default class Ship {
     this.shipElement.id = 'ship'
     this.shipElement.position = 'absolute'
     this.placed = true
+    this.shipElement.appendChild(document.createElement('span'))
     this.attachShipToTile(this.column, this.row)
     this.updateDomState()
     console.log(this.domState)
@@ -81,12 +82,10 @@ export default class Ship {
 
   onmousedown (e) {
     console.log('onmousedown')
-    if (this.placed) return
     this.moved = false
     document.onmousemove = (e) => this.onmousemove(e)
     this.shipElement.onmouseup = (e) => this.onmouseup(e)
     const shipCoordinates = this.getShipCoordinates()
-
     // set offsets for the click event
     this.shiftX = e.pageX - shipCoordinates.left
     this.shiftY = e.pageY - shipCoordinates.top
@@ -96,6 +95,7 @@ export default class Ship {
   onmousemove (e) {
     console.log('onmousemove')
     this.moved = true
+    this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
     this.shipElement.style.left = e.pageX - this.shiftX + 'px';
     this.shipElement.style.top = e.pageY - this.shiftY + 'px';
     this.triggerDragEvent()
@@ -108,7 +108,7 @@ export default class Ship {
     this.shipElement.onmouseup = null
     this.shipElement.classList.remove('dragged')
     if (!this.moved) {
-
+      this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
       this.triggerDragEvent()
       if (this.orientation === ShipOrientation.VERTICAL) {
         this.orientation = ShipOrientation.HORIZONTAL
@@ -203,9 +203,6 @@ export default class Ship {
   }
 
   triggerDragEvent() {
-    const elements = document.getElementsByClassName('droppable-target')
-    console.log(elements)
-    Array.from(elements).forEach((el) => el.dispatchEvent(new Event('dragLeave')))
     this.getShipTiles().forEach(tile =>tile.dispatchEvent(new Event('dragEnter')))
   }
 

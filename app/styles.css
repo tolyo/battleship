@@ -27,7 +27,7 @@
 }
 
 .tile.hit,.tile.hit:hover {
-  background-color: #FF6C64;
+  background-color: #C0CC28;
   border: 1px solid #2d6ca0;
 }
 
@@ -45,13 +45,23 @@
 }
 
 #ship {
-  background-color: black;
-  opacity: 0.8;
+  box-sizing: border-box;
+  border: #7f881a 2px solid;
   position: absolute;
   width: 30px;
   height: 30px;
   z-index: 1000;
+
 }
+
+#ship span {
+  background: white;
+  opacity: 0.2;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 
 #ship.dragged {
   opacity: 0.6;
