@@ -1,4 +1,3 @@
-import { Carrier } from './ships'
 import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import BoardMap, { GRID } from './BoardMap'
