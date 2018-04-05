@@ -215,16 +215,23 @@ export default class Ship {
   }
 
   getShipTiles() {
-    const tiles = []
+    let tiles = []
     const tile = this.findClosestTile()
     const coordinates = getTileCoordinates(tile)
-    this.gridState.forEach((val, indx) => {
-      if (this.orientation === ShipOrientation.HORIZONTAL) {
-        tiles.push(State.grid[coordinates.column][coordinates.row + indx].elem)
-      } else {
-        tiles.push(State.grid[coordinates.column + indx][coordinates.row].elem)
-      }
-    })
+    console.log(coordinates)
+    if (!isNaN(coordinates.row) && !isNaN(coordinates.column)) {
+      this.gridState.forEach((val, indx) => {
+        try {
+          if (this.orientation === ShipOrientation.HORIZONTAL) {
+            tiles.push(State.grid[coordinates.column][coordinates.row + indx].elem)
+          } else {
+            tiles.push(State.grid[coordinates.column + indx][coordinates.row].elem)
+          }
+        } catch (e) {
+          tiles = []
+        }
+      })
+    }
     return tiles
   }
 
