@@ -91,6 +91,7 @@ export default class Ship {
     this.shiftX = e.pageX - shipCoordinates.left
     this.shiftY = e.pageY - shipCoordinates.top
     this.shipElement.classList.add('dragged')
+    //console.log('finished')
   }
 
   onmousemove (e) {
@@ -112,23 +113,32 @@ export default class Ship {
     this.shipElement.onmouseup = null
     this.shipElement.classList.remove('dragged')
     if (this.moved === false) {
-      console.log('rotate ship')
       this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
       window.BattleShipBoard.map.remove(this)
       window.BattleShipBoard.map.clearBlocked()
-      this.triggerDragEvent()
-      if (this.orientation === ShipOrientation.VERTICAL) {
-        this.orientation = ShipOrientation.HORIZONTAL
-      } else {
-        this.orientation = ShipOrientation.VERTICAL
+
+      console.log('rotate ship')
+      const isLegal = window.BattleShipBoard.map.isLegal(this.column, this.row, this.size, this.alternateShipOrientation())
+
+      if (isLegal) {
+        this.triggerDragEvent()
+        this.orientation = this.alternateShipOrientation()
+        this.setShipSize()
+        this.triggerDragEvent()
       }
-      this.setShipSize()
-      this.triggerDragEvent()
     }
     this.attachShipToClosestTile()
     Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
     window.BattleShipBoard.map.add(this)
     console.log(window.BattleShipBoard.map.showGrid())
+  }
+
+  alternateShipOrientation() {
+    if (this.orientation === ShipOrientation.VERTICAL) {
+      return ShipOrientation.HORIZONTAL
+    } else {
+      return ShipOrientation.VERTICAL
+    }
   }
 
   getEventCoordinates(e) {
@@ -163,7 +173,7 @@ export default class Ship {
   }
 
   attachShipToLastTile() {
-    console.log(this.getShipTileId())
+    console.log("attachShipToLastTile")
     const tile = document.getElementById(this.getShipTileId())
     tile.className = 'tile hit'
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
@@ -184,22 +194,33 @@ export default class Ship {
   attachShipToClosestTile () {
     const tile = this.findClosestTile()
     this.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter')))
-
-    console.log(this.getAdjacentTiles())
-    if (tile.className.split(' ').indexOf('tile') != -1) {
-      //tile.className = 'tile hit'
-      this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
-      this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
-
-      // ship should remember its coordinates
-      const coordinates = getTileCoordinates(tile)
-      this.row = coordinates.row
-      this.column = coordinates.column
-
-      this.updateDomState() // always update dom state on ship attachment
-    } else {
+    //window.BattleShipBoard.map.isLegal(tile.elem.getAttribute(data-x))
+    if (!tile) {
       this.attachShipToLastTile()
+      return
     }
+    const {row, column} = getTileCoordinates(tile)
+    console.log(window.BattleShipBoard)
+    if (window.BattleShipBoard && !window.BattleShipBoard.map.isLegal(column, row, this.size, this.orientation)) {
+      this.attachShipToLastTile()
+    } else {
+      if (tile.className.split(' ').indexOf('tile') != -1) {
+        //tile.className = 'tile hit'
+        this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
+        this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+
+        // ship should remember its coordinates
+        const {row, column} = getTileCoordinates(tile)
+        this.row = row
+        this.column = column
+
+        this.updateDomState() // always update dom state on ship attachment
+      } else {
+        this.attachShipToLastTile()
+      }
+    }
+
+
   }
 
   findClosestTile() {

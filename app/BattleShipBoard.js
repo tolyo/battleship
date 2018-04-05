@@ -76,13 +76,19 @@ export default class BattleShipBoard {
   placeShipsAtRandom() {
 
     Fleet.forEach(ship => {
-      const { column, row } = getRandomTileCoordinate()
-      ship.setLocation(column, row, getRandomOrientation())
+      const location = getRandomTileCoordinate()
+      let column = location.column
+      let row = location.row
+      let orientation = getRandomOrientation()
       // generate a random location until a legal location is found
-      while (this.map.isLegal(ship) == false) {
-        const { column, row } = getRandomTileCoordinate()
-        ship.setLocation(column, row, getRandomOrientation())
+      while (this.map.isLegal(column, row, ship.size, orientation) == false) {
+        const location = getRandomTileCoordinate()
+        column = location.column
+        row = location.row
+        orientation = getRandomOrientation()
       }
+      // attach ship only when valid location is found
+      ship.setLocation(column, row, orientation)
       this.map.add(ship)
     })
   }

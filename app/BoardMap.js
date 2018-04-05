@@ -69,11 +69,11 @@ export default class BoardMap {
     }
   }
 
-  isLegal(ship) {
+  isLegalShip(ship) {
     console.log(JSON.parse(JSON.stringify(ship)))
     const { column, row, size, orientation } = ship
     // check if grid exceeded
-    console.log(`${column} ${row} ${size} ${orientation}`)
+    console.log(`Is legal to place`)
     // size decrease by one to account for head of ship being row or column
     if (orientation == ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
@@ -91,6 +91,30 @@ export default class BoardMap {
 
     return true
   }
+
+  isLegal(column, row, size, orientation) {
+    // check if grid exceeded
+    console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
+    if (isNaN(column) || isNaN(row)) return false
+    // size decrease by one to account for head of ship being row or column
+    if (orientation == ShipOrientation.HORIZONTAL) {
+      if (row + size - 1 >= 10) return false
+      for (let i = 0; i < size; i++) {
+        if (this.map[column][row + i] != MapTile.EMPTY) return false
+      }
+    }
+
+    if (orientation == ShipOrientation.VERTICAL) {
+      if (column + size - 1 >= 10) return false
+      for (let i = 0; i < size; i++) {
+        if (this.map[column + i][row] != MapTile.EMPTY) return false
+      }
+    }
+
+    return true
+  }
+
+
 
   getAdjacentCoordinates(y, x) {
 
