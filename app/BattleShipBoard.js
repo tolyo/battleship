@@ -2,7 +2,7 @@ import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import BoardMap, { GRID } from './BoardMap'
 import { Fleet } from './Fleet'
-import pubSubService from './PubSubService'
+import pubSubService from './pubsubservice'
 
 export default class BattleShipBoard {
 

@@ -1,6 +1,5 @@
 import { State } from './state'
-import BoardMap from './BoardMap'
-import pubsubService from './PubSubService'
+import pubsubService from './pubsubservice'
 
 export const ShipState = Object.freeze({
   ACTIVE:   'ACTIVE',
