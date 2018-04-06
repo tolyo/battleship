@@ -55,7 +55,7 @@ export default class Ship {
     console.log(this.domState)
     this.attachShipToClosestTile()
     console.log(this.domState)
-    Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
+    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile hit')
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
@@ -71,8 +71,8 @@ export default class Ship {
     const board = document.getElementById('board')
     board.removeChild(this.shipElement)
     this.domState.forEach(elem => {
-      elem.className = 'tile'
-      getAdjacentForTile(elem).forEach(elem => elem.className = 'tile')
+      elem.className = 'fleetboard-tile'
+      getAdjacentForTile(elem).forEach(elem => elem.className = 'fleetboard-tile')
     })
     this.placed = false
   }
@@ -132,7 +132,7 @@ export default class Ship {
       }
     }
     this.attachShipToClosestTile()
-    Array.from(this.domState).forEach(tile => tile.className = 'tile hit')
+    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile hit')
     window.BattleShipBoard.map.add(this)
     //Fleet.forEach(ship => ship.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter'))))
     pubsubService.publish("markAdjacent", null)
@@ -182,7 +182,7 @@ export default class Ship {
   attachShipToLastTile() {
     console.log("attachShipToLastTile")
     const tile = document.getElementById(this.getShipTileId())
-    tile.className = 'tile hit'
+    tile.className = 'fleetboard-tile hit'
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
@@ -211,8 +211,8 @@ export default class Ship {
     if (window.BattleShipBoard && !window.BattleShipBoard.map.isLegal(column, row, this.size, this.orientation)) {
       this.attachShipToLastTile()
     } else {
-      if (tile.className.split(' ').indexOf('tile') != -1) {
-        //tile.className = 'tile hit'
+      if (tile.className.split(' ').indexOf('fleetboard-tile') != -1) {
+        //tile.className = 'fleetboard-tile hit'
         this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
         this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
 
@@ -289,8 +289,8 @@ export default class Ship {
 
     // notify tiles
     this.getShipTiles().forEach(el => {
-      el.className = 'tile'
-      getAdjacentForTile(el).forEach(el => el.className = 'tile')
+      el.className = 'fleetboard-tile'
+      getAdjacentForTile(el).forEach(el => el.className = 'fleetboard-tile')
     })
 
     window.document.getElementById('board').removeChild(this.shipElement)

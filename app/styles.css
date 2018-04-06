@@ -13,7 +13,7 @@
   float: left;
 }
 
-.tile {
+.fleetboard-tile, .hitboard-tile {
   background-color: #4ba9ff;
   float: left;
   position: relative;
@@ -23,20 +23,20 @@
   box-sizing: border-box;
 }
 
-.tile.droppable-target {
+.fleetboard-tile.droppable-target {
   background-color: #92d2ff;
 }
 
-.hitboard .tile:hover {
+.hitboard .hitboard-tile:hover {
   border: 2px solid #fff757;
 }
 
-.tile.hit,.tile.hit:hover {
+.fleetboard-tile.hit,.fleetboard-tile.hit:hover {
   background-color: #C0CC28;
   border: 1px solid #2d6ca0;
 }
 
-.tile.miss, .tile.miss:hover {
+.fleetboard-tile.miss, .fleetboard-tile.miss:hover {
   background-color: #C0CC28;
   border: 1px solid #2d6ca0;
 }
