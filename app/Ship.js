@@ -83,6 +83,7 @@ export default class Ship {
   }
 
   onmousedown (e) {
+    e.preventDefault()
     if (this.dragged === true) return
     console.log('onmousedown')
     this.dragged = true
@@ -98,6 +99,7 @@ export default class Ship {
   }
 
   onmousemove (e) {
+    e.preventDefault()
     console.log('onmousemove')
     this.moved = true
     this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
@@ -110,6 +112,7 @@ export default class Ship {
   }
 
   onmouseup (e) {
+    e.preventDefault()
     console.log('onmouseup')
     this.dragged = false
     // clear event bindings
@@ -195,6 +198,7 @@ export default class Ship {
 
 
   getShipTileId () {
+    console.log("getShipTileId " + `${this.column}-${this.row}`)
     return `${this.column}-${this.row}`
   }
 
