@@ -1,4 +1,4 @@
-import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './ships'
+import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './Ship'
 
 // Fleet representation
 export const Fleet = [

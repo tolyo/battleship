@@ -32,7 +32,10 @@ class BoardMap {
 
   strike(column, row) {
     if (this.map[column][row] === MapTile.FILLED) {
-      document.getElementById(`${column}-${row}`).classList.add('hit')
+      const el = document.getElementById(`${column}-${row}`)
+      el.classList.add('hit')
+      el.dispatchEvent(new CustomEvent("strike"))
+      this.map[column][row] = MapTile.HIT
     }
   }
 

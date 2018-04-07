@@ -37,8 +37,8 @@
 }
 
 .fleetboard-tile.hit,.fleetboard-tile.hit:hover {
-    background-color: #f4363f;
-    border: 1px solid #2d6ca0;
+  background-color: #f4363f;
+  border: 1px solid #2d6ca0;
 }
 
 .fleetboard-tile.miss, .fleetboard-tile.miss:hover {
@@ -65,7 +65,10 @@
   width: 30px;
   height: 30px;
   z-index: 1000;
+}
 
+.ship.killed {
+  border: #8d2124 2px solid;
 }
 
 .ship span {

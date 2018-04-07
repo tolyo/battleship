@@ -1,4 +1,4 @@
-import { State } from './state'
+import { GridState, State } from './state'
 import pubsubService from './pubsubservice'
 import boardmap from './BoardMap'
 
@@ -33,6 +33,11 @@ export default class Ship {
     this.shiftX = 0     // offset holders
     this.shiftY = 0
     this.locked = false
+  }
+
+  reset() {
+    this.health = ShipState.ACTIVE
+    this.hitcount = 0
   }
 
   setLocation(column, row, orientation = ShipOrientation.HORIZONTAL) {
@@ -81,6 +86,7 @@ export default class Ship {
       getAdjacentForTile(elem).forEach(elem => elem.className = 'fleetboard-tile')
     })
     this.placed = false
+    this.reset()
   }
 
   setShipSize() {
@@ -304,7 +310,19 @@ export default class Ship {
     // console.log('updateDomState')
     this.domState = []
     // domState must always be the same size as the grid state
-    this.getShipTiles().forEach(el => this.domState.push(el))
+    this.getShipTiles().forEach(el => {
+      const size = this.domState.push(el)
+      el.addEventListener('strike', () => {
+        this.gridState[size - 1] = ShipGrid.KILLED
+        console.log(this.gridState)
+        this.hitcount += 1
+        if (this.isKilled()) {
+          this.health = ShipState.KILLED
+          document.getElementById(this.id).classList.add('killed')
+        }
+        console.log(this)
+      })
+    })
   }
 
   // Reset all tiles to initial state
@@ -403,3 +421,46 @@ const getStateElement = (y, x) => {
 const getGridElement = (y, x) => {
   return State.grid[y][x]
 }
+
+
+export const ShipGrid = {
+  ALIVE   : 0,
+  KILLED  : 1
+}
+
+export class Carrier extends Ship {
+
+  constructor(id) {
+    super(id, 4)
+    this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
+  }
+
+}
+
+export class Cruiser extends Ship {
+
+  constructor(id) {
+    super(id, 3)
+    this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
+  }
+
+}
+
+export class Destroyer extends Ship {
+
+  constructor(id) {
+    super(id, 2)
+    this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE]
+  }
+
+}
+
+export class TorpedoBoat extends Ship {
+
+  constructor(id) {
+    super(id, 1)
+    this.gridState = [ShipGrid.ALIVE]
+  }
+
+}
+
