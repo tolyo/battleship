@@ -31,9 +31,14 @@
   border: 2px solid #fff757;
 }
 
-.fleetboard-tile.hit,.fleetboard-tile.hit:hover {
+.fleetboard-tile.placed,.fleetboard-tile.placed:hover {
   background-color: #C0CC28;
   border: 1px solid #2d6ca0;
+}
+
+.fleetboard-tile.hit,.fleetboard-tile.hit:hover {
+    background-color: #f4363f;
+    border: 1px solid #2d6ca0;
 }
 
 .fleetboard-tile.miss, .fleetboard-tile.miss:hover {

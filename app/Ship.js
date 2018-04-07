@@ -60,7 +60,7 @@ export default class Ship {
     // console.log(this.domState)
     this.attachShipToClosestTile()
     // console.log(this.domState)
-    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile hit')
+    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile placed')
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
