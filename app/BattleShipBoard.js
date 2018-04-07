@@ -1,13 +1,13 @@
 import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
-import BoardMap, { GRID } from './BoardMap'
+import boardmap from './BoardMap'
+import { GRID } from './BoardMap'
 import { Fleet } from './Fleet'
 import pubSubService from './pubsubservice'
 
 export default class BattleShipBoard {
 
   constructor(id) {
-    this.map = new BoardMap()
     if (!id) throw new Error('Board id required')
     const gameboard = window.document.getElementById(id)
     const fleetBoard = document.createElement('div')
@@ -85,6 +85,14 @@ export default class BattleShipBoard {
       this.addShips()
     }
     this.fleetboard.appendChild(randomButton)
+
+    const lockButton = document.createElement('button')
+    lockButton.appendChild(document.createTextNode('Lock map'))
+    lockButton.className = 'clear-button'
+    lockButton.onclick = () => {
+      this.lockShips()
+    }
+    this.fleetboard.appendChild(lockButton)
   }
 
   placeShipsAtRandom() {
@@ -95,7 +103,7 @@ export default class BattleShipBoard {
       let row = location.row
       let orientation = getRandomOrientation()
       // generate a random location until a legal location is found
-      while (this.map.isLegal(column, row, ship.size, orientation) == false) {
+      while (boardmap.isLegal(column, row, ship.size, orientation) == false) {
         const location = getRandomTileCoordinate()
         column = location.column
         row = location.row
@@ -103,8 +111,8 @@ export default class BattleShipBoard {
       }
       // attach ship only when valid location is found
       ship.setLocation(column, row, orientation)
-      this.map.add(ship)
-      pubSubService.subscribe('markAdjacent', () => this.map.markAdjacent(ship))
+      boardmap.add(ship)
+      pubSubService.subscribe('markAdjacent', () => boardmap.markAdjacent(ship))
     })
   }
 
@@ -113,9 +121,13 @@ export default class BattleShipBoard {
   }
 
   clearShips() {
-    this.map.clearBoard()
+    boardmap.clearBoard()
     Fleet.forEach(e => e.removeFromBoard())
-    console.log(this.map.showGrid())
+    console.log(boardmap.showGrid())
+  }
+
+  lockShips() {
+    Fleet.forEach(e => e.lockShip())
   }
 }
 

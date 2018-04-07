@@ -53,7 +53,7 @@
   overflow: auto;
 }
 
-#ship {
+.ship {
   box-sizing: border-box;
   border: #7f881a 2px solid;
   position: absolute;
@@ -63,7 +63,7 @@
 
 }
 
-#ship span {
+.ship span {
   background: white;
   opacity: 0.2;
   width: 100%;
@@ -72,8 +72,70 @@
 }
 
 
-#ship.dragged {
+.ship.dragged {
   opacity: 0.6;
   border: 2px solid #02ff00;
 }
 
+.ship.error {
+  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+  border: #f4363f 2px solid;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@-webkit-keyframes shake {
+  from,
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    -webkit-transform: translate3d(-2px, 0, 0);
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    -webkit-transform: translate3d(2px, 0, 0);
+    transform: translate3d(2px, 0, 0);
+  }
+}
+
+@keyframes shake {
+  from,
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    -webkit-transform: translate3d(-2px, 0, 0);
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    -webkit-transform: translate3d(2px, 0, 0);
+    transform: translate3d(2px, 0, 0);
+  }
+}
+
+.shake {
+  -webkit-animation-name: shake;
+  animation-name: shake;
+}

@@ -4,7 +4,7 @@ import { ShipOrientation } from './Ship'
 
 export const GRID = [0,1,2,3,4,5,6,7,8,9]
 
-export default class BoardMap {
+class BoardMap {
 
   constructor() {
     this.map = []
@@ -98,7 +98,7 @@ export default class BoardMap {
 
   isLegal(column, row, size, orientation) {
     // check if grid exceeded
-    console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
+    //console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
 
     let isLegal = true
 
@@ -185,3 +185,7 @@ export default class BoardMap {
   }
 
 }
+
+const boardmap = new BoardMap()
+
+export default boardmap
