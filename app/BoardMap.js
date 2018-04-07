@@ -30,6 +30,12 @@ class BoardMap {
     this.markAdjacent(ship)
   }
 
+  strike(column, row) {
+    if (this.map[column][row] === MapTile.FILLED) {
+      document.getElementById(`${column}-${row}`).classList.add('hit')
+    }
+  }
+
   markAdjacent(ship) {
     ship.getShipMapCoordinates().forEach(val => {
       this.getAdjacentCoordinates(val.y, val.x).forEach(j => {

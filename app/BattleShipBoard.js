@@ -64,6 +64,13 @@ export default class BattleShipBoard {
         //tile.addEventListener('dragEnter', () => tile.className = 'fleetboard-tile droppable-target')
         tile.addEventListener('dragLeave', () => tile.className = boardname)
 
+        if (boardname === 'hitboard-tile') {
+          tile.onclick = () => {
+            console.log('attempt strike at' + tile.dataset.column)
+            boardmap.strike(tile.dataset.column, tile.dataset.row)
+          }
+        }
+
         tileRow.appendChild(tile)
         State.grid[y].push(new GridSquare(x, y, tile))
       })
