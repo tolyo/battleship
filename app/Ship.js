@@ -1,6 +1,6 @@
 import { GridState, State } from './state'
 import pubsubService from './pubsubservice'
-import boardmap from './BoardMap'
+import boardmap, { TOPIC } from './BoardMap'
 
 export const ShipState = Object.freeze({
   ACTIVE:   'ACTIVE',
@@ -33,11 +33,27 @@ export default class Ship {
     this.shiftX = 0     // offset holders
     this.shiftY = 0
     this.locked = false
+    pubsubService.subscribe(TOPIC.HIT, coordinates => {
+      const { column, row } = coordinates
+      const index = this.domState.map(x => x.id).indexOf(`${column}-${row}`)
+      if (index !== -1) {
+        this.gridState[index] = ShipGrid.KILLED
+        this.hitcount += 1
+        if (this.isKilled()) {
+          this.health = ShipState.KILLED
+          document.getElementById(this.id).classList.add('killed')
+          console.log(this)
+        }
+      }
+    })
   }
 
   reset() {
     this.health = ShipState.ACTIVE
     this.hitcount = 0
+    let newgridstate = []
+    this.gridState.forEach(e => newgridstate.push(ShipGrid.ALIVE))
+    this.gridState = newgridstate
   }
 
   setLocation(column, row, orientation = ShipOrientation.HORIZONTAL) {
@@ -72,7 +88,6 @@ export default class Ship {
 
     // override default browser behavior
     this.shipElement.ondragstart = () => false
-    document.dispatchEvent(new Event('hello'))
     this.shipElement.onmouseup = (e) => console.log(this.shipElement.id)
 
   }
@@ -312,16 +327,6 @@ export default class Ship {
     // domState must always be the same size as the grid state
     this.getShipTiles().forEach(el => {
       const size = this.domState.push(el)
-      el.addEventListener('strike', () => {
-        this.gridState[size - 1] = ShipGrid.KILLED
-        console.log(this.gridState)
-        this.hitcount += 1
-        if (this.isKilled()) {
-          this.health = ShipState.KILLED
-          document.getElementById(this.id).classList.add('killed')
-        }
-        console.log(this)
-      })
     })
   }
 

@@ -1,6 +1,12 @@
 
 import { MapTile } from './state'
 import { ShipOrientation } from './Ship'
+import { State } from './state'
+import pubsubservice from './pubsubservice'
+
+export const TOPIC = {
+  HIT: 'hit'
+}
 
 export const GRID = [0,1,2,3,4,5,6,7,8,9]
 
@@ -32,10 +38,9 @@ class BoardMap {
 
   strike(column, row) {
     if (this.map[column][row] === MapTile.FILLED) {
-      const el = document.getElementById(`${column}-${row}`)
-      el.classList.add('hit')
-      el.dispatchEvent(new CustomEvent("strike"))
+      State.grid[column][row].elem.classList.add('hit')
       this.map[column][row] = MapTile.HIT
+      pubsubservice.publish(TOPIC.HIT, [{ column: column, row: row}])
     }
   }
 
