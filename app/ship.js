@@ -1,4 +1,4 @@
-import { GridState, State } from './state'
+import { State } from './state'
 import pubsubService from './pubsubservice'
 import boardmap, { TOPIC } from './BoardMap'
 

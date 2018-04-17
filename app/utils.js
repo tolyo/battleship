@@ -1,6 +1,6 @@
 
 
-import { ShipOrientation } from './Ship'
+import { ShipOrientation } from './ship'
 
 export const getRandomTileCoordinate = () => {
   return {

@@ -1,6 +1,6 @@
 
 import { MapTile } from './state'
-import { ShipOrientation } from './Ship'
+import { ShipOrientation } from './ship'
 import { State } from './state'
 import pubsubservice from './pubsubservice'
 
