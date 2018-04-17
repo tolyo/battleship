@@ -3,12 +3,7 @@ import { MapTile } from './state'
 import { ShipOrientation } from './ship'
 import { State } from './state'
 import pubsubservice from './pubsubservice'
-
-export const TOPIC = {
-  HIT: 'hit'
-}
-
-export const GRID = [0,1,2,3,4,5,6,7,8,9]
+import { TOPIC, GRID } from './constants'
 
 class BoardMap {
 
@@ -16,7 +11,7 @@ class BoardMap {
     this.map = []
     GRID.forEach(col => {
       this.map.push([])
-      GRID.forEach(row => this.map[col].push(MapTile.EMPTY))
+      GRID.forEach(() => this.map[col].push(MapTile.EMPTY))
     })
   }
 
