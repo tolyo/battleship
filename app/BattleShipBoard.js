@@ -23,8 +23,6 @@ export default class BattleShipBoard {
 
     this.addTiles()
 
-    this.addControls()
-
     this.addShips()
 
 
@@ -77,31 +75,6 @@ export default class BattleShipBoard {
     })
   }
 
-  addControls() {
-    const clearButton = document.createElement('button')
-    clearButton.appendChild(document.createTextNode('Clear'))
-    clearButton.className = 'clear-button'
-    clearButton.onclick = () => this.clearShips()
-    this.fleetboard.appendChild(clearButton)
-
-    const randomButton = document.createElement('button')
-    randomButton.appendChild(document.createTextNode('Random map'))
-    randomButton.className = 'clear-button'
-    randomButton.onclick = () => {
-      this.clearShips()
-      this.addShips()
-    }
-    this.fleetboard.appendChild(randomButton)
-
-    const lockButton = document.createElement('button')
-    lockButton.appendChild(document.createTextNode('Lock map'))
-    lockButton.className = 'clear-button'
-    lockButton.onclick = () => {
-      this.lockShips()
-    }
-    this.fleetboard.appendChild(lockButton)
-  }
-
   placeShipsAtRandom() {
 
     Fleet.forEach(ship => {
@@ -127,13 +100,18 @@ export default class BattleShipBoard {
     Fleet.forEach(e => e.attachToBoard())
   }
 
+  randomShips() {
+    this.clearShips()
+    this.addShips()
+  }
+
   clearShips() {
     boardmap.clearBoard()
     Fleet.forEach(e => e.removeFromBoard())
     console.log(boardmap.showGrid())
   }
 
-  lockShips() {
+  lockFleetboard() {
     Fleet.forEach(e => e.lockShip())
   }
 }

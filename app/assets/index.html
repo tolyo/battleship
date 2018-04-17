@@ -6,8 +6,17 @@
   <link rel="stylesheet" href="/app.css">
   <script src="/vendor.js"></script>
   <script src="/app.js"></script>
-  <script>require('app');</script>
+  <script src="game.js"></script>
 </head>
 <body>
   <div id="board"></div>
+  <div style="float:left; width: 100%">
+    <button class="clear-button" onclick="BattleShipBoard.clearShips()">
+      Clear</button>
+    <button class="clear-button" onclick="BattleShipBoard.randomShips()">
+      Random map</button>
+    <button class="clear-button" onclick="BattleShipBoard.lockFleetboard()">
+      Lock map
+    </button>
+  </div>
 </body>
