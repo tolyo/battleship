@@ -171,7 +171,7 @@ export default class Ship {
       }
     }
     this.attachShipToClosestTile()
-    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile hit')
+    Array.from(this.domState).forEach(tile => tile.className += ' placed')
     boardmap.add(this)
     //Fleet.forEach(ship => ship.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter'))))
     pubsubService.publish("markAdjacent", null)
