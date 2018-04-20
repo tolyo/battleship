@@ -65,7 +65,13 @@ export default class BattleShipBoard {
         if (boardname === 'hitboard-tile') {
           tile.onclick = () => {
             console.log('attempt strike at' + tile.dataset.column)
-            boardmap.strike(tile.dataset.column, tile.dataset.row)
+            const shipHit = boardmap.strike(tile.dataset.column, tile.dataset.row)
+            if (shipHit == true) {
+              tile.className += ' hit'
+            } else {
+              tile.className += ' miss'
+              tile.onclick = null
+            }
           }
         }
 

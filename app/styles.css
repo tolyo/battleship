@@ -46,6 +46,12 @@
   border: 1px solid #2d6ca0;
 }
 
+.hitboard-tile.miss, .hitboard-tile.miss:hover {
+  background-color: #a9a9a9;
+  border: 1px solid #2d6ca0;
+}
+
+
 .clear-button {
   margin-top: 10px;
   -webkit-user-select: none;  /* Provent button highlighinng Chrome all / Safari all */
