@@ -36,6 +36,9 @@ class BoardMap {
       State.grid[column][row].elem.classList.add('hit')
       this.map[column][row] = MapTile.HIT
       pubsubservice.publish(TOPIC.HIT, [{ column: column, row: row}])
+      return true
+    } else {
+      return false
     }
   }
 
