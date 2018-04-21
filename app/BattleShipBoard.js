@@ -42,6 +42,20 @@ export default class BattleShipBoard {
 
   }
 
+  initHitboardTile(tile) {
+    tile.className = 'hitboard-tile'
+    tile.onclick = () => {
+      console.log('attempt strike at' + tile.dataset.column)
+      const shipHit = boardmap.strike(tile.dataset.column, tile.dataset.row)
+      if (shipHit === true) {
+        tile.className += ' hit'
+      } else {
+        tile.className += ' miss'
+      }
+      tile.onclick = null
+    }
+  }
+
   addTilesToBoard(elem, boardname) {
     GRID.forEach((y) => {
       // create row
@@ -63,16 +77,7 @@ export default class BattleShipBoard {
         tile.addEventListener('dragLeave', () => tile.className = boardname)
 
         if (boardname === 'hitboard') {
-          tile.onclick = () => {
-            console.log('attempt strike at' + tile.dataset.column)
-            const shipHit = boardmap.strike(tile.dataset.column, tile.dataset.row)
-            if (shipHit === true) {
-              tile.className += ' hit'
-            } else {
-              tile.className += ' miss'
-            }
-            tile.onclick = null
-          }
+          this.initHitboardTile(tile)
         }
 
         tileRow.appendChild(tile)
@@ -115,7 +120,7 @@ export default class BattleShipBoard {
     GRID.forEach(y => {
       GRID.forEach(x => {
         const tile = document.getElementById(`hitboard-${y}-${x}`)
-        tile.className = 'hitboard-tile'
+        this.initHitboardTile(tile)
       })
     })
   }
