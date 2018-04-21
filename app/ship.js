@@ -36,7 +36,7 @@ export default class Ship {
     this.locked = false
     pubsubService.subscribe(TOPIC.HIT, coordinates => {
       const { column, row } = coordinates
-      const index = this.domState.map(x => x.id).indexOf(`${column}-${row}`)
+      const index = this.domState.map(x => x.id).indexOf(`fleetboard-${column}-${row}`)
       if (index !== -1) {
         this.gridState[index] = ShipGrid.KILLED
         this.hitcount += 1
@@ -227,7 +227,7 @@ export default class Ship {
   }
 
   attachShipToTile(column, row) {
-    const tile = document.getElementById(`${column}-${row}`)
+    const tile = document.getElementById(`fleetboard-${column}-${row}`)
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
@@ -235,7 +235,7 @@ export default class Ship {
 
   getShipTileId () {
     // console.log("getShipTileId " + `${this.column}-${this.row}`)
-    return `${this.column}-${this.row}`
+    return `fleetboard-${this.column}-${this.row}`
   }
 
   lockShip() {
