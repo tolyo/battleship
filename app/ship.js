@@ -44,6 +44,7 @@ export default class Ship {
           this.health = ShipState.KILLED
           document.getElementById(this.id).classList.add('killed')
           console.log(this)
+          this.attachShipToHitBoard(this.column, this.row)
         }
       }
     })
@@ -102,6 +103,10 @@ export default class Ship {
       getAdjacentForTile(elem).forEach(elem => elem.className = 'fleetboard-tile')
     })
     this.placed = false
+    if (this.isKilled()) {
+      const hitShip = document.getElementById('hit-' + this.id)
+      board.removeChild(hitShip)
+    }
     this.reset()
   }
 
@@ -167,7 +172,6 @@ export default class Ship {
       } else {
         this.shipElement.classList.add('error')
         setTimeout(() => this.shipElement.classList.remove('error'), 500)
-        //this.shipElement.classList.remove('error')
       }
     }
     this.attachShipToClosestTile()
@@ -232,6 +236,21 @@ export default class Ship {
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
 
+  attachShipToHitBoard(column, row) {
+    // console.log('attach to board')
+    const shipElement = document.createElement('div')
+    const board = document.getElementById('board')
+    board.appendChild(shipElement)
+    shipElement.style.width = (this.orientation === ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    shipElement.style.height = (this.orientation === ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
+    shipElement.id = 'hit-' + this.id
+    shipElement.classList += 'ship killed'
+    shipElement.position = 'absolute'
+    shipElement.appendChild(document.createElement('span'))
+    const tile = document.getElementById(`hitboard-${column}-${row}`)
+    shipElement.style.left = tile.getBoundingClientRect().left + 'px';
+    shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+  }
 
   getShipTileId () {
     // console.log("getShipTileId " + `${this.column}-${this.row}`)
