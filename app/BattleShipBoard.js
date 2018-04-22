@@ -60,7 +60,7 @@ export default class BattleShipBoard {
     GRID.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
-      tileRow.className = 'tileRow'
+      tileRow.className = 'board-row'
       elem.appendChild(tileRow)
 
       State.grid.push([])
@@ -74,7 +74,7 @@ export default class BattleShipBoard {
         tile.setAttribute('data-row', x)
         //
         //tile.addEventListener('dragEnter', () => tile.className = 'fleetboard-tile droppable-target')
-        tile.addEventListener('dragLeave', () => tile.className = boardname)
+        tile.addEventListener('dragLeave', () => tile.className = boardname + '-tile')
 
         if (boardname === 'hitboard') {
           this.initHitboardTile(tile)

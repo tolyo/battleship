@@ -221,7 +221,7 @@ export default class Ship {
   attachShipToLastTile() {
     // console.log("attachShipToLastTile")
     const tile = document.getElementById(this.getShipTileId())
-    tile.className = 'fleetboard-tile hit'
+    tile.className = 'fleetboard-tile placed'
     this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
     this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
   }
