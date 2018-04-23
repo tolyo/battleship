@@ -258,9 +258,12 @@ export default class Ship {
   }
 
   lockShip() {
-    this.locked = !this.locked
+    this.locked = true
   }
 
+  unlockShip() {
+    this.locked = false
+  }
 
   attachShipToClosestTile () {
     const tile = this.findClosestTile()

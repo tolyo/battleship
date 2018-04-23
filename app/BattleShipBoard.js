@@ -2,8 +2,8 @@ import { GridSquare, State } from './state'
 import { getRandomOrientation, getRandomTileCoordinate } from './utils'
 import boardmap from './BoardMap'
 import { Fleet } from './fleet'
-import pubSubService from './pubsubservice'
-import { GRID } from './constants'
+import pubsubservice from './pubsubservice'
+import { GRID, TOPIC } from './constants'
 
 export default class BattleShipBoard {
 
@@ -11,20 +11,20 @@ export default class BattleShipBoard {
     if (!id) throw new Error('Board id required')
     const gameboard = window.document.getElementById(id)
     const fleetBoard = document.createElement('div')
-    fleetBoard.setAttribute('class', 'battleshipboard')
     gameboard.appendChild(fleetBoard)
     this.fleetboard = fleetBoard
-    this.fleetboard.setAttribute('class', 'battleshipboard')
+    this.fleetboard.setAttribute('id', 'battleshipboard')
 
     const hitBoard = document.createElement('div')
     gameboard.appendChild(hitBoard)
     this.hitBoard = hitBoard
-    this.hitBoard.setAttribute('class', 'hitboard')
+    this.hitBoard.setAttribute('id', 'hitboard')
 
     this.addTiles()
 
     this.addShips()
 
+    this.activeBoard = 0
 
   }
 
@@ -103,7 +103,7 @@ export default class BattleShipBoard {
       // attach ship only when valid location is found
       ship.setLocation(column, row, orientation)
       boardmap.add(ship)
-      pubSubService.subscribe('markAdjacent', () => boardmap.markAdjacent(ship))
+      pubsubservice.subscribe('markAdjacent', () => boardmap.markAdjacent(ship))
     })
   }
 
@@ -133,8 +133,27 @@ export default class BattleShipBoard {
     console.log(boardmap.showGrid())
   }
 
-  lockFleetboard() {
+  toggleLock() {
     Fleet.forEach(e => e.lockShip())
+  }
+
+  toggleBoard() {
+    if (this.activeBoard === 0) {
+      this.activeBoard = 1
+      document.getElementById('battleshipboard').classList.add('disabled')
+      Array.from(document.getElementsByClassName('ship')).forEach(e => e.classList.add('disabled'))
+      document.getElementById('hitboard').classList.remove('disabled')
+      Fleet.forEach(e => e.lockShip())
+      pubsubservice.publish(TOPIC.TOGGLE, [1])
+    } else {
+      this.activeBoard = 0
+      document.getElementById('battleshipboard').classList.remove('disabled')
+      document.getElementById('hitboard').classList.add('disabled')
+      Array.from(document.getElementsByClassName('ship')).forEach(e => e.classList.remove('disabled'))
+      this.toggleLock()
+      pubsubservice.publish(TOPIC.TOGGLE, [0])
+    }
+
   }
 }
 
