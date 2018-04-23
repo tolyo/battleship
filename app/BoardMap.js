@@ -38,6 +38,8 @@ class BoardMap {
       pubsubservice.publish(TOPIC.HIT, [{ column: column, row: row}])
       return true
     } else {
+      console.log('miss')
+      document.getElementById(`fleetboard-${column}-${row}`).classList.add('miss')
       return false
     }
   }
