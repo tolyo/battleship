@@ -4,6 +4,7 @@ import boardmap from './BoardMap'
 import { Fleet } from './fleet'
 import pubsubservice from './pubsubservice'
 import { GRID, TOPIC } from './constants'
+import Player from './Player'
 
 export default class BattleShipBoard {
 
@@ -24,8 +25,27 @@ export default class BattleShipBoard {
 
     this.addShips()
 
+    this.addPlayers()
+
     this.activeBoard = 0
 
+    // server call should go here
+    this.strikeRequestCallback = (column, row) => boardmap.strike(column, row)
+    //pubsubservice.subscribe(TOPIC.STRIKE_REQUEST, (column, row) => this.strikeRequestCallback(column, row))
+
+    // websocket call should go here
+    this.strikeReceiptCallback = (column, row) => {
+      const shipHit = boardmap.strike(column, row)
+      if (shipHit === true) {
+        this.hitBoardPlayer.decreaseHealth()
+        if (this.hitBoardPlayer.isDead()) this.endGame(this.hitBoardPlayer)
+      }
+    }
+
+  }
+
+  endGame(player) {
+    console.log('game end '  + player.id)
   }
 
   addShips() {
@@ -46,9 +66,11 @@ export default class BattleShipBoard {
     tile.className = 'hitboard-tile'
     tile.onclick = () => {
       console.log('attempt strike at' + tile.dataset.column)
-      const shipHit = boardmap.strike(tile.dataset.column, tile.dataset.row)
+      const shipHit = this.strikeRequestCallback(tile.dataset.column, tile.dataset.row)
       if (shipHit === true) {
         tile.className += ' hit'
+        this.fleetPlayer.decreaseHealth()
+        if (this.fleetPlayer.isDead()) this.endGame(this.fleetPlayer)
       } else {
         tile.className += ' miss'
       }
@@ -153,8 +175,13 @@ export default class BattleShipBoard {
       this.toggleLock()
       pubsubservice.publish(TOPIC.TOGGLE, [0])
     }
-
   }
+
+  addPlayers() {
+    this.fleetPlayer = new Player(1)
+    this.hitBoardPlayer = new Player(2)
+  }
+
 }
 
 
