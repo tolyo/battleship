@@ -7,8 +7,7 @@ import { GRID, TOPIC } from './constants'
 import Player from './Player'
 
 export default class BattleShipBoard {
-
-  constructor(id) {
+  constructor (id) {
     if (!id) throw new Error('Board id required')
     const gameboard = window.document.getElementById(id)
     const fleetBoard = document.createElement('div')
@@ -31,7 +30,7 @@ export default class BattleShipBoard {
 
     // server call should go here
     this.strikeRequestCallback = (column, row) => boardmap.strike(column, row)
-    //pubsubservice.subscribe(TOPIC.STRIKE_REQUEST, (column, row) => this.strikeRequestCallback(column, row))
+    // pubsubservice.subscribe(TOPIC.STRIKE_REQUEST, (column, row) => this.strikeRequestCallback(column, row))
 
     // websocket call should go here
     this.strikeReceiptCallback = (column, row) => {
@@ -41,28 +40,25 @@ export default class BattleShipBoard {
         if (this.hitBoardPlayer.isDead()) this.endGame(this.hitBoardPlayer)
       }
     }
-
   }
 
-  endGame(player) {
-    console.log('game end '  + player.id)
+  endGame (player) {
+    console.log('game end ' + player.id)
   }
 
-  addShips() {
+  addShips () {
     this.placeShipsAtRandom()
     this.attachShipsToBoard()
   }
 
-  addTiles() {
-
+  addTiles () {
     this.addTilesToBoard(this.fleetboard, 'fleetboard')
     this.addTilesToBoard(this.hitBoard, 'hitboard')
 
     console.log(State)
-
   }
 
-  initHitboardTile(tile) {
+  initHitboardTile (tile) {
     tile.className = 'hitboard-tile'
     tile.onclick = () => {
       console.log('attempt strike at' + tile.dataset.column)
@@ -78,7 +74,7 @@ export default class BattleShipBoard {
     }
   }
 
-  addTilesToBoard(elem, boardname) {
+  addTilesToBoard (elem, boardname) {
     GRID.forEach((y) => {
       // create row
       const tileRow = document.createElement('div')
@@ -95,8 +91,10 @@ export default class BattleShipBoard {
         tile.setAttribute('data-column', y)
         tile.setAttribute('data-row', x)
         //
-        //tile.addEventListener('dragEnter', () => tile.className = 'fleetboard-tile droppable-target')
-        tile.addEventListener('dragLeave', () => tile.className = boardname + '-tile')
+        // tile.addEventListener('dragEnter', () => tile.className = 'fleetboard-tile droppable-target')
+        tile.addEventListener('dragLeave', () => {
+          tile.className = boardname + '-tile'
+        })
 
         if (boardname === 'hitboard') {
           this.initHitboardTile(tile)
@@ -108,15 +106,14 @@ export default class BattleShipBoard {
     })
   }
 
-  placeShipsAtRandom() {
-
+  placeShipsAtRandom () {
     Fleet.forEach(ship => {
       const location = getRandomTileCoordinate()
       let column = location.column
       let row = location.row
       let orientation = getRandomOrientation()
       // generate a random location until a legal location is found
-      while (boardmap.isLegal(column, row, ship.size, orientation) == false) {
+      while (boardmap.isLegal(column, row, ship.size, orientation) === false) {
         const location = getRandomTileCoordinate()
         column = location.column
         row = location.row
@@ -129,16 +126,16 @@ export default class BattleShipBoard {
     })
   }
 
-  attachShipsToBoard() {
+  attachShipsToBoard () {
     Fleet.forEach(e => e.attachToBoard())
   }
 
-  randomShips() {
+  randomShips () {
     this.clearShips()
     this.addShips()
   }
 
-  clearHitBoard() {
+  clearHitBoard () {
     GRID.forEach(y => {
       GRID.forEach(x => {
         const tile = document.getElementById(`hitboard-${y}-${x}`)
@@ -147,7 +144,7 @@ export default class BattleShipBoard {
     })
   }
 
-  clearShips() {
+  clearShips () {
     // clear hitboard
     this.clearHitBoard()
     boardmap.clearBoard()
@@ -155,11 +152,11 @@ export default class BattleShipBoard {
     console.log(boardmap.showGrid())
   }
 
-  toggleLock() {
+  toggleLock () {
     Fleet.forEach(e => e.lockShip())
   }
 
-  toggleBoard() {
+  toggleBoard () {
     if (this.activeBoard === 0) {
       this.activeBoard = 1
       document.getElementById('battleshipboard').classList.add('disabled')
@@ -177,11 +174,8 @@ export default class BattleShipBoard {
     }
   }
 
-  addPlayers() {
+  addPlayers () {
     this.fleetPlayer = new Player(1)
     this.hitBoardPlayer = new Player(2)
   }
-
 }
-
-

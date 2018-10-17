@@ -1,6 +1,5 @@
 
 export default (() => {
-
   const cache = {}
 
   const subscribe = (topic, callback) => {
@@ -14,7 +13,7 @@ export default (() => {
   const publish = (topic, args) => {
     if (cache[topic]) {
       cache[topic].forEach(callback => {
-        callback(...(args || []))
+        callback.apply(null, ...(args || []))
       })
     }
   }

@@ -7,15 +7,17 @@
   "repository": "",
   "scripts": {
     "start": "brunch watch --server",
-    "build": "brunch build --production"
+    "build": "brunch build --production",
+    "lint": "standard --fix"
   },
   "dependencies": {},
   "devDependencies": {
     "auto-reload-brunch": "^2",
     "babel-brunch": "~6.0",
     "babel-preset-latest": "^6",
-    "brunch": "^2",
+    "brunch": "^2.10.17",
     "clean-css-brunch": "^2",
+    "standard": "^12.0.1",
     "uglify-js-brunch": "^2"
   }
 }

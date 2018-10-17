@@ -4,23 +4,22 @@ import boardmap from './BoardMap'
 import { TOPIC } from './constants'
 
 export const ShipState = Object.freeze({
-  ACTIVE:   'ACTIVE',
-  WOUNDED:  'WOUNDED',
-  KILLED:   'KILLED'
-});
+  ACTIVE: 'ACTIVE',
+  WOUNDED: 'WOUNDED',
+  KILLED: 'KILLED'
+})
 
 export const ShipOrientation = Object.freeze({
-  VERTICAL:   'VERTICAL',
+  VERTICAL: 'VERTICAL',
   HORIZONTAL: 'HORIZONTAL'
-});
+})
 
-const SQUARE_SIZE = 30;
+const SQUARE_SIZE = 30
 
 let DRAGGED = false
 
 export default class Ship {
-
-  constructor(id, size) {
+  constructor (id, size) {
     this.id = id
     this.health = ShipState.ACTIVE
     this.gridState = []
@@ -31,7 +30,7 @@ export default class Ship {
     this.size = size
     this.domState = [] // reference to dom elements occupied by a ship
 
-    this.shiftX = 0     // offset holders
+    this.shiftX = 0 // offset holders
     this.shiftY = 0
     this.locked = false
     pubsubService.subscribe(TOPIC.HIT, coordinates => {
@@ -50,7 +49,7 @@ export default class Ship {
     })
   }
 
-  reset() {
+  reset () {
     this.health = ShipState.ACTIVE
     this.hitcount = 0
     let newgridstate = []
@@ -58,13 +57,13 @@ export default class Ship {
     this.gridState = newgridstate
   }
 
-  setLocation(column, row, orientation = ShipOrientation.HORIZONTAL) {
+  setLocation (column, row, orientation = ShipOrientation.HORIZONTAL) {
     this.column = column
     this.row = row
     this.orientation = orientation
   }
 
-  attachToBoard() {
+  attachToBoard () {
     // console.log('attach to board')
     this.shipElement = document.createElement('div')
 
@@ -83,7 +82,9 @@ export default class Ship {
     // console.log(this.domState)
     this.attachShipToClosestTile()
     // console.log(this.domState)
-    Array.from(this.domState).forEach(tile => tile.className = 'fleetboard-tile placed')
+    Array.from(this.domState).forEach(tile => {
+      tile.className = 'fleetboard-tile placed'
+    })
 
     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e)
@@ -91,16 +92,17 @@ export default class Ship {
     // override default browser behavior
     this.shipElement.ondragstart = () => false
     this.shipElement.onmouseup = (e) => console.log(this.shipElement.id)
-
   }
 
-  removeFromBoard() {
-    if (this.placed == false) return
+  removeFromBoard () {
+    if (this.placed === false) return
     const board = document.getElementById('board')
     board.removeChild(this.shipElement)
     this.domState.forEach(elem => {
       elem.className = 'fleetboard-tile'
-      getAdjacentForTile(elem).forEach(elem => elem.className = 'fleetboard-tile')
+      getAdjacentForTile(elem).forEach(elem => {
+        elem.className = 'fleetboard-tile'
+      })
     })
     this.placed = false
     if (this.isKilled()) {
@@ -110,14 +112,14 @@ export default class Ship {
     this.reset()
   }
 
-  setShipSize() {
+  setShipSize () {
     this.shipElement.style.width = (this.orientation === ShipOrientation.HORIZONTAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
     this.shipElement.style.height = (this.orientation === ShipOrientation.VERTICAL) ? SQUARE_SIZE * this.size + 'px' : SQUARE_SIZE + 'px'
   }
 
   onmousedown (e) {
     if (e.button !== undefined && e.button !== 0) return // only touch or left click
-    if (e.touches && e.touches.length > 1)        return // support one finger touch only
+    if (e.touches && e.touches.length > 1) return // support one finger touch only
     if (DRAGGED === true) return
     if (this.locked === true) return
 
@@ -132,17 +134,17 @@ export default class Ship {
     this.shiftX = e.pageX - shipCoordinates.left
     this.shiftY = e.pageY - shipCoordinates.top
     this.shipElement.classList.add('dragged')
-    //// console.log('finished')
+    /// / console.log('finished')
   }
 
   onmousemove (e) {
     e.preventDefault()
     // console.log('onmousemove')
     this.moved = true
-    this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
-    this.shipElement.style.left = e.pageX - this.shiftX + 'px';
-    this.shipElement.style.top = e.pageY - this.shiftY + 'px';
-    //this.triggerDragEvent()
+    this.domState.forEach(elem => elem.dispatchEvent(new window.Event('dragLeave')))
+    this.shipElement.style.left = e.pageX - this.shiftX + 'px'
+    this.shipElement.style.top = e.pageY - this.shiftY + 'px'
+    // this.triggerDragEvent()
     boardmap.remove(this)
     boardmap.clearBlocked()
   }
@@ -157,7 +159,7 @@ export default class Ship {
     document.onmouseup = null
     this.shipElement.classList.remove('dragged')
     if (this.moved === false) {
-      this.domState.forEach(elem => elem.dispatchEvent(new Event('dragLeave')))
+      this.domState.forEach(elem => elem.dispatchEvent(new window.Event('dragLeave')))
       boardmap.remove(this)
       boardmap.clearBlocked()
 
@@ -171,19 +173,20 @@ export default class Ship {
         this.triggerDragEvent()
       } else {
         this.shipElement.classList.add('error')
-        setTimeout(() => this.shipElement.classList.remove('error'), 500)
+        setTimeout(() => { this.shipElement.classList.remove('error') }, 500)
       }
     }
     this.attachShipToClosestTile()
-    Array.from(this.domState).forEach(tile => tile.className += ' placed')
+    Array.from(this.domState).forEach(tile => {
+      tile.className += ' placed'
+    })
     boardmap.add(this)
-    //Fleet.forEach(ship => ship.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter'))))
-    pubsubService.publish("markAdjacent", null)
+    // Fleet.forEach(ship => ship.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new window.Event('dragEnter'))))
+    pubsubService.publish('markAdjacent', null)
     // console.log(boardmap.showGrid())
-
   }
 
-  alternateShipOrientation() {
+  alternateShipOrientation () {
     if (this.orientation === ShipOrientation.VERTICAL) {
       return ShipOrientation.HORIZONTAL
     } else {
@@ -191,16 +194,16 @@ export default class Ship {
     }
   }
 
-  getEventCoordinates(e) {
+  getEventCoordinates (e) {
     const ship = this.getShipCoordinates()
-    //// console.log(ship)
+    /// / console.log(ship)
     return {
       left: e.pageX - ship.left,
       top: e.pageY - ship.top
     }
   }
 
-  getShipCoordinates() {
+  getShipCoordinates () {
     const box = this.shipElement.getBoundingClientRect()
     return {
       left: box.left + window.pageXOffset,
@@ -208,7 +211,7 @@ export default class Ship {
     }
   }
 
-  getShipCenterCoordinates() {
+  getShipCenterCoordinates () {
     const box = this.shipElement.getBoundingClientRect()
     const width = (this.orientation === ShipOrientation.HORIZONTAL) ? this.shipElement.offsetWidth / this.size : this.shipElement.offsetWidth
     const height = (this.orientation === ShipOrientation.VERTICAL) ? this.shipElement.offsetHeight / this.size : this.shipElement.offsetHeight
@@ -218,25 +221,25 @@ export default class Ship {
     }
   }
 
-  isKilled() {
+  isKilled () {
     return this.hitcount === this.size
   }
 
-  attachShipToLastTile() {
+  attachShipToLastTile () {
     // console.log("attachShipToLastTile")
     const tile = document.getElementById(this.getShipTileId())
     tile.className = 'fleetboard-tile placed'
-    this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
-    this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+    this.shipElement.style.left = tile.getBoundingClientRect().left + 'px'
+    this.shipElement.style.top = tile.getBoundingClientRect().top + 'px'
   }
 
-  attachShipToTile(column, row) {
+  attachShipToTile (column, row) {
     const tile = document.getElementById(`fleetboard-${column}-${row}`)
-    this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
-    this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+    this.shipElement.style.left = tile.getBoundingClientRect().left + 'px'
+    this.shipElement.style.top = tile.getBoundingClientRect().top + 'px'
   }
 
-  attachShipToHitBoard(column, row) {
+  attachShipToHitBoard (column, row) {
     // console.log('attach to board')
     const shipElement = document.createElement('div')
     const board = document.getElementById('board')
@@ -248,8 +251,8 @@ export default class Ship {
     shipElement.position = 'absolute'
     shipElement.appendChild(document.createElement('span'))
     const tile = document.getElementById(`hitboard-${column}-${row}`)
-    shipElement.style.left = tile.getBoundingClientRect().left + 'px';
-    shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+    shipElement.style.left = tile.getBoundingClientRect().left + 'px'
+    shipElement.style.top = tile.getBoundingClientRect().top + 'px'
   }
 
   getShipTileId () {
@@ -257,35 +260,35 @@ export default class Ship {
     return `fleetboard-${this.column}-${this.row}`
   }
 
-  lockShip() {
+  lockShip () {
     this.locked = true
   }
 
-  unlockShip() {
+  unlockShip () {
     this.locked = false
   }
 
   attachShipToClosestTile () {
     const tile = this.findClosestTile()
-    this.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new Event('dragEnter')))
-    //boardmap.isLegal(tile.elem.getAttribute(data-x))
+    this.getAdjacentTiles().forEach(tile => tile.dispatchEvent(new window.Event('dragEnter')))
+    // boardmap.isLegal(tile.elem.getAttribute(data-x))
     if (!tile) {
       this.attachShipToLastTile()
       return
     }
-    const {row, column} = getTileCoordinates(tile)
+    const { row, column } = getTileCoordinates(tile)
     // console.log(window.BattleShipBoard)
-    console.log("isLegal " + boardmap.isLegal(column, row, this.size, this.orientation))
+    console.log('isLegal ' + boardmap.isLegal(column, row, this.size, this.orientation))
     if (!boardmap.isLegal(column, row, this.size, this.orientation)) {
       this.attachShipToLastTile()
     } else {
-      if (tile.className.split(' ').indexOf('fleetboard-tile') != -1) {
-        //tile.className = 'fleetboard-tile hit'
-        this.shipElement.style.left = tile.getBoundingClientRect().left + 'px';
-        this.shipElement.style.top = tile.getBoundingClientRect().top + 'px';
+      if (tile.className.split(' ').indexOf('fleetboard-tile') !== -1) {
+        // tile.className = 'fleetboard-tile hit'
+        this.shipElement.style.left = tile.getBoundingClientRect().left + 'px'
+        this.shipElement.style.top = tile.getBoundingClientRect().top + 'px'
 
         // ship should remember its coordinates
-        const {row, column} = getTileCoordinates(tile)
+        const { row, column } = getTileCoordinates(tile)
         this.row = row
         this.column = column
 
@@ -294,11 +297,9 @@ export default class Ship {
         this.attachShipToLastTile()
       }
     }
-
-
   }
 
-  findClosestTile() {
+  findClosestTile () {
     const shipCenter = this.getShipCenterCoordinates()
     this.shipElement.hidden = true
     const tile = document.elementFromPoint(shipCenter.left, shipCenter.top)
@@ -306,11 +307,11 @@ export default class Ship {
     return tile
   }
 
-  triggerDragEvent() {
-    this.getShipTiles().forEach(tile =>tile.dispatchEvent(new Event('dragEnter')))
+  triggerDragEvent () {
+    this.getShipTiles().forEach(tile => tile.dispatchEvent(new window.Event('dragEnter')))
   }
 
-  getShipTiles() {
+  getShipTiles () {
     let tiles = []
     const tile = this.findClosestTile()
     const coordinates = getTileCoordinates(tile)
@@ -331,7 +332,7 @@ export default class Ship {
     return tiles
   }
 
-  getAdjacentTiles() {
+  getAdjacentTiles () {
     const tiles = []
     this.getShipTiles().forEach(tile => {
       getAdjacentForTile(tile).forEach(adjacentTile => {
@@ -344,36 +345,36 @@ export default class Ship {
     return tiles
   }
 
-  updateDomState() {
+  updateDomState () {
     // console.log('updateDomState')
     this.domState = []
     // domState must always be the same size as the grid state
-    this.getShipTiles().forEach(el => {
-      const size = this.domState.push(el)
-    })
+    this.getShipTiles().forEach(el => this.domState.push(el))
   }
 
   // Reset all tiles to initial state
-  clear() {
+  clear () {
     // console.log(`crearing ship ${this}`)
 
     // notify tiles
     this.getShipTiles().forEach(el => {
       el.className = 'fleetboard-tile'
-      getAdjacentForTile(el).forEach(el => el.className = 'fleetboard-tile')
+      getAdjacentForTile(el).forEach(el => {
+        el.className = 'fleetboard-tile'
+      })
     })
 
     window.document.getElementById('board').removeChild(this.shipElement)
     this.placed = false
   }
 
-  getShipMapCoordinates() {
+  getShipMapCoordinates () {
     const coordinates = []
     for (let i = 0; i < this.size; i++) {
       if (this.orientation === ShipOrientation.HORIZONTAL) {
-        coordinates.push({y : this.column, x: this.row + i})
+        coordinates.push({ y: this.column, x: this.row + i })
       } else {
-        coordinates.push({y : this.column + i, x: this.row})
+        coordinates.push({ y: this.column + i, x: this.row })
       }
     }
     return coordinates
@@ -381,17 +382,14 @@ export default class Ship {
 }
 
 const getTileCoordinates = (tile) => {
-  //// console.log(tile)
+  /// / console.log(tile)
   return {
     row: parseInt(tile.getAttribute('data-row')),
     column: parseInt(tile.getAttribute('data-column'))
   }
 }
 
-
-
 const getAdjacentForTile = (tile) => {
-
   const tiles = []
   const coordinates = getTileCoordinates(tile)
   const y = coordinates.column
@@ -409,38 +407,36 @@ const getAdjacentForTile = (tile) => {
 
   // top right
   if (y !== 0 && x !== 9) {
-      tiles.push(getStateElement(y - 1,x + 1))
+    tiles.push(getStateElement(y - 1, x + 1))
   }
 
   // mid left
   if (x !== 0) {
-    tiles.push(getStateElement(y,x - 1))
+    tiles.push(getStateElement(y, x - 1))
   }
 
   // mid right
   if (x !== 9) {
-    tiles.push(getStateElement(y,x + 1))
+    tiles.push(getStateElement(y, x + 1))
   }
 
   // bot left
   if (y !== 9 && x !== 0) {
-      tiles.push(getStateElement(y + 1,x - 1))
+    tiles.push(getStateElement(y + 1, x - 1))
   }
 
   // bot mid
   if (y !== 9) {
-    tiles.push(getStateElement(y + 1,x))
+    tiles.push(getStateElement(y + 1, x))
   }
 
   // bot right
   if (y !== 9 && x !== 9) {
-    tiles.push(getStateElement(y + 1,x + 1))
+    tiles.push(getStateElement(y + 1, x + 1))
   }
 
   return tiles
 }
-
-
 
 const getStateElement = (y, x) => {
   return getGridElement(y, x).elem
@@ -450,45 +446,35 @@ const getGridElement = (y, x) => {
   return State.grid[y][x]
 }
 
-
 export const ShipGrid = {
-  ALIVE   : 0,
-  KILLED  : 1
+  ALIVE: 0,
+  KILLED: 1
 }
 
 export class Carrier extends Ship {
-
-  constructor(id) {
+  constructor (id) {
     super(id, 4)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
-
 }
 
 export class Cruiser extends Ship {
-
-  constructor(id) {
+  constructor (id) {
     super(id, 3)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
-
 }
 
 export class Destroyer extends Ship {
-
-  constructor(id) {
+  constructor (id) {
     super(id, 2)
     this.gridState = [ShipGrid.ALIVE, ShipGrid.ALIVE]
   }
-
 }
 
 export class TorpedoBoat extends Ship {
-
-  constructor(id) {
+  constructor (id) {
     super(id, 1)
     this.gridState = [ShipGrid.ALIVE]
   }
-
 }
-

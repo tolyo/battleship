@@ -2,18 +2,16 @@
 const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1
 
 export default class Player {
-
-  constructor(id) {
+  constructor (id) {
     this.id = id
     this.health = FLEET_SIZE
   }
 
-  decreaseHealth() {
+  decreaseHealth () {
     this.health = this.health - 1
   }
 
-  isDead() {
+  isDead () {
     return this.health === 0
   }
-
 }
