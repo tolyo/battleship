@@ -7,7 +7,8 @@ export const MapTile = Object.freeze({
   EMPTY: '_',
   FILLED: 'X',
   BLOCKED: 'o',
-  HIT: '+'
+  HIT: '+',
+  MISS: 'm'
 })
 
 export const GridState = Object.freeze({

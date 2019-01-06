@@ -1,10 +1,11 @@
 
 import { ShipOrientation } from './ship'
 
-export const getRandomTileCoordinate = () => {
+export const getRandomShipCoordinate = () => {
   return {
     row: getRandomTile(),
-    column: getRandomTile()
+    column: getRandomTile(),
+    orientation: getRandomOrientation()
   }
 }
 

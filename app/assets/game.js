@@ -1,5 +1,11 @@
-var BattleShipBoard = require('BattleShipBoard').default
+//
+// document.addEventListener('DOMContentLoaded', function () {
+//   window.BattleShipBoard = new BattleShipBoard('board')
+// })
+var fleetMap = require('BoardMap').default
+var fleet = require('fleet').default
 
-document.addEventListener('DOMContentLoaded', function () {
-  window.BattleShipBoard = new BattleShipBoard('board')
-})
+
+window.fleetMap = fleetMap
+window.fleet = fleet
+

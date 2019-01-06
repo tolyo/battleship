@@ -1,5 +1,5 @@
 import { GridSquare, State } from './state'
-import { getRandomOrientation, getRandomTileCoordinate } from './utils'
+import { getRandomOrientation, getRandomShipCoordinate } from './utils'
 import boardmap from './BoardMap'
 import { Fleet } from './fleet'
 import pubsubservice from './pubsubservice'
@@ -108,19 +108,11 @@ export default class BattleShipBoard {
 
   placeShipsAtRandom () {
     Fleet.forEach(ship => {
-      const location = getRandomTileCoordinate()
-      let column = location.column
-      let row = location.row
-      let orientation = getRandomOrientation()
-      // generate a random location until a legal location is found
-      while (boardmap.isLegal(column, row, ship.size, orientation) === false) {
-        const location = getRandomTileCoordinate()
-        column = location.column
-        row = location.row
-        orientation = getRandomOrientation()
+      ship.setLocation(getRandomShipCoordinate())
+      while (boardmap.isLegal(ship) === false) {
+        ship.setLocation(getRandomShipCoordinate())
       }
       // attach ship only when valid location is found
-      ship.setLocation(column, row, orientation)
       boardmap.add(ship)
       pubsubservice.subscribe('markAdjacent', () => boardmap.markAdjacent(ship))
     })

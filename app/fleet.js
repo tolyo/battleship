@@ -1,7 +1,7 @@
 import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './ship'
 
 // Fleet representation
-export const Fleet = [
+const Fleet = [
   // 1 carrier
   new Carrier('0'),
 
@@ -20,3 +20,5 @@ export const Fleet = [
   new TorpedoBoat('8'),
   new TorpedoBoat('9')
 ]
+
+export default Fleet

@@ -19,6 +19,7 @@ const SQUARE_SIZE = 30
 let DRAGGED = false
 
 export default class Ship {
+
   constructor (id, size) {
     this.id = id
     this.health = ShipState.ACTIVE
@@ -33,6 +34,7 @@ export default class Ship {
     this.shiftX = 0 // offset holders
     this.shiftY = 0
     this.locked = false
+
     pubsubService.subscribe(TOPIC.HIT, coordinates => {
       const { column, row } = coordinates
       const index = this.domState.map(x => x.id).indexOf(`fleetboard-${column}-${row}`)
@@ -55,13 +57,31 @@ export default class Ship {
     let newgridstate = []
     this.gridState.forEach(e => newgridstate.push(ShipGrid.ALIVE))
     this.gridState = newgridstate
+    return this
   }
 
-  setLocation (column, row, orientation = ShipOrientation.HORIZONTAL) {
+  setColumn (column) {
+    this.column = column
+    return this
+  }
+
+  setRow (row) {
+    this.row = row
+    return this
+  }
+
+  setOrienation (orientation = ShipOrientation.HORIZONTAL) {
+    this.orientation = orientation
+    return this
+  }
+
+  setLocation ({ column, row, orientation }) {
     this.column = column
     this.row = row
     this.orientation = orientation
+    return this
   }
+
 
   attachToBoard () {
     // console.log('attach to board')
