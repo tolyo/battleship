@@ -14,12 +14,27 @@ class BoardMap {
     })
   }
 
-  placeShipsAtRandom () {
-    this.clearBoard()
+  placeShipsAtRandom() {
+    try {
+      this.tryPlacingShips()
+    } catch (e) {
+      this.placeShipsAtRandom()
+    }
+  }
+
+  tryPlacingShips() {
+    this.reset()
     Fleet.forEach(ship => {
+      console.log(this.showGrid())
       ship.setLocation(getRandomShipCoordinate())
+      let count = 10000 // safety to prevent runaway cycle
       while (this.isLegal(ship) === false) {
         ship.setLocation(getRandomShipCoordinate())
+        count--
+        if (count == 0) {
+          console.log(this.showGrid())
+          throw new Error("Count exceeded")
+        }
       }
       // attach ship only when valid location is found
       this.add(ship)
@@ -37,13 +52,7 @@ class BoardMap {
 
   showGrid() {
     let grid = ``
-    let first = true
     this.map.forEach(column => {
-      if (first) {
-        first = false
-      } else {
-        grid = grid + ` `
-      }
       column.forEach(row => {
         grid = grid + `${row} `
       })
@@ -114,7 +123,7 @@ class BoardMap {
     }
   }
 
-  clearBoard() {
+  reset() {
     GRID.forEach(col => {
       GRID.forEach(row => {
         this.map[col][row] = MapTile.EMPTY
