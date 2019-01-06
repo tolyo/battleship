@@ -107,17 +107,17 @@ class BoardMap {
   }
 
   updateShipTiles (ship, tileState) {
-    const { column, row, size, orientation } = ship
+    const { row, column, size, orientation } = ship
     if (column === undefined || row === undefined || orientation === undefined) throw new Error('Cannot add ship. Column row and/or orientation not set')
-    console.log(`${column} ${row} ${size} ${orientation}`)
+    console.log(`${row} ${column} ${size} ${orientation}`)
 
     for (let i = 0; i < size; i++) {
-      if (orientation === ShipOrientation.HORIZONTAL && this.map[column] && this.map[column][row + i]) {
-        this.map[column][row + i] = tileState
-      } else if (this.map[column + i] && this.map[column + i][row]) {
-        this.map[column + i][row] = tileState
+      if (orientation === ShipOrientation.HORIZONTAL) {
+        this.map[row][column + i] = tileState
+      } else if (orientation === ShipOrientation.VERTICAL) {
+        this.map[row + i][column] = tileState
       } else {
-        throw new Error(`Unable to set tile for ${column} ${row} ${size} ${orientation}`)
+        throw new Error(`Unable to set tile for ${row} ${column}  ${size} ${orientation}`)
       }
     }
   }
@@ -138,21 +138,20 @@ class BoardMap {
     })
   }
 
-  isLegal ({ column, row, size, orientation }) {
+  isLegal ({row, column, size, orientation }) {
     // check if grid exceeded
     // console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
 
     let isLegal = true
 
-    if (isNaN(column) || isNaN(row)) return false
     // size decrease by one to account for head of ship being row or column
     if (orientation === ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
-        if (this.map[column][row + i] !== MapTile.EMPTY) return false
+        if (this.map[row][column + i] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(column, row + i).forEach(j => {
+        this.getAdjacentCoordinates(row, column + i).forEach(j => {
           if (this.map[j.y][j.x] === MapTile.FILLED) {
             isLegal = false
           }
@@ -163,10 +162,10 @@ class BoardMap {
     if (orientation === ShipOrientation.VERTICAL) {
       if (column + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
-        if (this.map[column + i][row] !== MapTile.EMPTY) return false
+        if (this.map[row + i][column] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(column + i, row).forEach(j => {
+        this.getAdjacentCoordinates(row + i, column).forEach(j => {
           if (this.map[j.y][j.x] === MapTile.FILLED) {
             isLegal = false
           }
