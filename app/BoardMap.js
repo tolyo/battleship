@@ -1,12 +1,12 @@
 
-import { MapTile, State } from './state'
+import { MapTile } from './state'
 import { ShipOrientation } from './ship'
 import { GRID } from './constants'
 import { getRandomShipCoordinate } from './utils'
 import Fleet from './fleet'
 
 class BoardMap {
-  constructor() {
+  constructor () {
     this.map = []
     GRID.forEach(col => {
       this.map.push([])
@@ -14,7 +14,7 @@ class BoardMap {
     })
   }
 
-  placeShipsAtRandom() {
+  placeShipsAtRandom () {
     try {
       this.tryPlacingShips()
     } catch (e) {
@@ -22,7 +22,7 @@ class BoardMap {
     }
   }
 
-  tryPlacingShips() {
+  tryPlacingShips () {
     this.reset()
     Fleet.forEach(ship => {
       console.log(this.showGrid())
@@ -31,9 +31,9 @@ class BoardMap {
       while (this.isLegal(ship) === false) {
         ship.setLocation(getRandomShipCoordinate())
         count--
-        if (count == 0) {
+        if (count === 0) {
           console.log(this.showGrid())
-          throw new Error("Count exceeded")
+          throw new Error('Count exceeded')
         }
       }
       // attach ship only when valid location is found
@@ -50,7 +50,7 @@ class BoardMap {
     this.clearBlocked()
   }
 
-  showGrid() {
+  showGrid () {
     let grid = ``
     this.map.forEach(column => {
       column.forEach(row => {
@@ -69,11 +69,11 @@ class BoardMap {
   strike (column, row) {
     // sanity checks
     if (this.map[column][row] === MapTile.HIT) {
-      throw new Error("Field in illegal state BLOCKED")
+      throw new Error('Field in illegal state BLOCKED')
     } else if (this.map[column][row] === MapTile.BLOCKED) {
-      throw new Error("Field in illegal state BLOCKED")
+      throw new Error('Field in illegal state BLOCKED')
     } else if (this.map[column][row] === MapTile.MISS) {
-      throw new Error("Field in illegal state MISS")
+      throw new Error('Field in illegal state MISS')
     }
 
     //
@@ -98,7 +98,6 @@ class BoardMap {
     })
   }
 
-
   placeShip (ship) {
     this.updateShipTiles(ship, MapTile.FILLED)
   }
@@ -107,9 +106,9 @@ class BoardMap {
     this.updateShipTiles(ship, MapTile.EMPTY)
   }
 
-  updateShipTiles(ship, tileState) {
+  updateShipTiles (ship, tileState) {
     const { column, row, size, orientation } = ship
-    if (column === undefined || row === undefined || orientation === undefined) throw new Error("Cannot add ship. Column row and/or orientation not set")
+    if (column === undefined || row === undefined || orientation === undefined) throw new Error('Cannot add ship. Column row and/or orientation not set')
     console.log(`${column} ${row} ${size} ${orientation}`)
 
     for (let i = 0; i < size; i++) {
@@ -123,7 +122,7 @@ class BoardMap {
     }
   }
 
-  reset() {
+  reset () {
     GRID.forEach(col => {
       GRID.forEach(row => {
         this.map[col][row] = MapTile.EMPTY
@@ -131,7 +130,7 @@ class BoardMap {
     })
   }
 
-  clearBlocked() {
+  clearBlocked () {
     GRID.forEach(col => {
       GRID.forEach(row => {
         if (this.map[col][row] === MapTile.BLOCKED) this.map[col][row] = MapTile.EMPTY

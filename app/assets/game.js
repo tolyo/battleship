@@ -5,7 +5,5 @@
 var fleetMap = require('BoardMap').default
 var fleet = require('fleet').default
 
-
 window.fleetMap = fleetMap
 window.fleet = fleet
-

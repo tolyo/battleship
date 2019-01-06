@@ -11,7 +11,6 @@ export const ShipOrientation = Object.freeze({
 })
 
 export default class Ship {
-
   constructor (id, size) {
     this.id = id
     this.health = ShipState.ACTIVE
@@ -25,7 +24,9 @@ export default class Ship {
   reset () {
     this.coordinates = undefined
     this.health = ShipState.ACTIVE
-    this.gridState.forEach((e, index) => this.gridState[index] = ShipGrid.ALIVE)
+    this.gridState.forEach((e, index) => {
+      this.gridState[index] = ShipGrid.ALIVE
+    })
     this.hitcount = 0
     this.domState = [] // reference to dom elements occupied by a ship
     return this
@@ -71,8 +72,8 @@ export default class Ship {
   }
 
   attemptStrike (column, row) {
-    this.getShipMapCoordinates().forEach(({y, x}, index) => {
-      if (column == x && row == x) {
+    this.getShipMapCoordinates().forEach(({ y, x }, index) => {
+      if (column === x && row === x) {
         this.gridState[index] = ShipGrid.KILLED
         this.strike()
       }

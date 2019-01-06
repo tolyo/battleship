@@ -1,5 +1,5 @@
 import { GridSquare, State } from './state'
-import { getRandomOrientation, getRandomShipCoordinate } from './utils'
+import { getRandomShipCoordinate } from './utils'
 import boardmap from './BoardMap'
 import { Fleet } from './fleet'
 import pubsubservice from './pubsubservice'
