@@ -82,7 +82,7 @@ export default class Ship {
 
   strike () {
     if (this.health === ShipState.KILLED) {
-      throw new Error("Illegal state. Ship already killed")
+      throw new Error('Illegal state. Ship already killed')
     }
     this.hitcount++
     if (this.isKilled() === true) {

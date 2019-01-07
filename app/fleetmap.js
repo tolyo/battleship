@@ -6,13 +6,12 @@ import { getRandomShipCoordinate } from './utils'
 import Fleet from './fleet'
 
 export default () => {
-
   const map = []
 
   GRID.forEach(col => {
     map.push([])
-      GRID.forEach(() => map[col].push(MapTile.EMPTY))
-    }
+    GRID.forEach(() => map[col].push(MapTile.EMPTY))
+  }
   )
 
   const placeShipsAtRandom = () => {
@@ -141,7 +140,7 @@ export default () => {
     })
   }
 
-  const isLegal = ({row, column, size, orientation }) => {
+  const isLegal = ({ row, column, size, orientation }) => {
     // check if grid exceeded
     // console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
 
@@ -154,7 +153,7 @@ export default () => {
         if (map[row][column + i] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        getAdjacentCoordinates(row, column + i).forEach(({row, column}) => {
+        getAdjacentCoordinates(row, column + i).forEach(({ row, column }) => {
           if (map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
@@ -168,7 +167,7 @@ export default () => {
         if (map[row + i][column] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        getAdjacentCoordinates(row + i, column).forEach(({row, column}) => {
+        getAdjacentCoordinates(row + i, column).forEach(({ row, column }) => {
           if (map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
@@ -230,6 +229,8 @@ export default () => {
     placeShipsAtRandom,
     reset,
     strike,
-    showGrid
+    showGrid,
+    placeShip,
+    removeShip
   }
 }

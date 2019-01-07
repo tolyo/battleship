@@ -6,7 +6,6 @@ import pubsubservice from './pubsubservice'
 import { GRID, TOPIC } from './constants'
 import Player from './Player'
 
-
 export default class BattleShipBoard {
   constructor (id) {
     if (!id) throw new Error('Board id required')

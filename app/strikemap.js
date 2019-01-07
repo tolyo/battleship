@@ -6,7 +6,6 @@ export default ({
   strikeCallback,
   victoryCallback
 }) => {
-
   const map = []
   let strikeCount = 0
 
@@ -29,24 +28,24 @@ export default ({
 
   const attemptStrike = (row, column) => {
     if (map[row][column] === MapTile.MISS) {
-      throw new Error("Illegal state. Already struck with MISS")
+      throw new Error('Illegal state. Already struck with MISS')
     }
 
     if (map[row][column] === MapTile.HIT) {
-      throw new Error("Illegal state. Already struck with HIT")
+      throw new Error('Illegal state. Already struck with HIT')
     }
 
     const result = strikeCallback(row, column)
     if (result === true) {
       map[row][column] = MapTile.HIT
-      ++strikeCount;
+      ++strikeCount
       if (strikeCount === FLEET_SIZE) {
         victoryCallback()
       }
     } else if (result === false) {
       map[row][column] = MapTile.MISS
     } else {
-      throw new Error("Callback must return boolean")
+      throw new Error('Callback must return boolean')
     }
   }
 
@@ -54,7 +53,4 @@ export default ({
     showMap,
     attemptStrike
   }
-
 }
-
-

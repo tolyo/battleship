@@ -11,7 +11,7 @@ var strikeMap = require('strikemap').default({
     return false
   },
   victoryCallback: function () {
-    return
+
   }
 })
 
