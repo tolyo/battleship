@@ -2,6 +2,12 @@ import { GRID } from './constants'
 import { MapTile } from './state'
 import { FLEET_SIZE } from './fleet'
 
+/**
+ * @function strikemap
+ * @param {function(int, int)} strikeCallback
+ * @param {function} victoryCallback
+ * @return {{showMap: function(), attemptStrike: function(number, number)}} strikemap
+ */
 export default ({
   strikeCallback,
   victoryCallback
@@ -15,6 +21,9 @@ export default ({
     GRID.forEach(() => map[col].push(MapTile.EMPTY))
   })
 
+  /**
+   * @return {null}
+   */
   const showMap = () => {
     let grid = ``
     map.forEach(column => {
@@ -26,6 +35,12 @@ export default ({
     console.log(grid)
   }
 
+  /**
+   *
+   * @param {number} row
+   * @param {number} column
+   * @return {null}
+   */
   const attemptStrike = (row, column) => {
     if (map[row][column] === MapTile.MISS) {
       throw new Error('Illegal state. Already struck with MISS')
