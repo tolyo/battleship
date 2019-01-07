@@ -1,10 +1,11 @@
 import { GridSquare, State } from './state'
 import { getRandomShipCoordinate } from './utils'
-import boardmap from './BoardMap'
+import boardmap from './fleetmap'
 import { Fleet } from './fleet'
 import pubsubservice from './pubsubservice'
 import { GRID, TOPIC } from './constants'
 import Player from './Player'
+
 
 export default class BattleShipBoard {
   constructor (id) {

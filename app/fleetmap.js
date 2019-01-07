@@ -5,54 +5,55 @@ import { GRID } from './constants'
 import { getRandomShipCoordinate } from './utils'
 import Fleet from './fleet'
 
-class BoardMap {
-  constructor () {
-    this.map = []
-    GRID.forEach(col => {
-      this.map.push([])
-      GRID.forEach(() => this.map[col].push(MapTile.EMPTY))
-    })
-  }
+export default () => {
 
-  placeShipsAtRandom () {
+  const map = []
+
+  GRID.forEach(col => {
+    map.push([])
+      GRID.forEach(() => map[col].push(MapTile.EMPTY))
+    }
+  )
+
+  const placeShipsAtRandom = () => {
     try {
-      this.tryPlacingShips()
+      tryPlacingShips()
     } catch (e) {
-      this.placeShipsAtRandom()
+      placeShipsAtRandom()
     }
   }
 
-  tryPlacingShips () {
-    this.reset()
+  const tryPlacingShips = () => {
+    reset()
     Fleet.forEach(ship => {
-      console.log(this.showGrid())
+      console.log(showGrid())
       ship.setLocation(getRandomShipCoordinate())
       let count = 10000 // safety to prevent runaway cycle
-      while (this.isLegal(ship) === false) {
+      while (isLegal(ship) === false) {
         ship.setLocation(getRandomShipCoordinate())
         count--
         if (count === 0) {
-          console.log(this.showGrid())
+          console.log(showGrid())
           throw new Error('Count exceeded')
         }
       }
       // attach ship only when valid location is found
-      this.add(ship)
+      add(ship)
     })
 
-    console.log(this.showGrid())
+    console.log(showGrid())
   }
 
   /**
    * Clear adjacent markings
    */
-  prepareForGame () {
-    this.clearBlocked()
+  const prepareForGame = () => {
+    clearBlocked()
   }
 
-  showGrid () {
+  const showGrid = () => {
     let grid = ``
-    this.map.forEach(column => {
+    map.forEach(column => {
       column.forEach(row => {
         grid = grid + `${row} `
       })
@@ -61,84 +62,86 @@ class BoardMap {
     return grid
   }
 
-  add (ship) {
-    this.placeShip(ship)
-    this.markAdjacent(ship)
+  const add = (ship) => {
+    placeShip(ship)
+    markAdjacent(ship)
   }
 
-  strike (column, row) {
+  const strike = (column, row) => {
     // sanity checks
-    if (this.map[column][row] === MapTile.HIT) {
+    if (map[column][row] === MapTile.HIT) {
       throw new Error('Field in illegal state BLOCKED')
-    } else if (this.map[column][row] === MapTile.BLOCKED) {
+    } else if (map[column][row] === MapTile.BLOCKED) {
       throw new Error('Field in illegal state BLOCKED')
-    } else if (this.map[column][row] === MapTile.MISS) {
+    } else if (map[column][row] === MapTile.MISS) {
       throw new Error('Field in illegal state MISS')
     }
 
     //
-    if (this.map[column][row] === MapTile.FILLED) {
+    if (map[column][row] === MapTile.FILLED) {
       console.log('HIT')
-      this.map[column][row] = MapTile.HIT
+      map[column][row] = MapTile.HIT
       return true
     } else {
       console.log('MISS')
-      this.map[column][row] = MapTile.MISS
+      map[column][row] = MapTile.MISS
       return false
     }
   }
 
-  markAdjacent (ship) {
+  const markAdjacent = (ship) => {
     ship.getShipMapCoordinates().forEach(({ row, column }) => {
-      this.getAdjacentCoordinates(row, column).forEach(({ row, column }) => {
-        if (this.map[row][column] !== MapTile.FILLED) {
-          this.map[row][column] = MapTile.BLOCKED
+      getAdjacentCoordinates(row, column).forEach(({ row, column }) => {
+        if (map[row][column] !== MapTile.FILLED) {
+          map[row][column] = MapTile.BLOCKED
         }
       })
     })
   }
 
-  placeShip (ship) {
-    this.updateShipTiles(ship, MapTile.FILLED)
+  const placeShip = (ship) => {
+    updateShipTiles(ship, MapTile.FILLED)
   }
 
-  removeShip (ship) {
-    this.updateShipTiles(ship, MapTile.EMPTY)
+  const removeShip = (ship) => {
+    updateShipTiles(ship, MapTile.EMPTY)
   }
 
-  updateShipTiles (ship, tileState) {
+  const updateShipTiles = (ship, tileState) => {
     const { row, column, size, orientation } = ship
     if (column === undefined || row === undefined || orientation === undefined) throw new Error('Cannot add ship. Column row and/or orientation not set')
     console.log(`${row} ${column} ${size} ${orientation}`)
 
     for (let i = 0; i < size; i++) {
       if (orientation === ShipOrientation.HORIZONTAL) {
-        this.map[row][column + i] = tileState
+        map[row][column + i] = tileState
       } else if (orientation === ShipOrientation.VERTICAL) {
-        this.map[row + i][column] = tileState
+        map[row + i][column] = tileState
       } else {
         throw new Error(`Unable to set tile for ${row} ${column}  ${size} ${orientation}`)
       }
     }
   }
 
-  reset () {
+  const reset = () => {
     GRID.forEach(col => {
       GRID.forEach(row => {
-        this.map[col][row] = MapTile.EMPTY
+        map[col][row] = MapTile.EMPTY
       })
     })
   }
 
-  clearBlocked () {
+  const clearBlocked = () => {
     GRID.forEach(col => {
       GRID.forEach(row => {
-        if (this.map[col][row] === MapTile.BLOCKED) this.map[col][row] = MapTile.EMPTY
+        if (map[col][row] === MapTile.BLOCKED) {
+          map[col][row] = MapTile.EMPTY
+        }
       })
     })
   }
 
-  isLegal ({row, column, size, orientation }) {
+  const isLegal = ({row, column, size, orientation }) => {
     // check if grid exceeded
     // console.log(`isLegal ${column} ${row} ${size} ${orientation}`)
 
@@ -148,11 +151,11 @@ class BoardMap {
     if (orientation === ShipOrientation.HORIZONTAL) {
       if (row + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
-        if (this.map[row][column + i] !== MapTile.EMPTY) return false
+        if (map[row][column + i] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(row, column + i).forEach(({row, column}) => {
-          if (this.map[row][column] === MapTile.FILLED) {
+        getAdjacentCoordinates(row, column + i).forEach(({row, column}) => {
+          if (map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
         })
@@ -162,11 +165,11 @@ class BoardMap {
     if (orientation === ShipOrientation.VERTICAL) {
       if (column + size - 1 >= 10) return false
       for (let i = 0; i < size; i++) {
-        if (this.map[row + i][column] !== MapTile.EMPTY) return false
+        if (map[row + i][column] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(row + i, column).forEach(({row, column}) => {
-          if (this.map[row][column] === MapTile.FILLED) {
+        getAdjacentCoordinates(row + i, column).forEach(({row, column}) => {
+          if (map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
         })
@@ -176,7 +179,7 @@ class BoardMap {
     return isLegal
   }
 
-  getAdjacentCoordinates (row, column) {
+  const getAdjacentCoordinates = (row, column) => {
     const coordinates = []
     //
     // // top left
@@ -221,8 +224,12 @@ class BoardMap {
 
     return coordinates
   }
+
+  return {
+    prepareForGame,
+    placeShipsAtRandom,
+    reset,
+    strike,
+    showGrid
+  }
 }
-
-const boardmap = new BoardMap()
-
-export default boardmap

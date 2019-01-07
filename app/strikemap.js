@@ -7,18 +7,18 @@ export default ({
   victoryCallback
 }) => {
 
-  const strikeMap = []
+  const map = []
   let strikeCount = 0
 
   // initialize map
   GRID.forEach(col => {
-    strikeMap.push([])
-    GRID.forEach(() => strikeMap[col].push(MapTile.EMPTY))
+    map.push([])
+    GRID.forEach(() => map[col].push(MapTile.EMPTY))
   })
 
   const showMap = () => {
     let grid = ``
-    strikeMap.forEach(column => {
+    map.forEach(column => {
       column.forEach(row => {
         grid = grid + `${row} `
       })
@@ -28,23 +28,23 @@ export default ({
   }
 
   const attemptStrike = (row, column) => {
-    if (strikeMap[row][column] === MapTile.MISS) {
+    if (map[row][column] === MapTile.MISS) {
       throw new Error("Illegal state. Already struck with MISS")
     }
 
-    if (strikeMap[row][column] === MapTile.HIT) {
+    if (map[row][column] === MapTile.HIT) {
       throw new Error("Illegal state. Already struck with HIT")
     }
 
     const result = strikeCallback(row, column)
     if (result === true) {
-      strikeMap[row][column] = MapTile.HIT
+      map[row][column] = MapTile.HIT
       ++strikeCount;
       if (strikeCount === FLEET_SIZE) {
         victoryCallback()
       }
     } else if (result === false) {
-      strikeMap[row][column] = MapTile.MISS
+      map[row][column] = MapTile.MISS
     } else {
       throw new Error("Callback must return boolean")
     }

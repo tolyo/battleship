@@ -2,14 +2,19 @@
 // document.addEventListener('DOMContentLoaded', function () {
 //   window.BattleShipBoard = new BattleShipBoard('board')
 // })
-var fleetMap = require('BoardMap').default
+var fleetMap = require('fleetmap').default()
+
 var fleet = require('fleet').default
-var strikemap = require('strikemap').default({
+
+var strikeMap = require('strikemap').default({
   strikeCallback: function (y, x) {
     return false
+  },
+  victoryCallback: function () {
+    return
   }
 })
 
 window.fleetMap = fleetMap
 window.fleet = fleet
-window.strikemap = strikemap
+window.strikemap = strikeMap
