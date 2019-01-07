@@ -1,6 +1,6 @@
 import { GRID } from './constants'
 import { MapTile } from './state'
-import { FLEET_SIZE } from './Player'
+import { FLEET_SIZE } from './fleet'
 
 export default ({
   strikeCallback,

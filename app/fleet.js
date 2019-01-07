@@ -1,5 +1,7 @@
 import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './ship'
 
+export const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1
+
 // Fleet representation
 const Fleet = [
   // 1 carrier
