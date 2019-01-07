@@ -89,8 +89,8 @@ class BoardMap {
   }
 
   markAdjacent (ship) {
-    ship.getShipMapCoordinates().forEach(({ y, x }) => {
-      this.getAdjacentCoordinates(y, x).forEach(({ row, column }) => {
+    ship.getShipMapCoordinates().forEach(({ row, column }) => {
+      this.getAdjacentCoordinates(row, column).forEach(({ row, column }) => {
         if (this.map[row][column] !== MapTile.FILLED) {
           this.map[row][column] = MapTile.BLOCKED
         }

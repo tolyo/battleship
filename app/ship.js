@@ -62,18 +62,18 @@ export default class Ship {
     const coordinates = []
     for (let i = 0; i < this.size; i++) {
       if (this.orientation === ShipOrientation.HORIZONTAL) {
-        coordinates.push({ y: this.row, x: this.column + i })
+        coordinates.push({ row: this.row, column: this.column + i })
       } else {
-        coordinates.push({ y: this.row + i, x: this.column })
+        coordinates.push({ row: this.row + i, column: this.column })
       }
     }
     this.coordinates = coordinates
     return this.coordinates
   }
 
-  attemptStrike (column, row) {
-    this.getShipMapCoordinates().forEach(({ y, x }, index) => {
-      if (column === x && row === x) {
+  attemptStrike (targetRow, targetColumn) {
+    this.getShipMapCoordinates().forEach(({ row, column }, index) => {
+      if (targetRow === row && targetColumn === column) {
         this.gridState[index] = ShipGrid.KILLED
         this.strike()
       }
@@ -81,7 +81,15 @@ export default class Ship {
   }
 
   strike () {
+    if (this.health === ShipState.KILLED) {
+      throw new Error("Illegal state. Ship already killed")
+    }
     this.hitcount++
+    if (this.isKilled() === true) {
+      this.health = ShipState.KILLED
+    } else {
+      this.health = ShipState.WOUNDED
+    }
     return this
   }
 
