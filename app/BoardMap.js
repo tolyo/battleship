@@ -89,10 +89,10 @@ class BoardMap {
   }
 
   markAdjacent (ship) {
-    ship.getShipMapCoordinates().forEach(val => {
-      this.getAdjacentCoordinates(val.y, val.x).forEach(j => {
-        if (this.map[j.y][j.x] !== MapTile.FILLED) {
-          this.map[j.y][j.x] = MapTile.BLOCKED
+    ship.getShipMapCoordinates().forEach(({ y, x }) => {
+      this.getAdjacentCoordinates(y, x).forEach(({ row, column }) => {
+        if (this.map[row][column] !== MapTile.FILLED) {
+          this.map[row][column] = MapTile.BLOCKED
         }
       })
     })
@@ -151,8 +151,8 @@ class BoardMap {
         if (this.map[row][column + i] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(row, column + i).forEach(j => {
-          if (this.map[j.y][j.x] === MapTile.FILLED) {
+        this.getAdjacentCoordinates(row, column + i).forEach(({row, column}) => {
+          if (this.map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
         })
@@ -165,8 +165,8 @@ class BoardMap {
         if (this.map[row + i][column] !== MapTile.EMPTY) return false
 
         // prevent placement to adjacent ships
-        this.getAdjacentCoordinates(row + i, column).forEach(j => {
-          if (this.map[j.y][j.x] === MapTile.FILLED) {
+        this.getAdjacentCoordinates(row + i, column).forEach(({row, column}) => {
+          if (this.map[row][column] === MapTile.FILLED) {
             isLegal = false
           }
         })
@@ -176,47 +176,47 @@ class BoardMap {
     return isLegal
   }
 
-  getAdjacentCoordinates (y, x) {
+  getAdjacentCoordinates (row, column) {
     const coordinates = []
     //
     // // top left
-    if (y !== 0 && x !== 0) {
-      coordinates.push({ y: y - 1, x: x - 1 })
+    if (row !== 0 && column !== 0) {
+      coordinates.push({ row: row - 1, column: column - 1 })
     }
 
     // top mid
-    if (y !== 0) {
-      coordinates.push({ y: y - 1, x })
+    if (row !== 0) {
+      coordinates.push({ row: row - 1, column })
     }
 
     // top right
-    if (y !== 0 && x !== 9) {
-      coordinates.push({ y: y - 1, x: x + 1 })
+    if (row !== 0 && column !== 9) {
+      coordinates.push({ row: row - 1, column: column + 1 })
     }
 
     // mid left
-    if (x !== 0) {
-      coordinates.push({ y: y, x: x - 1 })
+    if (column !== 0) {
+      coordinates.push({ row: row, column: column - 1 })
     }
 
     // mid right
-    if (x !== 9) {
-      coordinates.push({ y: y, x: x + 1 })
+    if (column !== 9) {
+      coordinates.push({ row: row, column: column + 1 })
     }
 
     // bot left
-    if (y !== 9 && x !== 0) {
-      coordinates.push({ y: y + 1, x: x - 1 })
+    if (row !== 9 && column !== 0) {
+      coordinates.push({ row: row + 1, column: column - 1 })
     }
 
     // bot mid
-    if (y !== 9) {
-      coordinates.push({ y: y + 1, x: x })
+    if (row !== 9) {
+      coordinates.push({ row: row + 1, column: column })
     }
 
     // bot right
-    if (y !== 9 && x !== 9) {
-      coordinates.push({ y: y + 1, x: x + 1 })
+    if (row !== 9 && column !== 9) {
+      coordinates.push({ row: row + 1, column: column + 1 })
     }
 
     return coordinates

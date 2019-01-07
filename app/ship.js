@@ -62,9 +62,9 @@ export default class Ship {
     const coordinates = []
     for (let i = 0; i < this.size; i++) {
       if (this.orientation === ShipOrientation.HORIZONTAL) {
-        coordinates.push({ y: this.column, x: this.row + i })
+        coordinates.push({ y: this.row, x: this.column + i })
       } else {
-        coordinates.push({ y: this.column + i, x: this.row })
+        coordinates.push({ y: this.row + i, x: this.column })
       }
     }
     this.coordinates = coordinates
