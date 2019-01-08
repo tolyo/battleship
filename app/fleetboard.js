@@ -9,10 +9,14 @@ export default (() => {
     addTilesToBoard(elem, "fleetboard")
   }
 
-  const placeFleet = () => {
+  const clearPlacedGrids = () => {
     const htmlList = window.document.getElementsByClassName('placed')
     const elemList = Array.from(htmlList)
     elemList.forEach(elem => elem.classList.remove('placed'))
+  }
+
+  const placeFleet = () => {
+    clearPlacedGrids()
     Fleet.forEach(ship => placeShip(ship))
   }
 
@@ -26,8 +30,14 @@ export default (() => {
     })
   }
 
+  const reset = () => {
+    clearPlacedGrids()
+    Fleet.forEach(ship => ship.reset())
+  }
+
   return {
     createBoard,
-    placeFleet
+    placeFleet,
+    reset
   }
 })()

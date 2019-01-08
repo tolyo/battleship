@@ -18,9 +18,7 @@ const init = (config) => {
   // init board
   fleetboard.createBoard(id)
 
-  // init fleet
-
-  // init strikemap
+  // configure strikemap
   strikemap(strikeCallback, victoryCallback)
 
 }
@@ -30,7 +28,13 @@ const placeShipsAtRandom = () => {
   fleetboard.placeFleet()
 }
 
+const reset = () => {
+  fleetmap.reset()
+  fleetboard.reset()
+}
+
 export {
   init,
-  placeShipsAtRandom
+  placeShipsAtRandom,
+  reset
 }
