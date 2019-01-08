@@ -5,14 +5,15 @@ import { GRID } from './constants'
 import { getRandomShipCoordinate } from './utils'
 import Fleet from './fleet'
 
-export default () => {
+export default (() => {
   const map = []
 
   GRID.forEach(col => {
     map.push([])
     GRID.forEach(() => map[col].push(MapTile.EMPTY))
-  }
-  )
+  })
+
+  const getMap = () => Object.clone(map)
 
   const placeShipsAtRandom = () => {
     try {
@@ -231,6 +232,7 @@ export default () => {
     strike,
     showGrid,
     placeShip,
-    removeShip
+    removeShip,
+    getMap
   }
-}
+})()

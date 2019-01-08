@@ -4,6 +4,8 @@
  */
 import strikemap from './strikemap'
 import fleetboard from './fleetboard'
+import fleetmap from './fleetmap'
+import Fleet from './fleet'
 
 const init = (config) => {
 
@@ -23,4 +25,12 @@ const init = (config) => {
 
 }
 
-export { init }
+const placeShipsAtRandom = () => {
+  fleetmap.placeShipsAtRandom()
+  fleetboard.placeFleet()
+}
+
+export {
+  init,
+  placeShipsAtRandom
+}
