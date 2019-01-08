@@ -5,7 +5,9 @@
 import strikemap from './strikemap'
 import fleetboard from './fleetboard'
 import fleetmap from './fleetmap'
+import fleetdom from './fleetdom'
 import gameEngine, { GameState } from './game-engine'
+import { FLEET_BOARD_ID } from './constants'
 
 const init = (config) => {
   if (gameEngine.getState() === GameState.PLAYING) {
@@ -13,15 +15,13 @@ const init = (config) => {
   }
   const noop = () => {}
 
-  const id = config.id || 'fleetBoard'
   const strikeCallback = config.strikeCallback || noop
   const victoryCallback = config.victoryCallback || noop
 
   // init board
-  fleetboard.createBoard(id)
+  fleetboard.createBoard(FLEET_BOARD_ID)
 
   gameEngine.init()
-
   // configure strikemap
   strikemap(strikeCallback, victoryCallback)
 }
@@ -32,6 +32,7 @@ const placeShipsAtRandom = () => {
   }
   fleetmap.placeShipsAtRandom()
   fleetboard.placeFleet()
+  fleetdom.init()
 }
 
 const reset = () => {

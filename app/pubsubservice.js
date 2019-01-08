@@ -1,6 +1,6 @@
 
 export default (() => {
-  const cache = {}
+  let cache = {}
 
   const subscribe = (topic, callback) => {
     if (!cache[topic]) {
@@ -29,9 +29,14 @@ export default (() => {
     }
   }
 
+  const reset = () => {
+    cache = {}
+  }
+
   return {
     publish,
     subscribe,
-    unsubscribe
+    unsubscribe,
+    reset
   }
 })()

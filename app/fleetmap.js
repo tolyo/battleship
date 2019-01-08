@@ -13,7 +13,11 @@ export default (() => {
     GRID.forEach(() => map[col].push(MapTile.EMPTY))
   })
 
-  const getMap = () => Object.clone(map)
+  /**
+   * Return a copy of a map of grid elements
+   * @return {*[]}
+   */
+  const getMap = () => map.splice(0)
 
   const placeShipsAtRandom = () => {
     try {

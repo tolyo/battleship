@@ -19,6 +19,7 @@ export default class Ship {
     this.hitcount = 0
     this.size = size
     this.domState = [] // reference to dom elements occupied by a ship
+    this.orientation = ShipOrientation.HORIZONTAL
   }
 
   reset () {

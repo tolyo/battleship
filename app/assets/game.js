@@ -22,5 +22,4 @@
 var battleship = require('battleship')
 
 battleship.init({
-  id: 'fleetboard'
 })

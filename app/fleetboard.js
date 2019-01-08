@@ -21,13 +21,20 @@ export default (() => {
   }
 
   /**
+   * Marks
    * @param {Ship} ship to place
    */
   const placeShip = (ship) => {
-    ship.getShipMapCoordinates().forEach(({ row, column }) => {
-      const elem = window.document.getElementById(`fleetboard-${row}-${column}`)
-      elem.classList.add('placed')
-    })
+    ship
+      .getShipMapCoordinates()
+      .forEach(({ row, column }) => {
+        applyClassToGrid(row, column, 'placed')
+      })
+  }
+
+  const applyClassToGrid = (row, column, className) => {
+    const elem = window.document.getElementById(`fleetboard-${row}-${column}`)
+    elem.classList.add(className)
   }
 
   const reset = () => {
