@@ -1,5 +1,5 @@
 
-const GameState = Object.freeze({
+export const GameState = Object.freeze({
   PREPARING: 0,
   PLAYING: 1,
   ENDED: 2
@@ -9,9 +9,11 @@ const GameState = Object.freeze({
  * @function gameEngine
  * @return {{nextState: function()}}
  */
-export default () => {
+export default (() => {
 
   let gamestate = GameState.PREPARING
+
+  const getState = () => gamestate
 
   const nextState = () => {
     switch (gamestate) {
@@ -24,8 +26,14 @@ export default () => {
     }
   }
 
-  return {
-    nextState
+  const init = () => {
+    gamestate = GameState.PREPARING
   }
 
-}
+  return {
+    getState,
+    nextState,
+    init
+  }
+
+})()
