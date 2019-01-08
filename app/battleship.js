@@ -9,11 +9,11 @@ import gameEngine, { GameState } from './game-engine'
 
 const init = (config) => {
   if (gameEngine.getState() === GameState.PLAYING) {
-    throw new Error("Illegal state")
+    throw new Error('Illegal state')
   }
   const noop = () => {}
 
-  const id = config.id || "fleetBoard"
+  const id = config.id || 'fleetBoard'
   const strikeCallback = config.strikeCallback || noop
   const victoryCallback = config.victoryCallback || noop
 
@@ -24,12 +24,11 @@ const init = (config) => {
 
   // configure strikemap
   strikemap(strikeCallback, victoryCallback)
-
 }
 
 const placeShipsAtRandom = () => {
   if (gameEngine.getState() === GameState.PLAYING) {
-    throw new Error("Illegal state")
+    throw new Error('Illegal state')
   }
   fleetmap.placeShipsAtRandom()
   fleetboard.placeFleet()
@@ -37,7 +36,7 @@ const placeShipsAtRandom = () => {
 
 const reset = () => {
   if (gameEngine.getState() === GameState.PLAYING) {
-    throw new Error("Illegal state")
+    throw new Error('Illegal state')
   }
   fleetmap.reset()
   fleetboard.reset()

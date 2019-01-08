@@ -10,7 +10,6 @@ export const GameState = Object.freeze({
  * @return {{nextState: function()}}
  */
 export default (() => {
-
   let gamestate = GameState.PREPARING
 
   const getState = () => gamestate
@@ -35,5 +34,4 @@ export default (() => {
     nextState,
     init
   }
-
 })()

@@ -1,4 +1,4 @@
-import { GridSquare, State } from './state'
+import { State } from './state'
 import { getRandomShipCoordinate } from './utils'
 import boardmap from './fleetmap'
 import { Fleet } from './fleet'
@@ -73,8 +73,6 @@ export default class BattleShipBoard {
       tile.onclick = null
     }
   }
-
-
 
   placeShipsAtRandom () {
     Fleet.forEach(ship => {

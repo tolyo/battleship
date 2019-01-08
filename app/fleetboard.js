@@ -3,10 +3,10 @@ import Fleet from './fleet'
 
 export default (() => {
   const createBoard = (id) => {
-    if (id === undefined) throw new Error("board id not provided")
+    if (id === undefined) throw new Error('board id not provided')
     const elem = window.document.getElementById(id)
-    if (elem === null) throw new Error("board element not found")
-    addTilesToBoard(elem, "fleetboard")
+    if (elem === null) throw new Error('board element not found')
+    addTilesToBoard(elem, 'fleetboard')
   }
 
   const clearPlacedGrids = () => {

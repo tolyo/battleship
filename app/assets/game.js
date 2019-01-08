@@ -19,8 +19,8 @@
 // window.fleet = fleet
 // window.strikemap = strikeMap
 
-var battleship = require("battleship")
+var battleship = require('battleship')
 
 battleship.init({
-  id: "fleetboard"
+  id: 'fleetboard'
 })
