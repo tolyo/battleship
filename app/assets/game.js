@@ -1,20 +1,26 @@
+// //
+// // document.addEventListener('DOMContentLoaded', function () {
+// //   window.BattleShipBoard = new BattleShipBoard('board')
+// // })
+// var fleetMap = require('fleetmap').default()
 //
-// document.addEventListener('DOMContentLoaded', function () {
-//   window.BattleShipBoard = new BattleShipBoard('board')
+// var fleet = require('fleet').default
+//
+// var strikeMap = require('strikemap').default({
+//   strikeCallback: function (y, x) {
+//     return false
+//   },
+//   victoryCallback: function () {
+//
+//   }
 // })
-var fleetMap = require('fleetmap').default()
+//
+// window.fleetMap = fleetMap
+// window.fleet = fleet
+// window.strikemap = strikeMap
 
-var fleet = require('fleet').default
+var battleship = require("battleship")
 
-var strikeMap = require('strikemap').default({
-  strikeCallback: function (y, x) {
-    return false
-  },
-  victoryCallback: function () {
-
-  }
+battleship.init({
+  id: "fleetboard"
 })
-
-window.fleetMap = fleetMap
-window.fleet = fleet
-window.strikemap = strikeMap
