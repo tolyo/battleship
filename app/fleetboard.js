@@ -39,7 +39,7 @@ export default (() => {
 
   const reset = () => {
     clearPlacedGrids()
-    Fleet.forEach(ship => ship.reset())
+    Fleet.forEach(ship => ship.reset()) // reset every chpm
   }
 
   return {

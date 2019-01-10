@@ -18,7 +18,6 @@ export default class Ship {
 
     this.hitcount = 0
     this.size = size
-    this.domState = [] // reference to dom elements occupied by a ship
     this.orientation = ShipOrientation.HORIZONTAL
   }
 
@@ -29,7 +28,6 @@ export default class Ship {
       this.gridState[index] = ShipGrid.ALIVE
     })
     this.hitcount = 0
-    this.domState = [] // reference to dom elements occupied by a ship
     return this
   }
 

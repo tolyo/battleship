@@ -39,8 +39,9 @@ const reset = () => {
   if (gameEngine.getState() === GameState.PLAYING) {
     throw new Error('Illegal state')
   }
-  fleetmap.reset()
-  fleetboard.reset()
+  fleetmap.reset()    // clear the grid
+  fleetboard.reset()  // clear the board
+  fleetdom.reset()    // remove ship elements
 }
 
 export {
