@@ -1,8 +1,9 @@
 import Fleet from './fleet'
-import { FLEET_BOARD_ID, GRID_SIZE } from './constants'
+import { BOARD_EVENTS, FLEET_BOARD_ID, GRID_SIZE } from './constants'
 import { ShipOrientation } from './ship'
 import { GameState } from './game-engine'
 import gameEngine from './game-engine'
+import pubsub from './pubsubservice'
 
 export default (() => {
 
@@ -77,11 +78,15 @@ export default (() => {
     shiftX = e.pageX - shipCoordinates.left
     shiftY = e.pageY - shipCoordinates.top
     shipDom.classList.add('dragged')
+    // remove from grid
+    pubsub.publish(BOARD_EVENTS.REMOVE_SHIP, [shipDom])
   }
 
   const onmousemove = (e, shipDom) => {
     shipDom.style.left = e.pageX - shiftX + 'px'
     shipDom.style.top = e.pageY - shiftY + 'px'
+
+    // highlight potential grid elements
   }
 
   /**

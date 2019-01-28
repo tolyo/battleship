@@ -6,6 +6,10 @@ export const TOPIC = {
   STRIKE_RESPONSE: 'STRIKE_RESPONSE'
 }
 
+export const BOARD_EVENTS = {
+  REMOVE_SHIP: 'REMOVE_SHIP'
+}
+
 export const GAME_STATE = {
   LOADING: 1,
   STARTED: 2,

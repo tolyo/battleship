@@ -1,5 +1,7 @@
 import { addTilesToBoard } from './boardutils'
 import Fleet from './fleet'
+import pubsub from './pubsubservice'
+import { BOARD_EVENTS } from './constants'
 
 export default (() => {
   const createBoard = (id) => {
@@ -7,6 +9,11 @@ export default (() => {
     const elem = window.document.getElementById(id)
     if (elem === null) throw new Error('board element not found')
     addTilesToBoard(elem, 'fleetboard')
+
+    pubsub.subscribe(BOARD_EVENTS.REMOVE_SHIP, shipDom =>  {
+      removeShip(Fleet[parseInt(shipDom.id)])
+    })
+
   }
 
   const clearPlacedGrids = () => {
@@ -32,9 +39,26 @@ export default (() => {
       })
   }
 
+  /**
+   * Marks
+   * @param {Ship} ship to place
+   */
+  const removeShip = (ship) => {
+    ship
+      .getShipMapCoordinates()
+      .forEach(({ row, column }) => {
+        removeClassFromGrid(row, column, 'placed')
+      })
+  }
+
   const applyClassToGrid = (row, column, className) => {
     const elem = window.document.getElementById(`fleetboard-${row}-${column}`)
     elem.classList.add(className)
+  }
+
+  const removeClassFromGrid = (row, column, className) => {
+    const elem = window.document.getElementById(`fleetboard-${row}-${column}`)
+    elem.classList.remove(className)
   }
 
   const reset = () => {

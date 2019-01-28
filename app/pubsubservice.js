@@ -13,7 +13,7 @@ export default (() => {
   const publish = (topic, args) => {
     if (cache[topic]) {
       cache[topic].forEach(callback => {
-        callback.apply(null, ...(args || []))
+        callback(...(args || []))
       })
     }
   }
