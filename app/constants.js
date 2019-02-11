@@ -1,3 +1,8 @@
+export const GameState = Object.freeze({
+  PREPARING: 0,
+  PLAYING: 1,
+  ENDED: 2
+})
 
 export const TOPIC = {
   HIT: 'HIT',
@@ -20,4 +25,4 @@ export const GRID = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 export const GRID_SIZE = 30
 
-export const FLEET_BOARD_ID = "fleetboard"
+export const FLEET_BOARD_ID = 'fleetboard'

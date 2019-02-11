@@ -10,10 +10,9 @@ export default (() => {
     if (elem === null) throw new Error('board element not found')
     addTilesToBoard(elem, 'fleetboard')
 
-    pubsub.subscribe(BOARD_EVENTS.REMOVE_SHIP, shipDom =>  {
+    pubsub.subscribe(BOARD_EVENTS.REMOVE_SHIP, shipDom => {
       removeShip(Fleet[parseInt(shipDom.id)])
     })
-
   }
 
   const clearPlacedGrids = () => {
@@ -31,7 +30,7 @@ export default (() => {
    * Marks
    * @param {Ship} ship to place
    */
-  const placeShip = (ship) => {
+  const placeShip = ship => {
     ship
       .getShipMapCoordinates()
       .forEach(({ row, column }) => {
@@ -43,7 +42,7 @@ export default (() => {
    * Marks
    * @param {Ship} ship to place
    */
-  const removeShip = (ship) => {
+  const removeShip = ship => {
     ship
       .getShipMapCoordinates()
       .forEach(({ row, column }) => {

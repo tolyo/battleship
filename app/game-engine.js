@@ -1,14 +1,9 @@
-
-export const GameState = Object.freeze({
-  PREPARING: 0,
-  PLAYING: 1,
-  ENDED: 2
-})
-
 /**
  * @function gameEngine
  * @return {{nextState: function()}}
  */
+import { GameState } from './constants'
+
 export default (() => {
   let gamestate = GameState.PREPARING
 

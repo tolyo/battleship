@@ -2,18 +2,18 @@
 export default (() => {
   let cache = {}
 
-  const subscribe = (topic, callback) => {
+  const subscribe = (topic, cb) => {
     if (!cache[topic]) {
       cache[topic] = []
     }
-    cache[topic].push(callback)
-    return [topic, callback]
+    cache[topic].push(cb)
+    return [topic, cb]
   }
 
   const publish = (topic, args) => {
     if (cache[topic]) {
-      cache[topic].forEach(callback => {
-        callback(...(args || []))
+      cache[topic].forEach(cb => {
+        cb.apply(null, args || [])
       })
     }
   }

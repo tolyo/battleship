@@ -1,12 +1,10 @@
 import Fleet from './fleet'
-import { BOARD_EVENTS, FLEET_BOARD_ID, GRID_SIZE } from './constants'
+import { BOARD_EVENTS, FLEET_BOARD_ID, GameState, GRID_SIZE } from './constants'
 import { ShipOrientation } from './ship'
-import { GameState } from './game-engine'
 import gameEngine from './game-engine'
 import pubsub from './pubsubservice'
 
 export default (() => {
-
   const init = () => {
     reset()
     const board = document.getElementById(FLEET_BOARD_ID)
@@ -19,8 +17,9 @@ export default (() => {
 
   const reset = () => {
     const htmlList = window.document.getElementsByClassName('ship')
-    const elemtList = Array.from(htmlList)
-    elemtList.forEach(elem => elem.parentNode.removeChild(elem))
+    Array
+      .from(htmlList)
+      .forEach(elem => elem.parentNode.removeChild(elem))
   }
 
   /**
@@ -55,12 +54,13 @@ export default (() => {
    * Drag control variables
    * @type {number}
    */
-  let shiftX = 0
-  let shiftY = 0
+  let shiftX
+  let shiftY
   let dragged = false
 
   /**
    * @param {MouseEvent} e
+   * @param {HTMLElement} shipDom
    */
   const onmousedown = (e, shipDom) => {
     if (dragged === true) return // one item at a time
@@ -82,16 +82,16 @@ export default (() => {
     pubsub.publish(BOARD_EVENTS.REMOVE_SHIP, [shipDom])
   }
 
-  const onmousemove = (e, shipDom) => {
-    shipDom.style.left = e.pageX - shiftX + 'px'
-    shipDom.style.top = e.pageY - shiftY + 'px'
+  const fleetBoardElem = document.getElementById(FLEET_BOARD_ID)
 
-    // highlight potential grid elements
+  const onmousemove = (e, shipDom) => {
+    shipDom.style.left = Math.floor((e.pageX - shiftX) / GRID_SIZE) * GRID_SIZE + fleetBoardElem.offsetLeft + 'px'
+    shipDom.style.top = Math.floor((e.pageY - shiftY) / GRID_SIZE) * GRID_SIZE + fleetBoardElem.offsetTop + 'px'
   }
 
   /**
    *
-   * @param {} e
+   * @param {Event} e
    * @param {HTMLElement} shipDom
    */
   const onmouseup = (e, shipDom) => {
@@ -132,5 +132,4 @@ export default (() => {
     init,
     reset
   }
-
 })()

@@ -1,14 +1,14 @@
-/**
- *
- * @param {object} config - game configuration
- */
 import strikemap from './strikemap'
 import fleetboard from './fleetboard'
 import fleetmap from './fleetmap'
 import fleetdom from './fleetdom'
-import gameEngine, { GameState } from './game-engine'
-import { FLEET_BOARD_ID } from './constants'
+import gameEngine from './game-engine'
+import { FLEET_BOARD_ID, GameState } from './constants'
 
+/**
+ *
+ * @param {object} config - game configuration
+ */
 const init = (config) => {
   if (gameEngine.getState() === GameState.PLAYING) {
     throw new Error('Illegal state')
@@ -39,9 +39,9 @@ const reset = () => {
   if (gameEngine.getState() === GameState.PLAYING) {
     throw new Error('Illegal state')
   }
-  fleetmap.reset()    // clear the grid
-  fleetboard.reset()  // clear the board
-  fleetdom.reset()    // remove ship elements
+  fleetmap.reset() // clear the grid
+  fleetboard.reset() // clear the board
+  fleetdom.reset() // remove ship elements
 }
 
 export {
