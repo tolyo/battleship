@@ -6,9 +6,13 @@ exports.files = {
       'app.js': /^app/
     }
   },
-  stylesheets: { joinTo: 'app.css' }
-}
-
-exports.plugins = {
-  babel: { presets: ['latest'] }
+  stylesheets: { joinTo: 'app.css' },
+  paths: {
+    watched: ['app', 'dist'],
+  },
+  plugins: {
+    babel: {
+      ignore: [/vendor/]
+    }
+  }
 }

@@ -6,18 +6,28 @@
   "version": "0.0.1",
   "repository": "",
   "scripts": {
-    "start": "brunch watch --server",
-    "build": "brunch build --production",
-    "lint": "standard --fix"
+    "dev": "concurrently \"tsc -w\" \"brunch watch --server\"",
+    "check": "gts check",
+    "clean": "gts clean",
+    "compile": "tsc -p .",
+    "fix": "gts fix",
+    "prepare": "npm run compile",
+    "pretest": "npm run compile",
+    "posttest": "npm run check"
   },
   "dependencies": {},
   "devDependencies": {
-    "auto-reload-brunch": "^2",
-    "babel-brunch": "~6.0",
-    "babel-preset-latest": "^6",
-    "brunch": "^2.10.17",
-    "clean-css-brunch": "^2",
-    "standard": "^12.0.1",
-    "uglify-js-brunch": "^2"
+    "@types/node": "^13.1.4",
+    "auto-reload-brunch": "^2.7.1",
+    "babel-brunch": "^7.0.1",
+    "babel-preset-latest": "^6.24.1",
+    "brunch": "^3.0.0",
+    "concurrently": "^5.0.2",
+    "css-brunch": "^2.10.0",
+    "gts": "^1.1.2",
+    "html-pages-brunch": "^2.8.0",
+    "javascript-brunch": "^2.10.0",
+    "typescript": "^3.7.4",
+    "uglify-js-brunch": "^2.10.0"
   }
 }
