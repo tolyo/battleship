@@ -1,4 +1,5 @@
-#fleetboard, #hitboard {
+#fleetboard,
+#hitboard {
   border: 0.5px solid #2d6ca0;
   width: 300px;
   height: 300px;
@@ -9,7 +10,8 @@
   cursor: pointer;
 }
 
-#fleetboard.disabled, #hitboard.disabled {
+#fleetboard.disabled,
+#hitboard.disabled {
   opacity: 0.8;
   cursor: default;
 }
@@ -22,7 +24,8 @@
   float: left;
 }
 
-.fleetboard-tile, .hitboard-tile {
+.fleetboard-tile,
+.hitboard-tile {
   background-color: #4ba9ff;
   float: left;
   position: relative;
@@ -40,38 +43,42 @@
   border: 2px solid #fff757;
 }
 
-.fleetboard-tile.placed,.fleetboard-tile.placed:hover {
-  background-color: #C0CC28;
+.fleetboard-tile.placed,
+.fleetboard-tile.placed:hover {
+  background-color: #c0cc28;
   border: 1px solid #2d6ca0;
 }
 
-.fleetboard-tile.hit,.fleetboard-tile.hit:hover {
+.fleetboard-tile.hit,
+.fleetboard-tile.hit:hover {
   background-color: #f4363f;
   border: 1px solid #2d6ca0;
 }
 
-.fleetboard-tile.miss, .fleetboard-tile.miss:hover {
+.fleetboard-tile.miss,
+.fleetboard-tile.miss:hover {
   background-color: #a9a9a9;
   border: 1px solid #2d6ca0;
 }
 
-.hitboard-tile.hit, .hitboard-tile.hit:hover {
+.hitboard-tile.hit,
+.hitboard-tile.hit:hover {
   background-color: #f4363f;
   border: 1px solid #2d6ca0;
 }
 
-.hitboard-tile.miss, .hitboard-tile.miss:hover {
+.hitboard-tile.miss,
+.hitboard-tile.miss:hover {
   background-color: #a9a9a9;
   border: 1px solid #2d6ca0;
 }
-
 
 .clear-button {
   margin-top: 10px;
-  -webkit-user-select: none;  /* Provent button highlighinng Chrome all / Safari all */
-  -moz-user-select: none;     /* Firefox all */
-  -ms-user-select: none;      /* IE 10+ */
-  user-select: none;          /* Likely future */
+  -webkit-user-select: none; /* Provent button highlighinng Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Likely future */
 }
 
 .clearfix {
@@ -104,14 +111,13 @@
   cursor: pointer;
 }
 
-
 .ship.dragged {
   opacity: 0.6;
   border: 2px solid #02ff00;
 }
 
 .ship.error {
-  animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   border: #f4363f 2px solid;
   transform: translate3d(0, 0, 0);
   backface-visibility: hidden;

@@ -1,14 +1,16 @@
-
-import { ShipOrientation } from './ship'
+import {ShipOrientation} from './ship';
 
 export const getRandomShipCoordinate = () => {
   return {
     row: getRandomTile(),
     column: getRandomTile(),
-    orientation: getRandomOrientation()
-  }
-}
+    orientation: getRandomOrientation(),
+  };
+};
 
-const getRandomTile = () => Math.floor(Math.random() * 9)
+const getRandomTile = () => Math.floor(Math.random() * 9);
 
-export const getRandomOrientation = () => [ShipOrientation.VERTICAL, ShipOrientation.HORIZONTAL][Math.round(Math.random())]
+export const getRandomOrientation = () =>
+  [ShipOrientation.VERTICAL, ShipOrientation.HORIZONTAL][
+    Math.round(Math.random())
+  ];

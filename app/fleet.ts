@@ -1,6 +1,6 @@
-import { Carrier, Cruiser, Destroyer, TorpedoBoat } from './ship'
+import {Carrier, Cruiser, Destroyer, TorpedoBoat} from './ship';
 
-export const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1
+export const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1;
 
 // Fleet representation
 const Fleet = [
@@ -20,7 +20,7 @@ const Fleet = [
   new TorpedoBoat('6'),
   new TorpedoBoat('7'),
   new TorpedoBoat('8'),
-  new TorpedoBoat('9')
-]
+  new TorpedoBoat('9'),
+];
 
-export default Fleet
+export default Fleet;
