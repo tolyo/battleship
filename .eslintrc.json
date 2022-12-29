@@ -1,3 +1,10 @@
 {
-  "extends": "./node_modules/gts/"
+  "extends": "./node_modules/gts/",
+  "overrides": [
+    {
+      "rules": {
+        "node/no-unpublished-import": "off"
+      }
+    }
+  ]
 }

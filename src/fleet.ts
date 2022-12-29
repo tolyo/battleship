@@ -1,4 +1,4 @@
-import {Carrier, Cruiser, Destroyer, TorpedoBoat} from './ship';
+import {Carrier, Cruiser, Destroyer, TorpedoBoat} from '../src/ship';
 
 export const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1;
 

@@ -5,23 +5,23 @@
 import {GameState} from './constants';
 
 export default (() => {
-  let gamestate = GameState.PREPARING;
+  let gamestate: GameState = GameState.Preparing;
 
   const getState = () => gamestate;
 
   const nextState = () => {
     switch (gamestate) {
-      case GameState.PREPARING:
-        gamestate = GameState.PLAYING;
+      case GameState.Preparing:
+        gamestate = GameState.Playing;
         break;
-      case GameState.PLAYING:
-        gamestate = GameState.ENDED;
+      case GameState.Playing:
+        gamestate = GameState.Ended;
         break;
     }
   };
 
   const init = () => {
-    gamestate = GameState.PREPARING;
+    gamestate = GameState.Preparing;
   };
 
   return {

@@ -20,7 +20,7 @@ abstract class Ship {
   private hitcount: number;
   private size: number;
   private orientation: ShipOrientation;
-  protected gridState: GridHealth[] = [] as GridHealth[];
+  protected gridState: GridHealth[] = [];
 
   constructor(id: string, size: number) {
     this.id = id;
@@ -65,28 +65,28 @@ abstract class Ship {
   }
 
   getShipMapCoordinates() {
-    // if (this.coordinates !== undefined) {
-    //   return this.coordinates
-    // }
-    // const coordinates = []
-    // for (let i = 0; i < this.size; i++) {
-    //   if (this.orientation === ShipOrientation.HORIZONTAL) {
-    //     coordinates.push({ row: this.row, column: this.column + i })
-    //   } else {
-    //     coordinates.push({ row: this.row + i, column: this.column })
-    //   }
-    // }
-    // this.coordinates = coordinates
-    // return this.coordinates
+    if (this.coordinates !== undefined) {
+      return this.coordinates
+    }
+    const coordinates = []
+    for (let i = 0; i < this.size; i++) {
+      if (this.orientation === ShipOrientation.HORIZONTAL) {
+        coordinates.push({ row: this.row, column: this.column + i })
+      } else {
+        coordinates.push({ row: this.row + i, column: this.column })
+      }
+    }
+    this.coordinates = coordinates
+    return this.coordinates
   }
 
   attemptStrike(targetRow: number, targetColumn: number) {
-    // this.getShipMapCoordinates().forEach(({ row, column }, index) => {
-    //   if (targetRow === row && targetColumn === column) {
-    //     this.gridState[index] = GridHealth.KILLED
-    //     this.strike()
-    //   }
-    // })
+    this.getShipMapCoordinates().forEach(({ row, column }, index) => {
+      if (targetRow === row && targetColumn === column) {
+        this.gridState[index] = GridHealth.KILLED
+        this.strike()
+      }
+    })
   }
 
   strike(): void {
