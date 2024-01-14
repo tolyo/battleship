@@ -1,40 +1,28 @@
 {
-  "name": "my-webpack-project",
-  "description": "My webpack project",
   "private": true,
-  "author": "Anatoly Ostrovsky",
-  "version": "1.0.0",
-  "repository": "",
   "scripts": {
-    "check": "gts check",
-    "clean": "gts clean",
-    "compile": "tsc",
-    "fix": "gts fix",
-    "prepare": "npm run compile",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint",
-    "build": "webpack --mode=production --node-env=production",
-    "build:dev": "webpack --mode=development",
-    "build:prod": "webpack --mode=production --node-env=production",
-    "watch": "webpack --watch",
-    "lint": "gts lint",
-    "prettier": "prettier --write ."
+    "browsersync": "browser-sync start --files './' --ignore './node_modules' --no-inject-changes --reload-delay 1000",
+    "typecheck": "./node_modules/.bin/tsc",
+    "lint": "./node_modules/.bin/eslint ./ --fix",
+    "format": "./node_modules/.bin/prettier ./ --write",
+    "playwright": "./node_modules/.bin/playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.29.1",
-    "@types/node": "^14.11.2",
-    "@webpack-cli/generators": "^3.0.1",
-    "concurrently": "^7.6.0",
-    "gts": "^3.1.1",
-    "html-webpack-plugin": "^5.5.0",
-    "prettier": "2.8.1",
-    "ts-loader": "^9.4.2",
-    "typescript": "~4.7.0",
-    "webpack": "^5.76.0",
-    "webpack-cli": "^5.0.1",
-    "workbox-webpack-plugin": "^6.5.4"
-  },
-  "dependencies": {
-    "lit": "^2.5.0"
+    "@playwright/test": "^1.40.1",
+    "@types/alpinejs": "^3.13.1",
+    "@types/node": "^20.6.0",
+    "@types/phoenix": "latest",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@uirouter/core": "^6.1.0",
+    "alpinejs": "^3.13.0",
+    "browser-sync": "^3.0.2",
+    "eslint": "^8.49.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-import": "^2.28.1",
+    "playwright": "^1.39.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.3.3",
+    "web": "^0.0.2"
   }
 }

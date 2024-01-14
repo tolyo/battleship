@@ -2,26 +2,27 @@
  * @function gameEngine
  * @return {{nextState: function()}}
  */
-import {GameState} from './constants';
-
 export default (() => {
-  let gamestate: GameState = GameState.Preparing;
+  /**
+   * @type {"PREPARING" | "PLAYING" | "ENDED"}
+   */
+  let gamestate = "PREPARING";
 
   const getState = () => gamestate;
 
   const nextState = () => {
     switch (gamestate) {
-      case GameState.Preparing:
-        gamestate = GameState.Playing;
+      case "PREPARING":
+        gamestate = "PLAYING";
         break;
-      case GameState.Playing:
-        gamestate = GameState.Ended;
+      case "PLAYING":
+        gamestate = "ENDED";
         break;
     }
   };
 
   const init = () => {
-    gamestate = GameState.Preparing;
+    gamestate = "PREPARING";
   };
 
   return {
