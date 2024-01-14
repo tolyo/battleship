@@ -1,33 +1,25 @@
-/**
- * @function gameEngine
- * @return {{nextState: function()}}
- */
-export default (() => {
-  /**
-   * @type {"PREPARING" | "PLAYING" | "ENDED"}
-   */
-  let gamestate = "PREPARING";
+export default class GameState {
+  constructor() {
+    /**
+     * @type {"PREPARING" | "PLAYING" | "ENDED"}
+     */
+    this.gamestate = 'PREPARING';
+  }
 
-  const getState = () => gamestate;
-
-  const nextState = () => {
-    switch (gamestate) {
-      case "PREPARING":
-        gamestate = "PLAYING";
+  nextState() {
+    switch (this.gamestate) {
+      case 'PREPARING':
+        this.gamestate = 'PLAYING';
         break;
-      case "PLAYING":
-        gamestate = "ENDED";
+      case 'PLAYING':
+        this.gamestate = 'ENDED';
         break;
+      default:
+        throw new Error('Game already ended');
     }
-  };
+  }
 
-  const init = () => {
-    gamestate = "PREPARING";
-  };
-
-  return {
-    getState,
-    nextState,
-    init,
-  };
-})();
+  init() {
+    this.gamestate = 'PREPARING';
+  }
+}

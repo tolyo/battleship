@@ -1,26 +1,24 @@
-import { Carrier, Cruiser, Destroyer, TorpedoBoat } from "./ship";
-
-export const FLEET_SIZE = 4 + 3 * 2 + 2 * 3 + 4 * 1;
-
+import Ship from './ship';
 // Fleet representation
-const Fleet = [
-  // 1 carrier
-  new Carrier("0"),
+export const Fleet = [
+  new Ship('0', 4),
 
-  // // 2 cruisers
-  new Cruiser("1"),
-  new Cruiser("2"),
-  //
-  // // 3 destroyers
-  new Destroyer("3"),
-  new Destroyer("4"),
-  new Destroyer("5"),
+  new Ship('1', 3),
+  new Ship('2', 3),
 
-  // // 4 torpedo boats
-  new TorpedoBoat("6"),
-  new TorpedoBoat("7"),
-  new TorpedoBoat("8"),
-  new TorpedoBoat("9"),
+  // 3 destroyers
+  new Ship('3', 2),
+  new Ship('4', 2),
+  new Ship('5', 3),
+
+  // 4 torpedo boats
+  new Ship('6', 2),
+  new Ship('7', 2),
+  new Ship('8', 2),
+  new Ship('9', 2),
 ];
 
-export default Fleet;
+export const FLEET_SIZE = Fleet.map((x) => x.size).reduce(
+  (acc, a) => acc + a,
+  0
+);

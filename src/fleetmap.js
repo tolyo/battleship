@@ -1,6 +1,6 @@
-import { GRID } from "./constants";
-import Fleet from "./fleet";
-import { MapTile } from "./strikemap";
+import { GRID } from './constants';
+import { Fleet } from './fleet';
+import { MapTile } from './strikemap';
 
 const map = [];
 
@@ -28,7 +28,6 @@ export function placeShipsAtRandom() {
 export function tryPlacingShips() {
   reset();
   Fleet.forEach((ship) => {
-    console.log(showGrid());
     ship.setLocation(getRandomShipCoordinate());
     let count = 10000; // safety to prevent runaway cycle
     while (isLegal(ship) === false) {
@@ -36,7 +35,7 @@ export function tryPlacingShips() {
       count--;
       if (count === 0) {
         console.log(showGrid());
-        throw new Error("Count exceeded");
+        throw new Error('Count exceeded');
       }
     }
     // attach ship only when valid location is found
@@ -72,20 +71,18 @@ export function add(ship) {
 function strike(column, row) {
   // sanity checks
   if (map[column][row] === MapTile.HIT) {
-    throw new Error("Field in illegal state BLOCKED");
+    throw new Error('Field in illegal state BLOCKED');
   } else if (map[column][row] === MapTile.BLOCKED) {
-    throw new Error("Field in illegal state BLOCKED");
+    throw new Error('Field in illegal state BLOCKED');
   } else if (map[column][row] === MapTile.MISS) {
-    throw new Error("Field in illegal state MISS");
+    throw new Error('Field in illegal state MISS');
   }
 
   //
   if (map[column][row] === MapTile.FILLED) {
-    console.log("HIT");
     map[column][row] = MapTile.HIT;
     return true;
   }
-  console.log("MISS");
   map[column][row] = MapTile.MISS;
   return false;
 }
@@ -111,17 +108,16 @@ function removeShip(ship) {
 function updateShipTiles(ship, tileState) {
   const { row, column, size, orientation } = ship;
   if (column === undefined || row === undefined || orientation === undefined)
-    throw new Error("Cannot add ship. Column row and/or orientation not set");
-  console.log(`${row} ${column} ${size} ${orientation}`);
+    throw new Error('Cannot add ship. Column row and/or orientation not set');
 
   for (let i = 0; i < size; i++) {
-    if (orientation === "HORIZONTAL") {
+    if (orientation === 'HORIZONTAL') {
       map[row][column + i] = tileState;
-    } else if (orientation === "VERTICAL") {
+    } else if (orientation === 'VERTICAL') {
       map[row + i][column] = tileState;
     } else {
       throw new Error(
-        `Unable to set tile for ${row} ${column}  ${size} ${orientation}`,
+        `Unable to set tile for ${row} ${column}  ${size} ${orientation}`
       );
     }
   }
@@ -152,9 +148,9 @@ function isLegal({ row, column, size, orientation }) {
   let isLegal = true;
 
   // size decrease by one to account for head of ship being row or column
-  if (orientation === "HORIZONTAL") {
+  if (orientation === 'HORIZONTAL') {
     if (row + size - 1 >= 10) return false;
-    for (let i = 0; i < size; i++) {
+    for (let i = 0; i < size; i += 1) {
       if (map[row][column + i] !== MapTile.EMPTY) return false;
 
       // prevent placement to adjacent ships
@@ -166,9 +162,9 @@ function isLegal({ row, column, size, orientation }) {
     }
   }
 
-  if (orientation === "VERTICAL") {
+  if (orientation === 'VERTICAL') {
     if (column + size - 1 >= 10) return false;
-    for (let i = 0; i < size; i++) {
+    for (let i = 0; i < size; i += 1) {
       if (map[row + i][column] !== MapTile.EMPTY) return false;
 
       // prevent placement to adjacent ships
@@ -234,7 +230,7 @@ function getRandomTile() {
 }
 
 function getRandomOrientation() {
-  return ["VERTICAL", "HORIZONTAL"][Math.round(Math.random())];
+  return ['VERTICAL', 'HORIZONTAL'][Math.round(Math.random())];
 }
 
 function getRandomShipCoordinate() {

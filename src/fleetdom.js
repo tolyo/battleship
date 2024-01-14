@@ -1,8 +1,7 @@
-import Fleet from "./fleet";
-import { BOARD_EVENTS, FLEET_BOARD_ID, GRID_SIZE } from "./constants";
-import { Ship } from "./ship";
-import gameEngine from "./game";
-import pubsub from "./pubsubservice";
+import Fleet from './fleet';
+import { BOARD_EVENTS, FLEET_BOARD_ID, GRID_SIZE } from './constants';
+import { Ship } from './ship';
+import gameEngine from './game';
 
 function init() {
   reset();
@@ -15,7 +14,7 @@ function init() {
 }
 
 function reset() {
-  const htmlList = window.document.getElementsByClassName("ship");
+  const htmlList = window.document.getElementsByClassName('ship');
   Array.from(htmlList).forEach((elem) => elem.parentNode.removeChild(elem));
 }
 
@@ -24,13 +23,13 @@ function reset() {
  * @return {HTMLElement} shipElement
  */
 function createDomElement(ship) {
-  const shipElement = document.createElement("div");
-  shipElement.classList.add("ship");
+  const shipElement = document.createElement('div');
+  shipElement.classList.add('ship');
   shipElement.id = ship.id; // each div is identified by ship id
   const { width, height } = calculateSize(ship);
   shipElement.style.width = width;
   shipElement.style.height = height;
-  shipElement.style.position = "absolute";
+  shipElement.style.position = 'absolute';
   return shipElement;
 }
 
@@ -63,7 +62,7 @@ export function onmousedown(e, shipDom) {
   if (dragged === true) return; // one item at a time
   if (e.button !== undefined && e.button !== 0) return; // only touch or left click
   // if (e.touches && e.touches.length > 1) return; // support one finger touch only
-  if (["PLAYING", "ENDED"].includes(gameEngine.getState())) return;
+  if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
 
   dragged = true;
   e.preventDefault();
@@ -74,9 +73,9 @@ export function onmousedown(e, shipDom) {
   console.log(shipCoordinates);
   shiftX = e.pageX - shipCoordinates.left;
   shiftY = e.pageY - shipCoordinates.top;
-  shipDom.classList.add("dragged");
+  shipDom.classList.add('dragged');
   // remove from grid
-  pubsub.publish(BOARD_EVENTS.REMOVE_SHIP, [shipDom]);
+  // pubsub.publish(BOARD_EVENTS.REMOVE_SHIP, [shipDom]);
 }
 
 const fleetBoardElem = document.getElementById(FLEET_BOARD_ID);
@@ -102,7 +101,7 @@ function onmouseup(e, shipDom) {
   // clear event bindings
   document.onmousemove = null;
   document.onmouseup = null;
-  shipDom.classList.remove("dragged");
+  shipDom.classList.remove('dragged');
 }
 
 function getShipCoordinates(srcElement) {
@@ -127,28 +126,12 @@ function calculateSize(ship) {
   console.log(ship.size);
   return {
     width:
-      ship.orientation === "HORIZONTAL"
+      ship.orientation === 'HORIZONTAL'
         ? `${GRID_SIZE * ship.size}px`
         : `${GRID_SIZE}px`,
     height:
-      ship.orientation === "VERTICAL"
+      ship.orientation === 'VERTICAL'
         ? `${GRID_SIZE * ship.size}px`
         : `${GRID_SIZE}px`,
-  };
-}
-
-function getRandomTile() {
-  return Math.floor(Math.random() * 9);
-}
-
-function getRandomOrientation() {
-  return ["VERTICAL", "HORIZONTAL"][Math.round(Math.random())];
-}
-
-function getRandomShipCoordinate() {
-  return {
-    row: getRandomTile(),
-    column: getRandomTile(),
-    orientation: getRandomOrientation(),
   };
 }

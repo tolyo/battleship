@@ -10,10 +10,7 @@
  * @typedef {boolean} GridAlive
  */
 
-/**
- * @abstract
- */
-export class Ship {
+export default class Ship {
   /**
    * @param {string} id
    * @param {number} size
@@ -27,7 +24,7 @@ export class Ship {
     /**
      * @type {ShipState}
      */
-    this.health = "ACTIVE";
+    this.health = 'ACTIVE';
 
     /**
      * @type {GridAlive[]}
@@ -47,12 +44,12 @@ export class Ship {
     /**
      * @type {ShipOrientation}
      */
-    this.orientation = "HORIZONTAL";
+    this.orientation = 'HORIZONTAL';
   }
 
   reset() {
     this.coordinates = undefined;
-    this.health = "ACTIVE";
+    this.health = 'ACTIVE';
     this.gridState.forEach((e, index) => {
       this.gridState[index] = true;
     });
@@ -73,8 +70,8 @@ export class Ship {
       return this.coordinates;
     }
     const coordinates = [];
-    for (let i = 0; i < this.size; i++) {
-      if (this.orientation === "HORIZONTAL") {
+    for (let i = 0; i < this.size; i += 1) {
+      if (this.orientation === 'HORIZONTAL') {
         coordinates.push({ row: this.row, column: this.column + i });
       } else {
         coordinates.push({ row: this.row + i, column: this.column });
@@ -97,14 +94,14 @@ export class Ship {
    * @returns
    */
   strike() {
-    if (this.health === "KILLED") {
-      throw new Error("Illegal state. Ship already killed");
+    if (this.health === 'KILLED') {
+      throw new Error('Illegal state. Ship already killed');
     }
-    this.hitcount++;
+    this.hitcount += 1;
     if (this.isKilled() === true) {
-      this.health = "KILLED";
+      this.health = 'KILLED';
     } else {
-      this.health = "DAMAGED";
+      this.health = 'DAMAGED';
     }
   }
 
@@ -113,33 +110,5 @@ export class Ship {
    */
   isKilled() {
     return this.hitcount === this.size;
-  }
-}
-
-export class Carrier extends Ship {
-  /**
-   *
-   * @param {string} id
-   */
-  constructor(id) {
-    super(id, 4);
-  }
-}
-
-export class Cruiser extends Ship {
-  constructor(id) {
-    super(id, 3);
-  }
-}
-
-export class Destroyer extends Ship {
-  constructor(id) {
-    super(id, 2);
-  }
-}
-
-export class TorpedoBoat extends Ship {
-  constructor(id) {
-    super(id, 1);
   }
 }
