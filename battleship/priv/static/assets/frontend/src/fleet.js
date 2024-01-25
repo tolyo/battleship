@@ -9,13 +9,13 @@ export const Fleet = [
   // 3 destroyers
   new Ship('3', 2),
   new Ship('4', 2),
-  new Ship('5', 3),
+  new Ship('5', 2),
 
   // 4 torpedo boats
-  new Ship('6', 2),
-  new Ship('7', 2),
-  new Ship('8', 2),
-  new Ship('9', 2),
+  new Ship('6', 1),
+  new Ship('7', 1),
+  new Ship('8', 1),
+  new Ship('9', 1),
 ];
 
 export const FLEET_SIZE = Fleet.map((x) => x.size).reduce(
