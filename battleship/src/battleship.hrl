@@ -3,7 +3,8 @@
 -define(BLOCKED, 'o').
 -define(HIT, '+').
 -define(MISS, 'x').
--type grid_state() :: ?EMPTY | ?BLOCKED | ?HIT | ?MISS.
+-type grid_state() ::
+    ?EMPTY | ?BLOCKED | ?HIT | ?MISS | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
 -type strike_res() :: 'MISS' | 'HIT' | 'ERROR'.
 -type ship_orientation() :: 'VERTICAL' | 'HORIZONTAL'.
 -type row() :: integer().
