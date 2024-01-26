@@ -193,7 +193,7 @@ next_move(Game, Row, Column) ->
                         '7' -> set_adjacents_blocked(NewBoard);
                         _ when HitCount =:= 0 -> set_adjacents_blocked(NewBoard)
                     end,
-                    update_board(Game, OppositePlayer, NewBoard) 
+                    update_board(Game, OppositePlayer, BlockedBoard) 
             end
     end.
 
