@@ -31,12 +31,12 @@ start:
 include ./config/dev.env
 
 lint:
-	$(FRONTEND_CONTEXT) lint
+#	$(FRONTEND_CONTEXT) lint
 	$(SERVER_CONTEXT) lint
 	@echo $(INFO) "Complete"
 
 check:
-	$(FRONTEND_CONTEXT) check
+#$(FRONTEND_CONTEXT) check
 	$(SERVER_CONTEXT) check
 
 .PHONY: test

@@ -18,12 +18,12 @@ place_fleet_random() ->
 
 -spec init_mock_game() -> #game{}.
 init_mock_game() ->
-    Player1 = #player{id = 1, board = place_fleet_random()},
-    Player2 = #player{id = 2, board = place_fleet_random()},
+    Player1 = #player{id = "1", board = place_fleet_random()},
+    Player2 = #player{id = "2", board = place_fleet_random()},
     #game{
         player_one = Player1,
         player_two = Player2,
-        first_turn = battleship_utils:get_random_binary(Player1, Player2),
+        first_turn = battleship_utils:get_random_binary(Player1#player.id, Player2#player.id),
         turns = []
     }.
 

@@ -1,7 +1,7 @@
 -module(battleship_utils).
 -compile(export_all).
 
--spec get_random_binary(any(), any()) -> any().
+-spec get_random_binary(T, T) -> T.
 get_random_binary(Val1, Val2) ->
     case rand:uniform(2) of
         1 -> Val1;

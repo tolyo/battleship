@@ -15,7 +15,8 @@ lint:
 	@rebar3 fmt -w --verbose
 
 check: 
-	@echo "TODO"
+	@echo "Checking w/ equalize"
+	@./elp eqwalize-all
 
 function-test:
 	@echo "TODO"

@@ -8,12 +8,12 @@
 -type ship_orientation() :: 'VERTICAL' | 'HORIZONTAL'.
 -type row() :: integer().
 -type column() :: integer().
--type player_id() :: string.
+-type player_id() :: [char()].
 
 -type board() :: [[grid_state()]].
 
 -record(ship, {
-    id :: string,
+    id :: atom(),
     health :: ship_state(),
     orientation :: ship_orientation(),
     column :: number(),
