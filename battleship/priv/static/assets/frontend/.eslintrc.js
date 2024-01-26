@@ -10,5 +10,14 @@ module.exports = {
   },
   rules: {
     'import/extensions': 0,
+    'no-use-before-define': [
+      'error',
+      {
+        functions: false,
+        classes: true,
+        variables: true,
+        allowNamedExports: false,
+      },
+    ],
   },
 };
