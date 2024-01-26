@@ -75,29 +75,29 @@ next_move(Game, Row, Column) ->
 %%% Private functions.
 %%% ---------------------------------------------------
 
-strike(Grid, Row, Column) ->
-    case battleship_board:get_cell_value(Grid, Row, Column) of
-        ?EMPTY -> {'MISS', battleship_board:update_cell_at(Grid, Row, Column, ?MISS)};
-        ?BLOCKED -> {'ERROR', Grid};
-        ?HIT -> {'ERROR', Grid};
-        ?MISS -> {'ERROR', Grid};
-        _ -> {battleship_board:get_cell_value(Grid, Row, Column), battleship_board:update_cell_at(Grid, Row, Column, ?HIT)}
+strike(Board, Row, Column) ->
+    case battleship_board:get_cell_value(Board, Row, Column) of
+        ?EMPTY -> {'MISS', battleship_board:update_cell_at(Board, Row, Column, ?MISS)};
+        ?BLOCKED -> {'ERROR', Board};
+        ?HIT -> {'ERROR', Board};
+        ?MISS -> {'ERROR', Board};
+        _ -> {battleship_board:get_cell_value(Board, Row, Column), battleship_board:update_cell_at(Board, Row, Column, ?HIT)}
     end.
 
 try_place_ship_random(_, _, 0) -> throw("Unable to place ship");
-try_place_ship_random(Grid, Ship, Count) ->
+try_place_ship_random(Board, Ship, Count) ->
     {Column, Row, Orientation} = get_random_ship_coordinate(),
     RandomShip = Ship#ship{row = Row, column = Column, orientation = Orientation},    
-    Legal = battleship_board:is_legal(Grid, RandomShip),                    
+    Legal = battleship_board:is_legal(Board, RandomShip),                    
     case Legal of
-        true -> battleship_board:attach_ship(Grid, RandomShip);
-        false -> try_place_ship_random(Grid, Ship, Count-1)
+        true -> battleship_board:attach_ship(Board, RandomShip);
+        false -> try_place_ship_random(Board, Ship, Count-1)
     end.
 
 
-place_ships(Grid, []) -> Grid;
-place_ships(Grid, [H|T]) ->
-    NewGrid = try_place_ship_random(Grid, H, 100), 
-    place_ships(NewGrid, T).
+place_ships(Board, []) -> Board;
+place_ships(Board, [H|T]) ->
+    NewBoard = try_place_ship_random(Board, H, 100), 
+    place_ships(NewBoard, T).
 
 get_random_ship_coordinate() -> {rand:uniform(10), rand:uniform(10), battleship_utils:get_random_binary('VERTICAL', 'HORIZONTAL')}.
