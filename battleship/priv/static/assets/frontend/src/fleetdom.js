@@ -1,5 +1,5 @@
 import Fleet from './fleet';
-import { BOARD_EVENTS, FLEET_BOARD_ID, GRID_SIZE } from './constants';
+import { FLEET_BOARD_ID, GRID_SIZE } from './constants';
 import { Ship } from './ship';
 import gameEngine from './game';
 

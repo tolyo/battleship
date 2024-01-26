@@ -1,8 +1,13 @@
 -type ship_state() :: 'ACTIVE' | 'DAMAGED' | 'KILLED'.
-
--type grid_state() :: 'EMPTY' | 'FILLED' | 'BLOCKED' | 'HIT' | 'MISS'.
-
+-define(EMPTY, '_').
+-define(BLOCKED, 'o').
+-define(HIT, '+').
+-define(MISS, 'x').
+-type grid_state() :: ?EMPTY | ?BLOCKED | ?HIT | ?MISS.
+-type strike_res() :: 'MISS' | 'HIT' | 'ERROR'.
 -type ship_orientation() :: 'VERTICAL' | 'HORIZONTAL'.
+
+-type board() :: [[grid_state()]].
 
 -record(ship, {
     id :: string,
@@ -14,32 +19,24 @@
     hitcount :: number(),
     size :: number()
 }).
-
--record(fleet, {
-    ships :: [ship]
-}).
-
--record(board, {
-    grid :: [[grid_state()]]
-}).
+-type fleet() :: [#ship{}].
 
 -record(strike, {
+    player_id :: string, 
     x :: number(),
-    y :: number()
+    y :: number(), 
+    res :: strike_res()
+}).
+
+-record(player, {
+    id :: string,
+    board :: board()
 }).
 
 -record(game, {
-    player_one :: string,
-    player_two :: string,
-    player_one_board :: #board{},
-    player_two_board :: #board{},
+    player_one :: #player{},
+    player_two :: #player{},
     first_turn :: string,
     turns :: [strike]
 }).
 
-% Map tile representation
--define(EMPTY, '_').
--define(FILLED, 'X').
--define(BLOCKED, 'o').
--define(HIT, '+').
--define(MISS, 'm').

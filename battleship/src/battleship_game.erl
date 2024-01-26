@@ -10,10 +10,13 @@ get_random_tile() ->
     rand:uniform(10).
 
 get_random_orientation() ->
+    get_random_binary('VERTICAL', 'HORIZONTAL').
+
+get_random_binary(Val1, Val2) ->
     case rand:uniform(2) of
-        1 -> 'VERTICAL';
-        2 -> 'HORIZONTAL'
-    end.
+        1 -> Val1;
+        2 -> Val2
+    end.    
 
 get_random_ship_coordinate() ->
     { get_random_tile(), get_random_tile(), get_random_orientation()}.
@@ -55,7 +58,11 @@ is_legal_vertical(Grid, Row, Column, Size, IsLegal) when Row >= 0, Row =< 9, Col
 is_legal_vertical(_, _, _, _, _) -> false.
 
 is_cell_empty(Grid, Row, Column) ->
-    lists:nth(Column, lists:nth(Row, Grid)) =:= ?EMPTY.
+    get_cell_value(Grid, Row, Column) =:= ?EMPTY.
+get_cell_value(Grid, Row, Column) ->
+    lists:nth(Column, lists:nth(Row, Grid)).
+update_cell_at(Grid, Row, Column, Value) ->
+    update_list_at(Grid, Row, update_list_at(lists:nth(Row, Grid), Column, Value)).
 
 is_adjacent_cells_empty(Grid, Row, Column) ->
     lists:all(fun({R, C}) -> is_cell_empty(Grid, R, C) end, get_adjacent_coordinates(Row, Column)).
@@ -103,3 +110,91 @@ place_fleet_random() ->
     catch
         _:_ -> place_fleet_random()
     end.
+
+
+
+init_mock_game() ->
+    Player1 = #player{id = 1, board = place_fleet_random()},
+    Player2 = #player{id = 2, board = place_fleet_random()},
+    #game{
+        player_one = Player1, 
+        player_two = Player2, 
+        first_turn = get_random_binary(Player1, Player2),
+        turns = []
+    }.
+
+get_player_by_id(Game, Id) ->
+    case Id =:= Game#game.player_one#player.id of
+        true -> Game#game.player_two;
+        false -> Game#game.player_one
+    end.    
+
+get_opposite_player(Game, Player) ->
+    case Player#player.id =:= Game#game.player_one#player.id of
+        true -> Game#game.player_two;
+        false -> Game#game.player_one
+    end.       
+
+
+update_board(Game, Player, Board) ->     
+    case Player#player.id =:= Game#game.player_one#player.id of
+        true -> Game#game.player_one#player{board = Board};
+        false -> Game#game.player_two#player{board = Board}
+    end.
+
+count(Grid, Val) ->
+    length(lists:filter(fun(X) -> X =:= Val end, lists:flatten(Grid))).
+    
+strike(Grid, Row, Column) ->
+    case get_cell_value(Grid, Row, Column) of
+        ?EMPTY -> {'MISS', update_cell_at(Grid, Row, Column, ?MISS)};
+        ?BLOCKED -> {'ERROR', Grid};
+        ?HIT -> {'ERROR', Grid};
+        ?MISS -> {'ERROR', Grid};
+        _ -> {get_cell_value(Grid, Row, Column), update_cell_at(Grid, Row, Column, ?HIT)}
+    end.
+
+set_adjacents_blocked(Grid) ->
+    Coords = [{R, C} || R <- grid(), C <- grid()],
+    set_adjacents_blocked(Coords, Grid).
+
+set_adjacents_blocked([], Grid) -> Grid;
+set_adjacents_blocked([{Row, Column}|T], Grid) -> 
+    case get_cell_value(Grid, Row, Column) of
+        ?HIT -> set_adjacents_blocked(T, update_blocked(get_adjacent_coordinates(Row, Column), Grid));
+        _ -> set_adjacents_blocked(T, Grid)
+    end.    
+update_blocked([], Grid) -> Grid;
+update_blocked([{Row, Column}| T], Grid) -> 
+    case get_cell_value(Grid, Row, Column) of
+        ?EMPTY -> update_blocked(T, update_cell_at(Grid, Row, Column, ?BLOCKED));
+        _ -> update_blocked(T, Grid)
+    end.
+next_move(Game, Row, Column) ->
+    % if the game has no turns the first move is for first turn player
+    CurrentPlayer = case Game#game.turns of
+        [] -> Game#game.first_turn;
+        [H|_] -> get_player_by_id(Game, H#strike.player_id)     
+    end,
+    OppositePlayer = get_opposite_player(Game, CurrentPlayer),
+    Board = OppositePlayer#player.board,
+    case strike(Board, Row, Column) of
+        {'MISS', NewBoard} ->
+            update_board(Game, OppositePlayer, NewBoard);
+        {'ERROR', _} -> error("Wrong move");    
+        {HitVal, NewBoard} -> 
+            case count(NewBoard, ?HIT) == battleship_ship:fleet_size() of
+                true -> "Game over";
+                false -> 
+                    HitCount = count(NewBoard, HitVal),
+                    BlockedBoard = case HitVal of
+                        '9' -> set_adjacents_blocked(NewBoard);
+                        '8' -> set_adjacents_blocked(NewBoard);
+                        '7' -> set_adjacents_blocked(NewBoard);
+                        _ when HitCount =:= 0 -> set_adjacents_blocked(NewBoard)
+                    end,
+                    update_board(Game, OppositePlayer, NewBoard) 
+            end
+    end.
+
+
