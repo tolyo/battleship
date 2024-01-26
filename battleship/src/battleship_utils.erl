@@ -1,5 +1,5 @@
 -module(battleship_utils).
--compile(export_all).
+-export([get_random_binary/2, update_list_at/3]).
 
 -spec get_random_binary(T, T) -> T.
 get_random_binary(Val1, Val2) ->
