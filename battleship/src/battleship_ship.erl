@@ -2,11 +2,10 @@
 -compile(export_all).
 -include("battleship.hrl").
 
-
 -spec create(atom(), integer()) -> #ship{}.
 create(Id, Size) ->
     #ship{
-        id = Id, 
+        id = Id,
         size = Size,
         health = 'ACTIVE',
         grid_state = lists:duplicate(Size, true),
@@ -30,4 +29,4 @@ fleet() ->
     ].
 
 -spec fleet_size() -> integer().
-fleet_size() -> lists:sum([Ship#ship.size || Ship <- fleet()]).    
+fleet_size() -> lists:sum([Ship#ship.size || Ship <- fleet()]).

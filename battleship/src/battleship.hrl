@@ -25,9 +25,9 @@
 -type fleet() :: [#ship{}].
 
 -record(strike, {
-    id :: player_id(), 
+    id :: player_id(),
     x :: number(),
-    y :: number(), 
+    y :: number(),
     res :: strike_res()
 }).
 
@@ -42,4 +42,3 @@
     first_turn :: player_id(),
     turns :: [strike]
 }).
-
