@@ -2,25 +2,27 @@
 -compile(export_all).
 -include("battleship.hrl").
 
+-spec grid() -> [integer].
 grid() -> lists:seq(1, 10).
 
+-spec init_grid() -> board().
 init_grid() -> [[?EMPTY || _ <- grid()] || _ <- grid()].
 
-get_random_tile() ->
-    rand:uniform(10).
-
-get_random_orientation() ->
-    get_random_binary('VERTICAL', 'HORIZONTAL').
-
+-spec get_random_binary(any(), any()) -> any().
 get_random_binary(Val1, Val2) ->
     case rand:uniform(2) of
         1 -> Val1;
         2 -> Val2
     end.    
 
+-spec get_random_ship_coordinate() -> {integer(), integer(), ship_orientation}.
 get_random_ship_coordinate() ->
-    { get_random_tile(), get_random_tile(), get_random_orientation()}.
+    {rand:uniform(10), 
+     rand:uniform(10), 
+     get_random_binary('VERTICAL', 'HORIZONTAL')
+    }.
 
+-spec get_adjacent_coordinates(integer(), integer()) -> [{integer(), integer()}].
 get_adjacent_coordinates(Row, Column) ->
     [{R, C} || 
         R <- [Row-1, Row, Row+1], 
@@ -32,13 +34,17 @@ get_adjacent_coordinates(Row, Column) ->
         {R, C} /= {Row, Column} 
     ].
 
+-spec is_legal(board(), #ship{}) -> boolean().
 is_legal(Grid, #ship{row=Row, column=Column, size=Size, orientation=Orientation}) ->
     case Orientation of
         'HORIZONTAL' -> is_legal_horizontal(Grid, Row, Column, Size);
         'VERTICAL' -> is_legal_vertical(Grid, Row, Column, Size)
     end.
+-spec is_legal_horizontal(board(), integer(), integer(), integer()) -> boolean().
 is_legal_horizontal(Grid, Row, Column, Size) when Row >= 1, Row =< 10, Column >= 1, Column =< 10 -> 
     is_legal_horizontal(Grid, Row, Column, Size, true).
+
+-spec is_legal_horizontal(board(), integer(), integer(), integer(), boolean()) -> boolean().
 is_legal_horizontal(_Grid, _Row, _Column, 0, IsLegal) -> IsLegal;
 is_legal_horizontal(Grid, Row, Column, Size, IsLegal) when Row >= 1, Row =< 10, Column >= 1, Column =< 10 ->
     case {is_cell_empty(Grid, Row, Column), is_adjacent_cells_empty(Grid, Row, Column)} of

@@ -3,6 +3,7 @@
 -include("battleship.hrl").
 
 
+-spec create(atom(), integer()) -> #ship{}.
 create(Id, Size) ->
     #ship{
         id = Id, 
@@ -13,6 +14,7 @@ create(Id, Size) ->
         orientation = 'HORIZONTAL'
     }.
 
+-spec fleet() -> [#ship{}].
 fleet() ->
     [
         create('0', 4),
@@ -27,10 +29,5 @@ fleet() ->
         create('9', 1)
     ].
 
-fleet_size() ->
-    lists:sum(
-        lists:map(
-            fun(#ship{size = Size}) -> Size end, 
-            fleet()
-        )
-    ).    
+-spec fleet_size() -> integer().
+fleet_size() -> lists:sum([Ship#ship.size || Ship <- fleet()]).    
