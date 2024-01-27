@@ -24,7 +24,7 @@ is_legal(Board, #ship{row = Row, column = Column, size = Size, orientation = Ori
 is_cell_empty(Board, Row, Column) ->
     get_cell_value(Board, Row, Column) =:= ?EMPTY.
 
--spec get_cell_value(board(), row(), column()) -> boolean().
+-spec get_cell_value(board(), row(), column()) -> grid_state().
 get_cell_value(Board, Row, Column) ->
     lists:nth(Column, lists:nth(Row, Board)).
 

@@ -8,7 +8,6 @@ create(Id, Size) ->
         id = Id,
         size = Size,
         health = 'ACTIVE',
-        grid_state = lists:duplicate(Size, true),
         hitcount = 0,
         column = 0,
         row = 0,

@@ -24,7 +24,8 @@ init_mock_game() ->
         player_one = Player1,
         player_two = Player2,
         first_turn = battleship_utils:get_random_binary(Player1#player.id, Player2#player.id),
-        turns = []
+        turns = [],
+        state = 'ACTIVE'
     }.
 
 -spec get_player_by_id(#game{}, player_id()) -> #player{}.
@@ -34,7 +35,7 @@ get_player_by_id(Game, Id) ->
         false -> Game#game.player_one
     end.
 
--spec get_opposite_player(#game{}, #player{}) -> #game{}.
+-spec get_opposite_player(#game{}, #player{}) -> #player{}.
 get_opposite_player(Game, Player) ->
     case Player#player.id =:= Game#game.player_one#player.id of
         true -> Game#game.player_two;
@@ -46,7 +47,7 @@ next_move(Game, Row, Column) ->
     % if the game has no turns the first move is for first turn player
     CurrentPlayer =
         case Game#game.turns of
-            [] -> Game#game.first_turn;
+            [] -> get_player_by_id(Game, Game#game.first_turn);
             [H | _] -> get_player_by_id(Game, H#strike.id)
         end,
     OppositePlayer = get_opposite_player(Game, CurrentPlayer),
@@ -59,7 +60,7 @@ next_move(Game, Row, Column) ->
         {HitVal, NewBoard} ->
             case battleship_board:count(NewBoard, ?HIT) == battleship_ship:fleet_size() of
                 true ->
-                    "Game over";
+                    Game#game{state = 'FINISHED'};
                 false ->
                     HitCount = battleship_board:count(NewBoard, HitVal),
                     BlockedBoard =

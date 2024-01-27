@@ -19,7 +19,6 @@
     orientation :: ship_orientation(),
     column :: number(),
     row :: number(),
-    grid_state :: [number()],
     hitcount :: number(),
     size :: number()
 }).
@@ -41,5 +40,6 @@
     player_one :: #player{},
     player_two :: #player{},
     first_turn :: player_id(),
-    turns :: [strike]
+    turns :: [#strike{}],
+    state :: 'INIT' | 'ACTIVE' | 'FINISHED'
 }).
