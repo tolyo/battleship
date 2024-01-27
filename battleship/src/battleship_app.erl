@@ -13,11 +13,11 @@ start(_StartType, _StartArgs) ->
     Port = 4000,
     Dispatch = cowboy_router:compile([
         {'_', [
-            {"/", cowboy_static, {file, "/priv/static/assets/index.html"}}
+            {"/", battleship_handler, []}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(
-        my_http_listener,
+        http_listener,
         [{port, Port}],
         #{env => #{dispatch => Dispatch}}
     ),

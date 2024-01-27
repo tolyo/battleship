@@ -26,7 +26,7 @@ compile:
 
 # Helper for running dev mode
 start:
-	@echo "TODO"
+	$(SERVER_CONTEXT) start
 
 include ./config/dev.env
 
