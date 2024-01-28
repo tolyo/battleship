@@ -14,7 +14,7 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
             {"/", cowboy_static, {file, "priv/static/index.html"}},
-            {"/[...]", cowboy_static, {dir, "priv/static/src"}}
+            {"/[...]", cowboy_static, {dir, "priv/static"}}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(
