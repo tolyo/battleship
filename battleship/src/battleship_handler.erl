@@ -7,7 +7,15 @@ init(Req0, Opts) ->
         #{
             <<"content-type">> => <<"text/plain">>
         },
-        <<"Hello fddsfafdsaddf!">>,
+        <<
+            "\n"
+            "            <h1>HELLO</h1>\n"
+            "            <script> \n"
+            "                window.test = 'hello';\n"
+            "                console.log('handler');\n"
+            "            </script>\n"
+            "        ="
+        >>,
         Req0
     ),
     {ok, Req, Opts}.

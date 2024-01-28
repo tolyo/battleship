@@ -3,8 +3,6 @@ import { generateRouteConfig, initRouter } from "./utils/router.js";
 import "./utils/components.js";
 import FormController from "./utils/form-controller.js";
 
-// Boostrap AlpineJS
-window.EventBus = new EventTarget();
 
 document.addEventListener("DOMContentLoaded", () => {
   // Clean up an init all form controllers
@@ -15,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .querySelectorAll("form")
     .forEach((form) => window.FormControllers.push(new FormController(form)));
+
 });
 
 /**
@@ -24,5 +23,3 @@ document.addEventListener("DOMContentLoaded", () => {
 if (document.querySelector("ui-view") !== null) {
   initRouter(window.routes);
 }
-
-console.log("App ready");

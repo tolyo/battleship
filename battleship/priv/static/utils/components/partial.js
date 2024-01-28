@@ -32,6 +32,8 @@ customElements.define(
       `);
       }
       this.innerHTML = await (await fetch(url)).text();
+
+      this.querySelectorAll("script").forEach(script => eval(script.text));  
     }
   },
 );

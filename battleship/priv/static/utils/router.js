@@ -73,6 +73,7 @@ export function fetchIntoDom(stateDef) {
     .then((response) => response.text())
     .then((text) => {
       parent.innerHTML = text;
+      parent.querySelectorAll("script").forEach(script => eval(script.text));  
       document.dispatchEvent(domContentLoadedEvent);
     });
 }
