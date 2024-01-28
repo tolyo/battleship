@@ -102,7 +102,7 @@ export function clearRenderedDom(stateDef) {
    *
    * @type {HTMLElement}
    */
-  const parent = document.getElementById(parentId);
+  const parent = document.getElementById(parentId) ||  document.querySelector("ui-view");
 
   // Clear the content by setting innerHTML to an empty string.
   parent.innerHTML = "";

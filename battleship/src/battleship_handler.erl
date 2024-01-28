@@ -14,7 +14,7 @@ init(Req0, Opts) ->
             "                window.test = 'hello';\n"
             "                console.log('handler');\n"
             "            </script>\n"
-            "        ="
+            "        "
         >>,
         Req0
     ),
