@@ -10,7 +10,7 @@ create(Id, Size) ->
         health = 'ACTIVE',
         hitcount = 0,
         column = 0,
-        row = 0,
+        row = 2,
         orientation = 'HORIZONTAL'
     }.
 

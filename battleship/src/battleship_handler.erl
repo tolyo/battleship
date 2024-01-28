@@ -7,7 +7,7 @@ init(Req0, Opts) ->
         #{
             <<"content-type">> => <<"text/plain">>
         },
-        <<"Hello world!">>,
+        <<"Hello fddsfafdsaddf!">>,
         Req0
     ),
     {ok, Req, Opts}.

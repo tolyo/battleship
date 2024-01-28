@@ -13,7 +13,8 @@ start(_StartType, _StartArgs) ->
     Port = 4000,
     Dispatch = cowboy_router:compile([
         {'_', [
-            {"/", battleship_handler, []}
+            {"/", cowboy_static, {file, "priv/static/index.html"}},
+            {"/[...]", cowboy_static, {dir, "priv/static/src"}}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(
