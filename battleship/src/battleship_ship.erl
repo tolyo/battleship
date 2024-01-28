@@ -1,5 +1,5 @@
 -module(battleship_ship).
--compile(export_all).
+-export([create/2, fleet/0, fleet_size/0]).
 -include("battleship.hrl").
 
 -spec create(atom(), integer()) -> #ship{}.
