@@ -15,7 +15,8 @@ start(_StartType, _StartArgs) ->
         {'_', [
             {"/", cowboy_static, {file, "priv/static/index.html"}},
             {"/profile", battleship_handler, []},
-            {"/[...]", cowboy_static, {dir, "priv/static"}}
+            {"/static/[...]", cowboy_static, {dir, "priv/static"}},
+            {"/[...]", cowboy_static, {file, "priv/static/index.html"}}
         ]}
     ]),
     {ok, _} = cowboy:start_clear(

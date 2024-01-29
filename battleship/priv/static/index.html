@@ -3,7 +3,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
   <title>Battleship</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/static/styles.css" />
 
   <script defer src="https://unpkg.com/alpinejs@3.13.1/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/@uirouter/core@6.1.0/_bundles/ui-router-core.min.js"></script>
@@ -13,18 +13,18 @@
       {
         name: "home",
         url: "/",
-        serverPath: "_home.html"
+        serverPath: "static/_home.html"
       },
       {
         name: "map",
         url: "/map",
-        serverPath: "_map.html"
+        serverPath: "static/_map.html"
       }
     ];
   </script>
 </head>
 <body>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="/static/app.js"></script>
   <partial-component data-url="/profile"></partial-component>
   <ui-view></ui-view>
   
