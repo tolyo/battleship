@@ -8,7 +8,7 @@ init(Req0, Opts) ->
             <<"content-type">> => <<"text/plain">>
         },
         "\n"
-        "            <h1>HELLO</h1>\n"
+        "            <h1>Battleship</h1>\n"
         "            <script> \n"
         "                window.test = 'hello';\n"
         "                console.log('handler');\n"

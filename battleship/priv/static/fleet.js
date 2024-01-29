@@ -1,4 +1,4 @@
-import Ship from './ship';
+import Ship from './ship.js';
 // Fleet representation
 export const Fleet = [
   new Ship('0', 4),

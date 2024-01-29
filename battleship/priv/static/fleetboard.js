@@ -1,71 +1,54 @@
-import { GRID } from './constants';
-import Fleet from './fleet';
-import { Ship } from './ship';
+import { GRID } from './constants.js';
+import { Fleet } from './fleet.js';
+import Ship from './ship.js';
 
-export default (() => {
-  const createBoard = (id) => {
-    if (id === undefined) throw new Error('board id not provided');
-    const elem = window.document.getElementById(id);
-    if (elem === null) throw new Error('board element not found');
-    addTilesToBoard(elem, 'fleetboard');
 
-    // pubsub.subscribe(BOARD_EVENTS.REMOVE_SHIP, (shipDom) => {
-    //   removeShip(Fleet[parseInt(shipDom.id)]);
-    // });
-  };
+export function clearPlacedGrids() {
+  const htmlList = window.document.getElementsByClassName('placed');
+  const elemList = Array.from(htmlList);
+  elemList.forEach((elem) => elem.classList.remove('placed'));
+};
 
-  const clearPlacedGrids = () => {
-    const htmlList = window.document.getElementsByClassName('placed');
-    const elemList = Array.from(htmlList);
-    elemList.forEach((elem) => elem.classList.remove('placed'));
-  };
+export function placeFleet() {
+  clearPlacedGrids();
+  Fleet.forEach((ship) => placeShip(ship));
+};
 
-  const placeFleet = () => {
-    clearPlacedGrids();
-    Fleet.forEach((ship) => placeShip(ship));
-  };
+/**
+ * Marks
+ * @param {Ship} ship to place
+ */
+export function  placeShip(ship) {
+  ship.getShipMapCoordinates().forEach(({ row, column }) => {
+    applyClassToGrid(row, column, 'placed');
+  });
+};
 
-  /**
-   * Marks
-   * @param {Ship} ship to place
-   */
-  const placeShip = (ship) => {
-    ship.getShipMapCoordinates().forEach(({ row, column }) => {
-      applyClassToGrid(row, column, 'placed');
-    });
-  };
+/**
+ * Marks
+ * @param {Ship} ship to place
+ */
+export function  removeShip(ship) {
+  ship.getShipMapCoordinates().forEach(({ row, column }) => {
+    removeClassFromGrid(row, column, 'placed');
+  });
+};
 
-  /**
-   * Marks
-   * @param {Ship} ship to place
-   */
-  const removeShip = (ship) => {
-    ship.getShipMapCoordinates().forEach(({ row, column }) => {
-      removeClassFromGrid(row, column, 'placed');
-    });
-  };
+export function  applyClassToGrid(row, column, className) {
+  const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
+  elem.classList.add(className);
+};
 
-  const applyClassToGrid = (row, column, className) => {
-    const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
-    elem.classList.add(className);
-  };
+export function removeClassFromGrid(row, column, className) {
+  const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
+  elem.classList.remove(className);
+};
 
-  const removeClassFromGrid = (row, column, className) => {
-    const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
-    elem.classList.remove(className);
-  };
+export function reset() {
+  clearPlacedGrids();
+  Fleet.forEach((ship) => ship.reset()); // reset every chpm
+};
 
-  const reset = () => {
-    clearPlacedGrids();
-    Fleet.forEach((ship) => ship.reset()); // reset every chpm
-  };
-
-  return {
-    createBoard,
-    placeFleet,
-    reset,
-  };
-})();
 
 /**
  * @function addTilesToBoard

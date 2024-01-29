@@ -2,6 +2,7 @@ import { StateService, UIRouter } from "@uirouter/core";
 import { Alpine } from "alpinejs";
 import FormController from "./utils/form-controller";
 import { RouteConfig } from "./utils/router";
+import MapController from "./map-controller";
 
 declare global {
   interface Window {
@@ -12,6 +13,9 @@ declare global {
     stateService: StateService;
     EventBus: EventTarget;
     FormControllers: Array<FormController>;
+    App: {
+      MapController: MapController
+    }
   }
 }
 

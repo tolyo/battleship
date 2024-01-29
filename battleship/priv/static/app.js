@@ -1,7 +1,8 @@
-import { generateRouteConfig, initRouter } from "./utils/router.js";
+import { initRouter } from "./utils/router.js";
 
 import "./utils/components.js";
 import FormController from "./utils/form-controller.js";
+import MapController from "./map-controller.js";
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -22,4 +23,8 @@ document.addEventListener("DOMContentLoaded", () => {
  */
 if (document.querySelector("ui-view") !== null) {
   initRouter(window.routes);
+}
+
+window.App = {
+  MapController: MapController,
 }
