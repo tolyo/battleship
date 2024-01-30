@@ -2,7 +2,7 @@ import { StateService, UIRouter } from "@uirouter/core";
 import { Alpine } from "alpinejs";
 import FormController from "./utils/form-controller";
 import { RouteConfig } from "./utils/router";
-import MapController from "./map-controller";
+import MapController from "./map/map-controller.js";
 
 declare global {
   interface Window {
