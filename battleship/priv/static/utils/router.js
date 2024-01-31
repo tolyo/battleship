@@ -6,7 +6,7 @@
  */
 
 // Create a custom DOMContentLoaded event to trigger resync of any library that depends on this
-const domContentLoadedEvent = new Event("DOMContentLoaded", {
+const domContentLoadedEvent = new Event('DOMContentLoaded', {
   bubbles: true,
   cancelable: true,
 });
@@ -29,7 +29,7 @@ export function fetchIntoDom(stateDef) {
    *
    * @type {string}
    */
-  const parentId = state.parent.name || "root";
+  const parentId = state.parent.name || 'root';
 
   /**
    * The actual parameters being passed to view
@@ -41,19 +41,20 @@ export function fetchIntoDom(stateDef) {
   const pathSegments = Object.keys(stateParams)
     .filter(
       (key) =>
-        key !== "server_path" &&
+        key !== 'server_path' &&
         stateParams[key] !== null &&
-        stateParams[key] !== undefined,
+        stateParams[key] !== undefined
     )
     .map((key) => `/${stateParams[key]}`)
-    .join("");
+    .join('');
 
   /**
    * The parent element where the content will be rendered.
    *
    * @type {HTMLElement}
    */
-  const parent = document.getElementById(parentId) ||  document.querySelector("ui-view");
+  const parent =
+    document.getElementById(parentId) || document.querySelector('ui-view');
 
   /**
    * The server url that should return a new template
@@ -73,7 +74,7 @@ export function fetchIntoDom(stateDef) {
     .then((response) => response.text())
     .then((text) => {
       parent.innerHTML = text;
-      parent.querySelectorAll("script").forEach(script => eval(script.text));  
+      parent.querySelectorAll('script').forEach((script) => eval(script.text));
       document.dispatchEvent(domContentLoadedEvent);
     });
 }
@@ -95,17 +96,18 @@ export function clearRenderedDom(stateDef) {
    *
    * @type {string}
    */
-  const parentId = state.parent.name || "root";
+  const parentId = state.parent.name || 'root';
 
   /**
    * The parent element from which to clear the content.
    *
    * @type {HTMLElement}
    */
-  const parent = document.getElementById(parentId) ||  document.querySelector("ui-view");
+  const parent =
+    document.getElementById(parentId) || document.querySelector('ui-view');
 
   // Clear the content by setting innerHTML to an empty string.
-  parent.innerHTML = "";
+  parent.innerHTML = '';
 }
 
 /**
@@ -146,7 +148,7 @@ export function initRouter(routes) {
   /**
    * @type {import("@uirouter/core")}
    */
-  const uiRouter = window["@uirouter/core"];
+  const uiRouter = window['@uirouter/core'];
 
   const router = new uiRouter.UIRouter();
   router.plugin(uiRouter.pushStateLocationPlugin);
@@ -161,7 +163,7 @@ export function initRouter(routes) {
     (trans) => {
       trans.exiting().forEach((stateDef) => clearRenderedDom(stateDef));
       trans.entering().forEach((stateDef) => fetchIntoDom(stateDef));
-    },
+    }
   );
 
   // Route definitions
@@ -173,8 +175,8 @@ export function initRouter(routes) {
     });
   });
 
-  router.urlService.rules.initial({ state: "home" });
-  router.urlService.rules.otherwise({ state: "home" });
+  router.urlService.rules.initial({ state: 'home' });
+  router.urlService.rules.otherwise({ state: 'home' });
   router.urlService.listen();
   router.urlService.sync();
 

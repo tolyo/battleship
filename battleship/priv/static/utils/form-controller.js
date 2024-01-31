@@ -1,5 +1,5 @@
 // Create an empty input event
-const inputEvent = new Event("input", {
+const inputEvent = new Event('input', {
   bubbles: true,
   cancelable: true,
 });
@@ -26,11 +26,11 @@ export default class FormController {
     this.reactive = false;
 
     if (!this.form) {
-      throw new Error("Form required");
+      throw new Error('Form required');
     }
 
     // Prevent the form from submitting and call the submit() method instead
-    this.form.addEventListener("submit", (ev) => {
+    this.form.addEventListener('submit', (ev) => {
       ev.preventDefault();
       this.submit();
     });
@@ -49,10 +49,10 @@ export default class FormController {
     Array.from(this.form.elements).forEach((i) => {
       // Input handler
       if (i instanceof HTMLInputElement) {
-        if (i.name === "_csrf_token") {
+        if (i.name === '_csrf_token') {
           this.csrf = i.value;
         }
-        i.addEventListener("input", () => {
+        i.addEventListener('input', () => {
           this.dataModel[i.name] = i.value;
           // Clear all error messages
           this.clearAllMessages();
@@ -65,7 +65,7 @@ export default class FormController {
       // Select handler
       if (i instanceof HTMLSelectElement) {
         this.dataModel[i.name] = i.value; // Set initial value
-        i.addEventListener("change", () => {
+        i.addEventListener('change', () => {
           this.dataModel[i.name] = i.value;
           // Clear all error messages
           this.clearAllMessages();
@@ -83,13 +83,13 @@ export default class FormController {
   clearAllMessages() {
     // Remove invalid states from inputs
     Array.from(this.form.elements).forEach((e) =>
-      e.removeAttribute("aria-invalid"),
+      e.removeAttribute('aria-invalid')
     );
     // Remove spans with error messages
-    this.form.querySelectorAll("span.error").forEach((x) => x.remove());
+    this.form.querySelectorAll('span.error').forEach((x) => x.remove());
     // Remove error class from labels
-    Array.from(this.form.getElementsByClassName("error")).forEach((x) =>
-      x.classList.remove("error"),
+    Array.from(this.form.getElementsByClassName('error')).forEach((x) =>
+      x.classList.remove('error')
     );
   }
 
@@ -100,7 +100,7 @@ export default class FormController {
     this.clearAllMessages();
     const { action, method } = this.form.dataset;
     Array.from(this.form.elements).forEach((i) => i.dispatchEvent(inputEvent));
-    fetch(action, this.maybeAttachBody(method || "POST")).then((res) => {
+    fetch(action, this.maybeAttachBody(method || 'POST')).then((res) => {
       if (res.status < 300 && res.status >= 200) {
         this.onSuccess(res);
       } else {
@@ -114,7 +114,7 @@ export default class FormController {
    * @param {Response} res - response data to pass to data-success callback
    */
   async onSuccess(res) {
-    if (res.status === 204 || res.headers.get("content-type") === "text/html") {
+    if (res.status === 204 || res.headers.get('content-type') === 'text/html') {
       // eslint-disable-next-line no-eval
       eval(`${this.form.dataset.success}`);
     } else {
@@ -123,7 +123,7 @@ export default class FormController {
         // eslint-disable-next-line no-eval
         eval(`(function() { return ${this.form.dataset.success} })()`)(data);
       } else {
-        throw Error("Unknown direction");
+        throw Error('Unknown direction');
       }
     }
 
@@ -133,7 +133,7 @@ export default class FormController {
       if (partial) {
         partial.innerHTML = await res.text();
       } else {
-        throw new Error("Partial not found");
+        throw new Error('Partial not found');
       }
     }
   }
@@ -149,12 +149,12 @@ export default class FormController {
     this.res.json().then((err) => {
       Object.keys(err).forEach((x) => {
         const input = this.form.elements[x];
-        input.setAttribute("aria-invalid", "true");
-        const helper = document.createElement("span");
-        helper.classList.add("error");
+        input.setAttribute('aria-invalid', 'true');
+        const helper = document.createElement('span');
+        helper.classList.add('error');
         helper.innerHTML = err[x];
         input.after(helper);
-        input.labels?.[0]?.classList.add("error");
+        input.labels?.[0]?.classList.add('error');
       });
     });
   }
@@ -165,15 +165,15 @@ export default class FormController {
    * @param { string } method
    */
   maybeAttachBody(method) {
-    if (["DELETE", "GET"].includes(this.form.method)) {
+    if (['DELETE', 'GET'].includes(this.form.method)) {
       return {};
     }
     return {
       method,
       body: JSON.stringify(this.dataModel),
       headers: {
-        "Content-Type": "application/json",
-        "x-csrf-token": this.csrf,
+        'Content-Type': 'application/json',
+        'x-csrf-token': this.csrf,
       },
     };
   }
@@ -182,19 +182,19 @@ export default class FormController {
    * Destroy the FormController instance.
    */
   destroy() {
-    this.form.removeEventListener("submit", (ev) => {
+    this.form.removeEventListener('submit', (ev) => {
       ev.preventDefault();
       this.submit();
     });
 
     Array.from(this.form.elements).forEach((element) => {
       if (element instanceof HTMLInputElement) {
-        element.removeEventListener("input", () => {
+        element.removeEventListener('input', () => {
           this.dataModel[element.name] = element.value;
           this.clearAllMessages();
         });
       } else if (element instanceof HTMLSelectElement) {
-        element.removeEventListener("change", () => {
+        element.removeEventListener('change', () => {
           this.dataModel[element.name] = element.value;
           this.clearAllMessages();
         });

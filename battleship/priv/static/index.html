@@ -5,21 +5,27 @@
   <title>Battleship</title>
   <link rel="stylesheet" href="/static/styles.css" />
 
-  <script defer src="https://unpkg.com/alpinejs@3.13.1/dist/cdn.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/@uirouter/core@6.1.0/_bundles/ui-router-core.min.js"></script>
+  <script
+    defer
+    src="https://unpkg.com/alpinejs@3.13.1/dist/cdn.min.js"
+  ></script>
+  <script
+    defer
+    src="https://cdn.jsdelivr.net/npm/@uirouter/core@6.1.0/_bundles/ui-router-core.min.js"
+  ></script>
   <script>
     window.EventBus = new EventTarget();
     window.routes = [
       {
-        name: "home",
-        url: "/",
-        serverPath: "static/home.html"
+        name: 'home',
+        url: '/',
+        serverPath: 'static/home.html',
       },
       {
-        name: "map",
-        url: "/map",
-        serverPath: "static/map/map.html"
-      }
+        name: 'map',
+        url: '/map',
+        serverPath: 'static/map/map.html',
+      },
     ];
   </script>
 </head>
@@ -27,5 +33,4 @@
   <script type="module" src="/static/app.js"></script>
   <partial-component data-url="/profile"></partial-component>
   <ui-view></ui-view>
-  
 </body>

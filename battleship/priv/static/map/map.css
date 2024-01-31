@@ -1,22 +1,22 @@
 #map {
+  display: flex;
+  & #fleet {
     display: flex;
-    & #fleet {
-        display: flex;
-        width: 300px;
-        height: 300px;
-        flex-direction: row;
-        align-items: stretch;
-        flex-wrap: wrap;
-        align-content: flex-start;
+    width: 300px;
+    height: 300px;
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: wrap;
+    align-content: flex-start;
 
-        & .place-holder {
-            box-sizing: border-box;
-            border: 1.5px solid gray;
-            height: 30px;
-            float: inline-start;
-            margin-bottom: 1.5rem;
-            margin-left: 1rem;
-            margin-top: 1rem;
-        }
+    & .place-holder {
+      box-sizing: border-box;
+      border: 1.5px solid gray;
+      height: 30px;
+      float: inline-start;
+      margin-bottom: 1.5rem;
+      margin-left: 1rem;
+      margin-top: 1rem;
     }
+  }
 }

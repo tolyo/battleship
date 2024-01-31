@@ -10,8 +10,8 @@
     "sourceMap": false,
     "declaration": false,
     "incremental": true,
-    "typeRoots": ["/global.d.ts", "node_modules/@types"]
+    "typeRoots": ["/global.d.ts", "node_modules/@types"],
   },
   "include": ["./**/*.js", "./**/*.ts"],
-  "exclude": []
+  "exclude": [],
 }

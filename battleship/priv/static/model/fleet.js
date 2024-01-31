@@ -18,7 +18,4 @@ export const Fleet = [
   new Ship('9', 1),
 ];
 
-export const FLEET_SIZE = Fleet.map((x) => x.size).reduce(
-  (acc, a) => acc + a,
-  0
-);
+export const FLEET_SIZE = 20;

@@ -1,5 +1,5 @@
 import { GRID } from './constants.js';
-import { FLEET_SIZE } from './fleet.js';
+import { FLEET_SIZE } from './model/fleet.js';
 
 /**
  * @type {MapTile[][]}

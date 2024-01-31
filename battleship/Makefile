@@ -1,7 +1,7 @@
 default: help
 
 # Frontend make file context
-FRONTEND_CONTEXT = make -C priv/static/assets/frontend
+FRONTEND_CONTEXT = make -C priv/static
 SERVER_CONTEXT = make -f server.mk
 
 INFO = "\033[32m[INFO]\033[0m"
@@ -31,7 +31,7 @@ start:
 include ./config/dev.env
 
 lint:
-#	$(FRONTEND_CONTEXT) lint
+	$(FRONTEND_CONTEXT) lint
 	$(SERVER_CONTEXT) lint
 	@echo $(INFO) "Complete"
 

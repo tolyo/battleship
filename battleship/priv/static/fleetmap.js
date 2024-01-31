@@ -1,5 +1,5 @@
 import { GRID } from './constants';
-import { Fleet } from './fleet';
+import { Fleet } from './model/fleet';
 import { MapTile } from './strikemap';
 
 const map = [];
