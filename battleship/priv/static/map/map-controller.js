@@ -34,8 +34,8 @@ export default class MapController {
     attachShipElelmentToPlaceHolder(ship) {
         const tile = document.getElementById(`placeholder-${ship.id}`);
         const shipDom = document.getElementById(ship.id);
-        shipDom.style.left = `${tile.getBoundingClientRect().left + window.pageXOffset}px`;
-        shipDom.style.top = `${tile.getBoundingClientRect().top + window.pageYOffset}px`;
+        shipDom.style.left = `${tile.getBoundingClientRect().left + window.scrollX}px`;
+        shipDom.style.top = `${tile.getBoundingClientRect().top + window.scrollY}px`;
         // //     // set event handlers
         // shipDom.onmousedown = (e) => onmousedown(e, shipDom);
         // override default browser behavior
