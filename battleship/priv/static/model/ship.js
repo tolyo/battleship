@@ -225,6 +225,14 @@ export default class Ship {
     document.onmousemove = null;
     document.onmouseup = null;
     this.shipElement.classList.remove('dragged');
+
+    // Check if legal otherwise recreate on placeholder
+    if (false) {
+      // TODO
+    } else {
+      this.shipElement.remove();
+      this.createOnPlaceholder();
+    }
   }
 
   getShipCoordinates() {
