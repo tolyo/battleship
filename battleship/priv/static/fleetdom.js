@@ -1,7 +1,7 @@
-import Fleet from './fleet';
-import { FLEET_BOARD_ID, GRID_SIZE } from './constants';
-import { Ship } from './ship';
-import gameEngine from './game';
+import {Fleet} from './fleet.js';
+import { FLEET_BOARD_ID, GRID_SIZE } from './constants.js';
+import Ship from './ship.js';
+
 
 function init() {
   reset();
@@ -22,7 +22,7 @@ function reset() {
  * @param {Ship} ship
  * @return {HTMLElement} shipElement
  */
-function createDomElement(ship) {
+export function createDomElement(ship) {
   const shipElement = document.createElement('div');
   shipElement.classList.add('ship');
   shipElement.id = ship.id; // each div is identified by ship id
@@ -62,7 +62,7 @@ export function onmousedown(e, shipDom) {
   if (dragged === true) return; // one item at a time
   if (e.button !== undefined && e.button !== 0) return; // only touch or left click
   // if (e.touches && e.touches.length > 1) return; // support one finger touch only
-  if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
+  // if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
 
   dragged = true;
   e.preventDefault();

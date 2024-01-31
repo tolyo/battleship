@@ -10,6 +10,7 @@
         align-content: flex-start;
 
         & .place-holder {
+            box-sizing: border-box;
             border: 1.5px solid gray;
             height: 30px;
             float: inline-start;

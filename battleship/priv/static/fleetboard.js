@@ -18,7 +18,7 @@ export function placeFleet() {
  * Marks
  * @param {Ship} ship to place
  */
-export function  placeShip(ship) {
+export function placeShip(ship) {
   ship.getShipMapCoordinates().forEach(({ row, column }) => {
     applyClassToGrid(row, column, 'placed');
   });

@@ -89,6 +89,8 @@
 .ship {
   box-sizing: border-box;
   border: #7f881a 2px solid;
+  background-color: #f0ff20;
+  opacity: 0.2;
   position: absolute;
   width: 30px;
   height: 30px;

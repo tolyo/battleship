@@ -1,23 +1,46 @@
 import { Fleet } from "../fleet.js";
 import { addTilesToBoard } from "../fleetboard.js";
+import { createDomElement } from "../fleetdom.js";
 
 export default class MapController {
     constructor() {
         this.board = document.getElementById("fleetboard");
         addTilesToBoard(this.board, "fleetboard");
-        addFleetPlaceholders();
+        this.addFleetPlaceholders();
+        this.addFleet();
     }
-}
 
-function addFleetPlaceholders() {
+    addFleetPlaceholders() {
+        const fleetPlaceholder = document.getElementById("fleet");
+    
+        Fleet.forEach((ship) => {
+            const shipPlaceholder = document.createElement('div');
+            shipPlaceholder.className = `place-holder`;
+            shipPlaceholder.id = `placeholder-${ship.id}`;
+            shipPlaceholder.style.width = `${ship.size * 30}px`;
+            fleetPlaceholder.appendChild(shipPlaceholder);
+        })
+    }
+  
 
-    const fleetPlaceholder = document.getElementById("fleet");
+    addFleet() {
+        Fleet.forEach((ship) => {
+            const element = createDomElement(ship);
+            this.board.appendChild(element);
+            this.attachShipElelmentToPlaceHolder(ship);
+        })
+    }
 
-    Fleet.forEach((ship) => {
-        const shipPlaceholder = document.createElement('div');
-        shipPlaceholder.className = `place-holder`;
-        shipPlaceholder.id = ship.id;
-        shipPlaceholder.style.width = `${ship.size * 30}px`;
-        fleetPlaceholder.appendChild(shipPlaceholder);
-    })
+    attachShipElelmentToPlaceHolder(ship) {
+        const tile = document.getElementById(`placeholder-${ship.id}`);
+        const shipDom = document.getElementById(ship.id);
+        shipDom.style.left = `${tile.getBoundingClientRect().left + window.pageXOffset}px`;
+        shipDom.style.top = `${tile.getBoundingClientRect().top + window.pageYOffset}px`;
+        // //     // set event handlers
+        // shipDom.onmousedown = (e) => onmousedown(e, shipDom);
+        // override default browser behavior
+        shipDom.ondragstart = () => false;
+        shipDom.onmouseup = () => false;
+      }
+      
 }
