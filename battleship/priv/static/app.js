@@ -1,6 +1,4 @@
 import { initRouter } from "./utils/router.js";
-
-import "./utils/components.js";
 import FormController from "./utils/form-controller.js";
 import MapController from "./map/map-controller.js";
 
