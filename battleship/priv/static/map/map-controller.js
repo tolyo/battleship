@@ -5,16 +5,12 @@ export default class MapController {
   constructor() {
     this.board = document.getElementById('fleetboard');
     addTilesToBoard(this.board, 'fleetboard');
-    this.addFleetPlaceholders();
-    this.addFleet();
-  }
-
-  addFleetPlaceholders() {
+    // Add placeholders
     const fleetPlaceholder = document.getElementById('fleet');
     Fleet.forEach((ship) => ship.createPlaceHolder(fleetPlaceholder));
+    // Attach ships to them
+    Fleet.forEach((ship) => ship.createOnPlaceholder());
+    window.Fleet = Fleet;
   }
 
-  addFleet() {
-    Fleet.forEach((ship) => ship.createOnPlaceholder());
-  }
 }

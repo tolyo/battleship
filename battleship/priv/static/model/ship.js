@@ -1,6 +1,5 @@
 import { GRID_SIZE } from '../constants.js';
 import { MapTile } from '../strikemap.js';
-import { Fleet } from './fleet.js';
 
 /**
  * @typedef {'ACTIVE' | 'DAMAGED' | 'KILLED'} ShipState
@@ -79,6 +78,18 @@ export default class Ship {
      * @type {?Element}
      */
     this.currentDroppable = null;
+
+    // Ensure reclaim of tiles in case 
+    document.addEventListener('mousedown', 
+    /**
+     * 
+     * @param {MouseEvent} e 
+     */
+    (e) => {
+      if (/** @type {HTMLElement} */ (e.target).id !== this.id) {
+        this.claimTiles();
+      }
+    });
   }
 
   reset() {
@@ -183,6 +194,7 @@ export default class Ship {
    * @param {MouseEvent} e
    */
   onmousedown(e) {
+    console.log("onmousedown");
     if (e.button !== undefined && e.button !== 0) return; // only touch or left click
     // if (e.touches && e.touches.length > 1) return; // support one finger touch only
     // if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
@@ -190,29 +202,68 @@ export default class Ship {
 
     const shipCoordinates = this.getShipCoordinates();
     // set offsets for the click event
-    console.log(shipCoordinates);
     this.shiftX = e.pageX - shipCoordinates.left;
     this.shiftY = e.pageY - shipCoordinates.top;
     this.shipElement.classList.add('dragged');
     // On move, clear all old tiles
     this.elementsBelow.forEach((tile) => {
       this.getAdjacents(tile).forEach((adjacentTile) => {
-        if (adjacentTile.dataset.state == MapTile.BLOCKED) {
+        if (adjacentTile.dataset.state === MapTile.BLOCKED) {
           adjacentTile.dataset.state = MapTile.EMPTY;
         }
       });
       tile.dataset.state = MapTile.EMPTY;
     });
     this.elementsBelow = [];
-    // But let other ships to reclaim the tiles
-    Fleet.forEach((ship) => {
-      if (ship.isPlaced()) {
-        ship.claimTiles();
-      }
-    });
+    
+    
+    document.onmousemove = (moveEvt) => this.onmousemove(moveEvt);
+    document.onmouseup = (upEvt) => this.onmouseup(upEvt);
+  }
+  
+  /**
+   * @param {MouseEvent} e
+   */
+  onmousemove(e) {
+    const x = Math.floor(e.pageX - this.shiftX);
+    const y = Math.floor(e.pageY - this.shiftY);
+    this.shipElement.style.left = `${x}px`;
+    this.shipElement.style.top = `${y}px`;
+    this.shipElement.hidden = true;
 
-    document.onmousemove = (e) => this.onmousemove(e);
-    document.onmouseup = (e) => this.onmouseup(e);
+    const elementBelow = /** @type {HTMLElement} */ (
+      document.elementFromPoint(x + 15, y + 15)
+    ); // casting for JSdoc
+    if (elementBelow?.classList?.contains('fleetboard-tile')) {
+      if (this.isLegal(elementBelow.dataset.row, elementBelow.dataset.column)) {
+        this.elementsBelow.forEach((el) => el.classList.add('droppable-target'));
+      } else {
+        this.elementsBelow = [];
+      }
+    } 
+
+    this.shipElement.hidden = false;
+  }
+
+  /**
+   *
+   */
+  onmouseup() {
+    // clear event bindings
+    document.onmousemove = null;
+    document.onmouseup = null;
+    this.shipElement.classList.remove('dragged');
+
+    // Check if legal otherwise recreate on placeholder
+    if (this.elementsBelow.length > 0) {
+      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
+      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
+      this.claimTiles();
+      // possibly set blocked
+    } else {
+      this.shipElement.remove();
+      this.createOnPlaceholder();
+    }
   }
 
   /**
@@ -238,86 +289,41 @@ export default class Ship {
   }
 
   /**
-   * @param {MouseEvent} e
-   */
-  onmousemove(e) {
-    const x = Math.floor(e.pageX - this.shiftX);
-    const y = Math.floor(e.pageY - this.shiftY);
-    this.shipElement.style.left = `${x}px`;
-    this.shipElement.style.top = `${y}px`;
-    this.shipElement.hidden = true;
-
-    const elementBelow = /** @type {HTMLElement} */ (
-      document.elementFromPoint(x + 15, y + 15)
-    ); // casting for JSdoc
-    if (elementBelow?.classList?.contains('fleetboard-tile')) {
-      if (this.isLegal(elementBelow.dataset.row, elementBelow.dataset.column)) {
-        this.elementsBelow.forEach((e) => e.classList.add('droppable-target'));
-      }
-    } else {
-      this.resetElementsBelow();
-    }
-
-    this.shipElement.hidden = false;
-  }
-
-  /**
    * Checks legality and popullates state with elements belpw
    * @param {string} row
    * @param {string} column
    * @returns {boolean}
    */
   isLegal(row, column) {
+    let res = true;
     this.resetElementsBelow();
     const x = parseInt(row, 10);
-    console.log(x);
     const y = parseInt(column, 10);
     if (this.orientation === 'HORIZONTAL') {
       if (y + this.size - 1 >= 10) return false;
       for (let i = y; i < y + this.size; i += 1) {
         const tile = document.getElementById(`fleetboard-${x}-${i}`);
-        console.log(tile);
-        if (tile.dataset.state != MapTile.EMPTY) {
-          return false;
+        if (tile.dataset.state !== MapTile.EMPTY) {
+          res = false;
         }
-        for (const adjacent of this.getAdjacents(tile)) {
-          if (adjacent.dataset.state == MapTile.FILLED) {
-            return false;
-          }
+        // eslint-disable-next-line no-loop-func
+        this.getAdjacents(tile).forEach((adjacent) => {
+          if (adjacent.dataset.state === MapTile.FILLED) {
+            res = false;
+          };
+        });
+        
+        if (res) {
+          this.elementsBelow.push(tile);
         }
-        this.elementsBelow.push(tile);
       }
     }
-
-    return true;
+    return res;
   }
 
   resetElementsBelow() {
     this.elementsBelow.forEach((e) => e.classList.remove('droppable-target'));
     this.elementsBelow = []; // always reset
-  }
-
-  /**
-   *
-   * @param {MouseEvent} e
-   */
-  onmouseup(e) {
-    // clear event bindings
-    document.onmousemove = null;
-    document.onmouseup = null;
-    this.shipElement.classList.remove('dragged');
-
-    // Check if legal otherwise recreate on placeholder
-    if (this.elementsBelow.length > 0) {
-      console.log(this.elementsBelow);
-      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
-      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
-      this.claimTiles();
-      // possibly set blocked
-    } else {
-      this.shipElement.remove();
-      this.createOnPlaceholder();
-    }
   }
 
   getShipCoordinates() {
