@@ -32,17 +32,14 @@ export function tryPlacingShips() {
     let count = 10000; // safety to prevent runaway cycle
     while (isLegal(ship) === false) {
       ship.setLocation(getRandomShipCoordinate());
-      count--;
+      count -= 1;
       if (count === 0) {
-        console.log(showGrid());
         throw new Error('Count exceeded');
       }
     }
     // attach ship only when valid location is found
     add(ship);
   });
-
-  console.log(showGrid());
 }
 
 /**
@@ -88,8 +85,8 @@ function strike(column, row) {
 }
 
 function markAdjacent(ship) {
-  ship.getShipMapCoordinates().forEach(({ row, column }) => {
-    getAdjacentCoordinates(row, column).forEach(({ row, column }) => {
+  ship.getShipMapCoordinates().forEach(({ x, y }) => {
+    getAdjacentCoordinates(x, y).forEach(({ row, column }) => {
       if (map[row][column] !== MapTile.FILLED) {
         map[row][column] = MapTile.BLOCKED;
       }
@@ -101,16 +98,16 @@ function placeShip(ship) {
   updateShipTiles(ship, MapTile.FILLED);
 }
 
-function removeShip(ship) {
-  updateShipTiles(ship, MapTile.EMPTY);
-}
+// function removeShip(ship) {
+//   updateShipTiles(ship, MapTile.EMPTY);
+// }
 
 function updateShipTiles(ship, tileState) {
   const { row, column, size, orientation } = ship;
   if (column === undefined || row === undefined || orientation === undefined)
     throw new Error('Cannot add ship. Column row and/or orientation not set');
 
-  for (let i = 0; i < size; i++) {
+  for (let i = 0; i < size; i += 1) {
     if (orientation === 'HORIZONTAL') {
       map[row][column + i] = tileState;
     } else if (orientation === 'VERTICAL') {
@@ -181,8 +178,7 @@ function isLegal({ row, column, size, orientation }) {
 
 function getAdjacentCoordinates(row, column) {
   const coordinates = [];
-  //
-  // // top left
+  // top left
   if (row !== 0 && column !== 0) {
     coordinates.push({ row: row - 1, column: column - 1 });
   }

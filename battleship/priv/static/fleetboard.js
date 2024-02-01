@@ -1,6 +1,7 @@
 import { GRID } from './constants.js';
 import { Fleet } from './model/fleet.js';
 import Ship from './model/ship.js';
+import { MapTile } from './strikemap.js';
 
 export function clearPlacedGrids() {
   const htmlList = window.document.getElementsByClassName('placed');
@@ -66,8 +67,9 @@ export function addTilesToBoard(elem, boardname) {
       const tile = document.createElement('div');
       tile.className = `${boardname}-tile`;
       tile.id = `${boardname}-${y}-${x}`;
-      tile.setAttribute('data-column', y.toString());
-      tile.setAttribute('data-row', x.toString());
+      tile.dataset.row = y.toString();
+      tile.dataset.column = x.toString();
+      tile.dataset.state = MapTile.EMPTY;
       tileRow.appendChild(tile);
     });
   });

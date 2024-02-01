@@ -1,4 +1,5 @@
 import { GRID_SIZE } from '../constants.js';
+import { MapTile } from '../strikemap.js';
 
 /**
  * @typedef {'ACTIVE' | 'DAMAGED' | 'KILLED'} ShipState
@@ -59,6 +60,16 @@ export default class Ship {
     this.placeHolder = null;
 
     /**
+     * @type {?Element}
+     */
+    this.elementBelow = null;
+
+    /**
+     * @type {HTMLElement[]}
+     */
+    this.elementsBelow = [];
+
+    /**
      * @type {number}
      */
     this.shiftX = 0;
@@ -67,6 +78,11 @@ export default class Ship {
      * @type {number}
      */
     this.shiftY = 0;
+
+    /**
+     * @type {?Element}
+     */
+    this.currentDroppable = null;
   }
 
   reset() {
@@ -212,8 +228,54 @@ export default class Ship {
    * @param {MouseEvent} e
    */
   onmousemove(e) {
-    this.shipElement.style.left = `${Math.floor(e.pageX - this.shiftX)}px`;
-    this.shipElement.style.top = `${Math.floor(e.pageY - this.shiftY)}px`;
+    const x = Math.floor(e.pageX - this.shiftX);
+    const y = Math.floor(e.pageY - this.shiftY);
+    this.shipElement.style.left = `${x}px`;
+    this.shipElement.style.top = `${y}px`;
+    this.shipElement.hidden = true;
+
+    const elementBelow = /** @type {HTMLElement} */ (
+      document.elementFromPoint(x + 15, y + 15)
+    ); // casting for JSdoc
+    if (elementBelow?.classList?.contains('fleetboard-tile')) {
+      if (this.isLegal(elementBelow.dataset.row, elementBelow.dataset.column)) {
+        this.elementsBelow.forEach((e) => e.classList.add('droppable-target'));
+      }
+    } else {
+      this.resetElementsBelow();
+    }
+
+    this.shipElement.hidden = false;
+  }
+
+  /**
+   * Checks legality and popullates state with elements belpw
+   * @param {string} row
+   * @param {string} column
+   * @returns {boolean}
+   */
+  isLegal(row, column) {
+    this.resetElementsBelow();
+    const x = parseInt(row, 10);
+    console.log(x);
+    const y = parseInt(column, 10);
+    if (this.orientation === 'HORIZONTAL') {
+      if (y + this.size - 1 >= 10) return false;
+      for (let i = y; i < y + this.size; i += 1) {
+        const tile = document.getElementById(`fleetboard-${x}-${i}`);
+        if (tile.dataset.state != MapTile.EMPTY) {
+          return false;
+        }
+        this.elementsBelow.push(tile);
+      }
+    }
+
+    return true;
+  }
+
+  resetElementsBelow() {
+    this.elementsBelow.forEach((e) => e.classList.remove('droppable-target'));
+    this.elementsBelow = []; // always reset
   }
 
   /**
@@ -227,8 +289,13 @@ export default class Ship {
     this.shipElement.classList.remove('dragged');
 
     // Check if legal otherwise recreate on placeholder
-    if (false) {
-      // TODO
+    if (this.elementsBelow != []) {
+      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
+      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
+      this.elementsBelow.forEach(
+        (tile) => (tile.dataset.state = MapTile.FILLED)
+      );
+      // possibly set blocked
     } else {
       this.shipElement.remove();
       this.createOnPlaceholder();
