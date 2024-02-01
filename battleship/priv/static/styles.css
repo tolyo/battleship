@@ -41,6 +41,10 @@
   background-color: #92d2ff;
 }
 
+.fleetboard-tile[data-state='o'] {
+  background-color: #92d2ff;
+}
+
 .hitboard .hitboard-tile:hover {
   border: 2px solid #fff757;
 }

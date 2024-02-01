@@ -1,5 +1,6 @@
 import { GRID_SIZE } from '../constants.js';
 import { MapTile } from '../strikemap.js';
+import { Fleet } from './fleet.js';
 
 /**
  * @typedef {'ACTIVE' | 'DAMAGED' | 'KILLED'} ShipState
@@ -58,11 +59,6 @@ export default class Ship {
      * @type {?HTMLElement}
      */
     this.placeHolder = null;
-
-    /**
-     * @type {?Element}
-     */
-    this.elementBelow = null;
 
     /**
      * @type {HTMLElement[]}
@@ -198,6 +194,23 @@ export default class Ship {
     this.shiftX = e.pageX - shipCoordinates.left;
     this.shiftY = e.pageY - shipCoordinates.top;
     this.shipElement.classList.add('dragged');
+    // On move, clear all old tiles
+    this.elementsBelow.forEach((tile) => {
+      this.getAdjacents(tile).forEach((adjacentTile) => {
+        if (adjacentTile.dataset.state == MapTile.BLOCKED) {
+          adjacentTile.dataset.state = MapTile.EMPTY;
+        }
+      });
+      tile.dataset.state = MapTile.EMPTY;
+    });
+    this.elementsBelow = [];
+    // But let other ships to reclaim the tiles
+    Fleet.forEach((ship) => {
+      if (ship.isPlaced()) {
+        ship.claimTiles();
+      }
+    });
+
     document.onmousemove = (e) => this.onmousemove(e);
     document.onmouseup = (e) => this.onmouseup(e);
   }
@@ -263,8 +276,14 @@ export default class Ship {
       if (y + this.size - 1 >= 10) return false;
       for (let i = y; i < y + this.size; i += 1) {
         const tile = document.getElementById(`fleetboard-${x}-${i}`);
+        console.log(tile);
         if (tile.dataset.state != MapTile.EMPTY) {
           return false;
+        }
+        for (const adjacent of this.getAdjacents(tile)) {
+          if (adjacent.dataset.state == MapTile.FILLED) {
+            return false;
+          }
         }
         this.elementsBelow.push(tile);
       }
@@ -289,12 +308,11 @@ export default class Ship {
     this.shipElement.classList.remove('dragged');
 
     // Check if legal otherwise recreate on placeholder
-    if (this.elementsBelow != []) {
+    if (this.elementsBelow.length > 0) {
+      console.log(this.elementsBelow);
       this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
       this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
-      this.elementsBelow.forEach(
-        (tile) => (tile.dataset.state = MapTile.FILLED)
-      );
+      this.claimTiles();
       // possibly set blocked
     } else {
       this.shipElement.remove();
@@ -308,5 +326,84 @@ export default class Ship {
       left: box.left + window.scrollX,
       top: box.top + window.scrollY,
     };
+  }
+
+  claimTiles() {
+    this.elementsBelow.forEach((tile) => {
+      tile.dataset.state = MapTile.FILLED;
+      this.blockAdjacents(tile);
+    });
+  }
+
+  /**
+   * @param {HTMLElement} tile
+   */
+  blockAdjacents(tile) {
+    this.getAdjacents(tile).forEach((adjacentTile) => {
+      if (adjacentTile.dataset.state == MapTile.EMPTY) {
+        adjacentTile.dataset.state = MapTile.BLOCKED;
+      }
+    });
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isPlaced() {
+    return this.elementsBelow.length > 0;
+  }
+
+  /**
+   *
+   * @param {HTMLElement} elem
+   * @returns {HTMLElement[]} list of adjacent tiles
+   */
+  getAdjacents(elem) {
+    const row = parseInt(elem.dataset.row);
+    const column = parseInt(elem.dataset.column);
+    const coordinates = [];
+    // top left
+    if (row !== 0 && column !== 0) {
+      coordinates.push({ row: row - 1, column: column - 1 });
+    }
+
+    // top mid
+    if (row !== 0) {
+      coordinates.push({ row: row - 1, column });
+    }
+
+    // top right
+    if (row !== 0 && column !== 9) {
+      coordinates.push({ row: row - 1, column: column + 1 });
+    }
+
+    // mid left
+    if (column !== 0) {
+      coordinates.push({ row, column: column - 1 });
+    }
+
+    // mid right
+    if (column !== 9) {
+      coordinates.push({ row, column: column + 1 });
+    }
+
+    // bot left
+    if (row !== 9 && column !== 0) {
+      coordinates.push({ row: row + 1, column: column - 1 });
+    }
+
+    // bot mid
+    if (row !== 9) {
+      coordinates.push({ row: row + 1, column });
+    }
+
+    // bot right
+    if (row !== 9 && column !== 9) {
+      coordinates.push({ row: row + 1, column: column + 1 });
+    }
+
+    return coordinates.map(({ row, column }) =>
+      document.getElementById(`fleetboard-${row}-${column}`)
+    );
   }
 }
