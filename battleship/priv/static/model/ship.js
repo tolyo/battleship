@@ -243,8 +243,8 @@ export default class Ship {
     const elementBelow = /** @type {HTMLElement} */ (
       document.elementFromPoint(x + 15, y + 15)
     ); // casting for JSdoc
+    this.resetElementsBelow();
     if (elementBelow?.classList?.contains('fleetboard-tile')) {
-      this.resetElementsBelow();
       if (
         this.isLegal(
           elementBelow.dataset.row,
@@ -293,6 +293,7 @@ export default class Ship {
    * Handle rotation
    */
   ondblclick() {
+    // Cant rotate a ship of size 1
     if (this.size === 1) {
       return;
     }
