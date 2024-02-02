@@ -74,22 +74,24 @@ export default class Ship {
      */
     this.shiftY = 0;
 
-    /**
-     * @type {?Element}
-     */
-    this.currentDroppable = null;
-
-    // Ensure reclaim of tiles in case 
-    document.addEventListener('mousedown', 
-    /**
-     * 
-     * @param {MouseEvent} e 
-     */
-    (e) => {
-      if (/** @type {HTMLElement} */ (e.target).id !== this.id) {
-        this.claimTiles();
+    // Ensure reclaim of tiles in case
+    document.addEventListener(
+      'mousedown',
+      /**
+       *
+       * @param {MouseEvent} e
+       */
+      (e) => {
+        if (/** @type {HTMLElement} */ (e.target).id !== this.id) {
+          this.claimTiles();
+        }
       }
-    });
+    );
+
+    /**
+     * @type {boolean}
+     */
+    this.firstMove = false;
   }
 
   reset() {
@@ -188,13 +190,13 @@ export default class Ship {
     // override default browser behavior
     this.shipElement.ondragstart = () => false;
     this.shipElement.onmouseup = () => false;
+    this.shipElement.ondblclick = () => this.ondblclick();
   }
 
   /**
    * @param {MouseEvent} e
    */
   onmousedown(e) {
-    console.log("onmousedown");
     if (e.button !== undefined && e.button !== 0) return; // only touch or left click
     // if (e.touches && e.touches.length > 1) return; // support one finger touch only
     // if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
@@ -205,26 +207,20 @@ export default class Ship {
     this.shiftX = e.pageX - shipCoordinates.left;
     this.shiftY = e.pageY - shipCoordinates.top;
     this.shipElement.classList.add('dragged');
-    // On move, clear all old tiles
-    this.elementsBelow.forEach((tile) => {
-      this.getAdjacents(tile).forEach((adjacentTile) => {
-        if (adjacentTile.dataset.state === MapTile.BLOCKED) {
-          adjacentTile.dataset.state = MapTile.EMPTY;
-        }
-      });
-      tile.dataset.state = MapTile.EMPTY;
-    });
-    this.elementsBelow = [];
-    
-    
+    this.firstMove = true;
+
     document.onmousemove = (moveEvt) => this.onmousemove(moveEvt);
-    document.onmouseup = (upEvt) => this.onmouseup(upEvt);
+    document.onmouseup = () => this.onmouseup();
   }
-  
+
   /**
    * @param {MouseEvent} e
    */
   onmousemove(e) {
+    if (this.firstMove) {
+      this.clearMapBlocks();
+      this.firstMove = false;
+    }
     const x = Math.floor(e.pageX - this.shiftX);
     const y = Math.floor(e.pageY - this.shiftY);
     this.shipElement.style.left = `${x}px`;
@@ -235,12 +231,26 @@ export default class Ship {
       document.elementFromPoint(x + 15, y + 15)
     ); // casting for JSdoc
     if (elementBelow?.classList?.contains('fleetboard-tile')) {
-      if (this.isLegal(elementBelow.dataset.row, elementBelow.dataset.column)) {
-        this.elementsBelow.forEach((el) => el.classList.add('droppable-target'));
+      this.resetElementsBelow();
+      if (
+        this.isLegal(
+          elementBelow.dataset.row,
+          elementBelow.dataset.column,
+          this.orientation
+        )
+      ) {
+        this.elementsBelow = this.getElementsBelow(
+          elementBelow.dataset.row,
+          elementBelow.dataset.column,
+          this.orientation
+        );
+        this.elementsBelow.forEach((el) =>
+          el.classList.add('droppable-target')
+        );
       } else {
         this.elementsBelow = [];
       }
-    } 
+    }
 
     this.shipElement.hidden = false;
   }
@@ -267,6 +277,30 @@ export default class Ship {
   }
 
   /**
+   * Handle rotation
+   */
+  ondblclick() {
+    const { row, column } = this.elementsBelow[0].dataset;
+    this.elementsBelow.forEach((e) => e.classList.remove('droppable-target'));
+    this.clearMapBlocks();
+
+    if (this.isLegal(row, column, this.getOppositeOrientation())) {
+      // Try rotation
+      if (this.orientation === 'HORIZONTAL') {
+        this.orientation = 'VERTICAL';
+      } else {
+        this.orientation = 'HORIZONTAL';
+      }
+      const { width, height } = this.calculateSize();
+      this.shipElement.style.width = width;
+      this.shipElement.style.height = height;
+    }
+
+    this.elementsBelow = this.getElementsBelow(row, column, this.orientation);
+    this.claimTiles();
+  }
+
+  /**
    * @typedef {Object} shipElementSize
    * @property {string} width - px
    * @property {string} height - px
@@ -288,37 +322,100 @@ export default class Ship {
     };
   }
 
+  getOppositeOrientation() {
+    return this.orientation === 'HORIZONTAL' ? 'VERTICAL' : 'HORIZONTAL';
+  }
+
   /**
-   * Checks legality and popullates state with elements belpw
+   * Checks legality and popullates state with elements below
+   *
    * @param {string} row
    * @param {string} column
+   * @param {ShipOrientation} orientation
+   * @returns {HTMLElement[]}
+   */
+  getElementsBelow(row, column, orientation) {
+    const elementsBelow = [];
+    const y = parseInt(row, 10);
+    const x = parseInt(column, 10);
+    if (orientation === 'HORIZONTAL') {
+      for (let i = x; i < x + this.size; i += 1) {
+        const tile = document.getElementById(`fleetboard-${y}-${i}`);
+        elementsBelow.push(tile);
+      }
+    } else {
+      for (let i = y; i < y + this.size; i += 1) {
+        const tile = document.getElementById(`fleetboard-${i}-${x}`);
+        elementsBelow.push(tile);
+      }
+    }
+
+    return elementsBelow;
+  }
+
+  /**
+   * Checks legality and popullates state with elements below
+   *
+   * @param {string} row
+   * @param {string} column
+   * @param {ShipOrientation} orientation
    * @returns {boolean}
    */
-  isLegal(row, column) {
+  isLegal(row, column, orientation) {
     let res = true;
-    this.resetElementsBelow();
-    const x = parseInt(row, 10);
-    const y = parseInt(column, 10);
-    if (this.orientation === 'HORIZONTAL') {
-      if (y + this.size - 1 >= 10) return false;
-      for (let i = y; i < y + this.size; i += 1) {
-        const tile = document.getElementById(`fleetboard-${x}-${i}`);
-        if (tile.dataset.state !== MapTile.EMPTY) {
-          res = false;
-        }
-        // eslint-disable-next-line no-loop-func
-        this.getAdjacents(tile).forEach((adjacent) => {
-          if (adjacent.dataset.state === MapTile.FILLED) {
+    const y = parseInt(row, 10);
+    const x = parseInt(column, 10);
+    if (orientation === 'HORIZONTAL') {
+      if (x + this.size - 1 >= 10) {
+        res = false;
+      } else {
+        for (let i = x; i < x + this.size; i += 1) {
+          const tile = document.getElementById(`fleetboard-${y}-${i}`);
+          if (tile.dataset.state !== MapTile.EMPTY) {
             res = false;
-          };
-        });
-        
-        if (res) {
-          this.elementsBelow.push(tile);
+          }
+          // eslint-disable-next-line no-loop-func
+          this.getAdjacents(tile).forEach((adjacent) => {
+            if (adjacent.dataset.state === MapTile.FILLED) {
+              res = false;
+            }
+          });
+        }
+      }
+    } else {
+      // Handle vertical case
+      // eslint-disable-next-line no-lonely-if
+      if (y + this.size - 1 >= 10) {
+        res = false;
+      } else {
+        for (let i = y; i < y + this.size; i += 1) {
+          const tile = document.getElementById(`fleetboard-${i}-${x}`);
+          if (tile.dataset.state !== MapTile.EMPTY) {
+            res = false;
+          }
+          // eslint-disable-next-line no-loop-func
+          this.getAdjacents(tile).forEach((adjacent) => {
+            if (adjacent.dataset.state === MapTile.FILLED) {
+              res = false;
+            }
+          });
         }
       }
     }
     return res;
+  }
+
+  clearMapBlocks() {
+    // On move, clear all old tiles
+    this.elementsBelow.forEach((tile) => {
+      this.getAdjacents(tile).forEach((adjacentTile) => {
+        if (adjacentTile.dataset.state === MapTile.BLOCKED) {
+          adjacentTile.dataset.state = MapTile.EMPTY;
+        }
+      });
+      tile.dataset.state = MapTile.EMPTY;
+    });
+    this.elementsBelow = [];
   }
 
   resetElementsBelow() {
@@ -346,7 +443,7 @@ export default class Ship {
    */
   blockAdjacents(tile) {
     this.getAdjacents(tile).forEach((adjacentTile) => {
-      if (adjacentTile.dataset.state == MapTile.EMPTY) {
+      if (adjacentTile.dataset.state === MapTile.EMPTY) {
         adjacentTile.dataset.state = MapTile.BLOCKED;
       }
     });

@@ -12,5 +12,4 @@ export default class MapController {
     Fleet.forEach((ship) => ship.createOnPlaceholder());
     window.Fleet = Fleet;
   }
-
 }
