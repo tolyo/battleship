@@ -1,7 +1,5 @@
-import { GRID } from './constants.js';
+import { GRID, MapTile } from './constants.js';
 import { Fleet } from './model/fleet.js';
-import Ship from './model/ship.js';
-import { MapTile } from './strikemap.js';
 
 export function clearPlacedGrids() {
   const htmlList = window.document.getElementsByClassName('placed');
@@ -16,7 +14,7 @@ export function placeFleet() {
 
 /**
  * Marks
- * @param {Ship} ship to place
+ * @param {import('./model/ship.js').default} ship to place
  */
 export function placeShip(ship) {
   ship.getShipMapCoordinates().forEach(({ row, column }) => {
@@ -26,7 +24,7 @@ export function placeShip(ship) {
 
 /**
  * Marks
- * @param {Ship} ship to place
+ * @param {import('./model/ship.js').default} ship to place
  */
 export function removeShip(ship) {
   ship.getShipMapCoordinates().forEach(({ row, column }) => {

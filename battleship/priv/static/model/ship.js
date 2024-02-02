@@ -1,5 +1,4 @@
-import { GRID_SIZE } from '../constants.js';
-import { MapTile } from '../strikemap.js';
+import { GRID_SIZE, MapTile } from '../constants.js';
 
 /**
  * @typedef {'ACTIVE' | 'DAMAGED' | 'KILLED'} ShipState
@@ -294,6 +293,9 @@ export default class Ship {
    * Handle rotation
    */
   ondblclick() {
+    if (this.size === 1) {
+      return;
+    }
     const { row, column } = this.elementsBelow[0].dataset;
     this.elementsBelow.forEach((e) => e.classList.remove('droppable-target'));
     this.clearMapBlocks();

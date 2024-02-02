@@ -1,5 +1,7 @@
 import Ship from './ship.js';
-// Fleet representation
+/**
+ * @type {Ship[]}
+ */
 export const Fleet = [
   new Ship('0', 4),
 
@@ -17,5 +19,3 @@ export const Fleet = [
   new Ship('8', 1),
   new Ship('9', 1),
 ];
-
-export const FLEET_SIZE = 20;
