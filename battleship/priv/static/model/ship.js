@@ -88,6 +88,20 @@ export default class Ship {
       }
     );
 
+    // Ensure reclaim of tiles in case
+    document.addEventListener(
+      'claim',
+      /**
+       *
+       * @param {CustomEvent} e
+       */
+      (e) => {
+        if (e.detail.id !== this.id) {
+          this.claimTiles();
+        }
+      }
+    );
+
     /**
      * @type {boolean}
      */
@@ -416,6 +430,7 @@ export default class Ship {
       tile.dataset.state = MapTile.EMPTY;
     });
     this.elementsBelow = [];
+    document.dispatchEvent(new CustomEvent('claim', { detail: this.id }));
   }
 
   resetElementsBelow() {
