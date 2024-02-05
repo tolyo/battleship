@@ -427,9 +427,11 @@ export default class Ship {
     this.elementsBelow.forEach((tile) => {
       this.getAdjacents(tile).forEach((adjacentTile) => {
         if (adjacentTile.dataset.state === MapTile.BLOCKED) {
+          // eslint-disable-next-line no-param-reassign
           adjacentTile.dataset.state = MapTile.EMPTY;
         }
       });
+      // eslint-disable-next-line no-param-reassign
       tile.dataset.state = MapTile.EMPTY;
     });
     this.elementsBelow = [];
@@ -462,6 +464,7 @@ export default class Ship {
   blockAdjacents(tile) {
     this.getAdjacents(tile).forEach((adjacentTile) => {
       if (adjacentTile.dataset.state === MapTile.EMPTY) {
+        // eslint-disable-next-line no-param-reassign
         adjacentTile.dataset.state = MapTile.BLOCKED;
       }
     });
@@ -479,9 +482,10 @@ export default class Ship {
    * @param {HTMLElement} elem
    * @returns {HTMLElement[]} list of adjacent tiles
    */
+  // eslint-disable-next-line class-methods-use-this
   getAdjacents(elem) {
-    const row = parseInt(elem.dataset.row);
-    const column = parseInt(elem.dataset.column);
+    const row = parseInt(elem.dataset.row, 10);
+    const column = parseInt(elem.dataset.column, 10);
     const coordinates = [];
     // top left
     if (row !== 0 && column !== 0) {
