@@ -196,14 +196,21 @@ export default class Ship {
   createOnPlaceholder() {
     this.createDomElement();
     this.placeHolder.appendChild(this.shipElement);
-    this.shipElement.style.left = `${this.placeHolder.getBoundingClientRect().left + window.scrollX}px`;
-    this.shipElement.style.top = `${this.placeHolder.getBoundingClientRect().top + window.scrollY}px`;
     // //     // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e);
     // override default browser behavior
     this.shipElement.ondragstart = () => false;
     this.shipElement.onmouseup = () => false;
     this.shipElement.ondblclick = () => this.ondblclick();
+    this.setOnPlaceholder();
+  }
+
+  setOnPlaceholder() {
+    this.clearMapBlocks();
+    this.orientation = 'HORIZONTAL';
+    this.setRotation();
+    this.shipElement.style.left = `${this.placeHolder.getBoundingClientRect().left + window.scrollX}px`;
+    this.shipElement.style.top = `${this.placeHolder.getBoundingClientRect().top + window.scrollY}px`;
   }
 
   /**
@@ -302,19 +309,23 @@ export default class Ship {
     this.clearMapBlocks();
 
     if (this.isLegal(row, column, this.getOppositeOrientation())) {
-      // Try rotation
+      // Reverse rotation
       if (this.orientation === 'HORIZONTAL') {
         this.orientation = 'VERTICAL';
       } else {
         this.orientation = 'HORIZONTAL';
       }
-      const { width, height } = this.calculateSize();
-      this.shipElement.style.width = width;
-      this.shipElement.style.height = height;
+      this.setRotation();
     }
 
     this.elementsBelow = this.getElementsBelow(row, column, this.orientation);
     this.claimTiles();
+  }
+
+  setRotation() {
+    const { width, height } = this.calculateSize();
+    this.shipElement.style.width = width;
+    this.shipElement.style.height = height;
   }
 
   /**
@@ -453,8 +464,10 @@ export default class Ship {
 
   claimTiles() {
     this.elementsBelow.forEach((tile) => {
+      // eslint-disable-next-line no-param-reassign
       tile.dataset.state = MapTile.FILLED;
       this.blockAdjacents(tile);
+      tile.classList.remove('droppable-target');
     });
   }
 
@@ -527,8 +540,50 @@ export default class Ship {
       coordinates.push({ row: row + 1, column: column + 1 });
     }
 
+    // eslint-disable-next-line no-shadow
     return coordinates.map(({ row, column }) =>
       document.getElementById(`fleetboard-${row}-${column}`)
     );
   }
+
+  /**
+   * @returns {boolean}
+   */
+  tryRandomLocation() {
+    this.setOnPlaceholder();
+    const { row, column, orientation } = getRandomShipCoordinate();
+    if (this.isLegal(row, column, orientation)) {
+      this.orientation = orientation;
+      this.setRotation();
+      this.elementsBelow = this.getElementsBelow(row, column, orientation);
+      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
+      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
+      this.claimTiles();
+      return true;
+    }
+    return false;
+  }
+}
+
+function getRandomTile() {
+  return `${Math.floor(Math.random() * 9)}`;
+}
+
+/**
+ *
+ * @returns {ShipOrientation}
+ */
+function getRandomOrientation() {
+  if (Math.round(Math.random()) > 0) {
+    return 'HORIZONTAL';
+  }
+  return 'VERTICAL';
+}
+
+function getRandomShipCoordinate() {
+  return {
+    row: getRandomTile(),
+    column: getRandomTile(),
+    orientation: getRandomOrientation(),
+  };
 }

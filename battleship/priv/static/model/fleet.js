@@ -1,8 +1,9 @@
 import Ship from './ship.js';
+
 /**
  * @type {Ship[]}
  */
-export const Fleet = [
+export default [
   new Ship('0', 4),
 
   new Ship('1', 3),

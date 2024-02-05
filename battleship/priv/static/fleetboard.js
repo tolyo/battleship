@@ -1,5 +1,5 @@
 import { GRID, MapTile } from './constants.js';
-import { Fleet } from './model/fleet.js';
+import Fleet from './model/fleet.js';
 
 export function clearPlacedGrids() {
   const htmlList = window.document.getElementsByClassName('placed');

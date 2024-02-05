@@ -1,4 +1,5 @@
-import { Fleet } from '../model/fleet.js';
+/* eslint-disable class-methods-use-this */
+import Fleet from '../model/fleet.js';
 import { addTilesToBoard } from '../fleetboard.js';
 import { FLEET_SIZE } from '../constants.js';
 
@@ -20,6 +21,8 @@ export default class MapController {
       childList: true,
       subtree: true,
     });
+
+    window.Fleet = Fleet;
   }
 
   handleChildChanges() {
@@ -32,5 +35,32 @@ export default class MapController {
     } else {
       this.button.setAttribute('hidden', 'true');
     }
+  }
+
+  random() {
+    try {
+      this.tryPlacingShips();
+    } catch (e) {
+      this.random();
+    }
+  }
+
+  tryPlacingShips() {
+    this.reset();
+    Fleet.forEach((ship) => {
+      let count = 100; // safety to prevent runaway cycle
+      let res = ship.tryRandomLocation();
+      while (res === false) {
+        res = ship.tryRandomLocation();
+        count -= 1;
+        if (count === 0) {
+          throw new Error('Count exceeded');
+        }
+      }
+    });
+  }
+
+  reset() {
+    Fleet.forEach((ship) => ship.setOnPlaceholder());
   }
 }
