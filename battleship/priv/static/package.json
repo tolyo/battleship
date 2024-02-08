@@ -8,18 +8,18 @@
     "playwright": "./node_modules/.bin/playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.1",
-    "@types/node": "^20.6.0",
-    "@typescript-eslint/eslint-plugin": "^6.19.1",
-    "@typescript-eslint/parser": "^6.19.1",
-    "browser-sync": "^3.0.2",
-    "eslint": "^8.56.0",
-    "eslint-config-airbnb-base": "^15.0.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "playwright": "^1.41.1",
-    "prettier": "^3.0.3",
-    "typescript": "^5.3.3",
-    "web": "^0.0.2"
+    "@playwright/test": "latest",
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "@uirouter/core": "latest",
+    "browser-sync": "latest",
+    "eslint": "latest",
+    "eslint-config-airbnb-base": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-import": "latest",
+    "playwright": "latest",
+    "prettier": "latest",
+    "typescript": "latest"
   }
 }

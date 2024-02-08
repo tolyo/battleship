@@ -1,12 +1,11 @@
 import { StateService, UIRouter } from '@uirouter/core';
-import { Alpine } from 'alpinejs';
 import FormController from './utils/form-controller';
 import { RouteConfig } from './utils/router';
 import MapController from './map/map-controller.js';
+import Ship from './model/ship';
 
 declare global {
   interface Window {
-    Alpine: Alpine;
     router: UIRouter;
     routes: RouteConfig[];
     crudRoutes: RouteConfig[];
@@ -16,6 +15,7 @@ declare global {
     App: {
       MapController: MapController;
     };
+    Fleet: Ship[];
   }
 }
 
