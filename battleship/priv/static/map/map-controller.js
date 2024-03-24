@@ -3,7 +3,7 @@ import Fleet from '../model/fleet.js';
 import { addTilesToBoard } from '../fleetboard.js';
 import { FLEET_SIZE } from '../constants.js';
 
-export default class MapController {
+class MapController {
   constructor() {
     this.board = document.getElementById('fleetboard');
     this.button = document.getElementById('ready');
@@ -64,3 +64,11 @@ export default class MapController {
     Fleet.forEach((ship) => ship.setOnPlaceholder());
   }
 }
+
+/**
+ * @type {angular.IComponentOptions}
+ */
+export default {
+  templateUrl: '/static/map/map.html',
+  controller: MapController,
+};

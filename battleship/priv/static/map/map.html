@@ -4,9 +4,5 @@
 </section>
 
 <button id="ready" hidden="true">Ready</button>
-<button id="random" onclick="mapController.random()">Random</button>
-<button id="random" onclick="mapController.reset()">Reset</button>
-
-<script>
-  window.mapController = new App.MapController();
-</script>
+<button id="random" ng-click="$ctrl.random()">Random</button>
+<button id="random" ng-click="$ctrl.reset()">Reset</button>

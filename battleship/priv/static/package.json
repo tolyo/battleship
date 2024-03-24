@@ -8,11 +8,12 @@
     "playwright": "./node_modules/.bin/playwright test"
   },
   "devDependencies": {
+    "@types/angular": "latest",
     "@playwright/test": "latest",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",
-    "@uirouter/core": "latest",
+    "@uirouter/angularjs": "latest",
     "browser-sync": "latest",
     "eslint": "latest",
     "eslint-config-airbnb-base": "latest",
