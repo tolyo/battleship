@@ -1,7 +1,7 @@
 default: help
 
 # Frontend make file context
-FRONTEND_CONTEXT = make -C priv/static
+FRONTEND_CONTEXT = make -C priv/static -f frontend.mk
 SERVER_CONTEXT = make -f server.mk
 
 INFO = "\033[32m[INFO]\033[0m"
@@ -36,17 +36,18 @@ lint:
 	@echo $(INFO) "Complete"
 
 check:
-#$(FRONTEND_CONTEXT) check
+	$(FRONTEND_CONTEXT) check
 	$(SERVER_CONTEXT) check
+	@echo $(INFO) "Complete"
 
 .PHONY: test
 test:
-	@echo "TODO"
+	$(SERVER_CONTEXT) test
+	@echo $(INFO) "Complete"
 
 functional-test:
-	$(SERVER_CONTEXT) functional-test &
 	$(FRONTEND_CONTEXT) test
-	@echo "TODO"
+	@echo $(INFO) "Complete"
 
 quality:
 	@make lint

@@ -18,5 +18,5 @@ check:
 	@echo "Checking w/ equalize"
 	@./elp eqwalize-all
 
-function-test:
+test:
 	@echo "TODO"

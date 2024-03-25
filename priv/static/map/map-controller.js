@@ -21,8 +21,6 @@ class MapController {
       childList: true,
       subtree: true,
     });
-
-    window.Fleet = Fleet;
   }
 
   handleChildChanges() {
