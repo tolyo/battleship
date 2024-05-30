@@ -151,25 +151,18 @@ export default class Ship {
   }
 
   /**
-   * @returns
+   * Marks a successful strike on a ship
    */
   strike() {
     if (this.health === 'KILLED') {
       throw new Error('Illegal state. Ship already killed');
     }
     this.hitcount += 1;
-    if (this.isKilled() === true) {
+    if (this.hitcount === this.size) {
       this.health = 'KILLED';
     } else {
       this.health = 'DAMAGED';
     }
-  }
-
-  /**
-   * @returns boolean
-   */
-  isKilled() {
-    return this.hitcount === this.size;
   }
 
   /**
@@ -196,7 +189,7 @@ export default class Ship {
   createOnPlaceholder() {
     this.createDomElement();
     this.placeHolder.appendChild(this.shipElement);
-    // //     // set event handlers
+    // set event handlers
     this.shipElement.onmousedown = (e) => this.onmousedown(e);
     // override default browser behavior
     this.shipElement.ondragstart = () => false;

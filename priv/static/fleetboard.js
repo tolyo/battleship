@@ -2,9 +2,9 @@ import { GRID, MapTile } from './constants.js';
 import Fleet from './model/fleet.js';
 
 export function clearPlacedGrids() {
-  const htmlList = window.document.getElementsByClassName('placed');
-  const elemList = Array.from(htmlList);
-  elemList.forEach((elem) => elem.classList.remove('placed'));
+  Array.from(window.document.getElementsByClassName('placed')).forEach((elem) =>
+    elem.classList.remove('placed')
+  );
 }
 
 export function placeFleet() {
