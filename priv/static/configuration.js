@@ -1,9 +1,3 @@
-/**
- *
- * @param {angular.ILocationProvider} $locationProvider
- * @param {angular.IHttpProvider} $httpProvider
- * @param {import("@uirouter/angularjs").UrlService} $urlServiceProvider
- */
 export default function appConfig(
   $locationProvider,
   $httpProvider,
@@ -14,7 +8,6 @@ export default function appConfig(
     requireBase: false,
     rewriteLinks: false,
   });
-  // eslint-disable-next-line no-param-reassign
   $httpProvider.defaults.withCredentials = true;
   // Error intercepter for ajax requests
   $httpProvider.interceptors.push([

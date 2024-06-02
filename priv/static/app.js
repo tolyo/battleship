@@ -1,15 +1,19 @@
 import mapComponent from './map/map-controller.js';
 import appConfig from './configuration.js';
 
+debugger
 window.angular
   .module('battleship', ['ui.router'])
   .config(appConfig)
   .config([
     '$stateProvider',
-    /**
-     * @param {import("@uirouter/angularjs").StateProvider} $stateProvider
-     */
+    
+    // TODO fix type imports 
+    // /**
+    //  * @param {import("@uirouter/angularjs").StateProvider} $stateProvider
+    //  */
     ($stateProvider) => {
+
       $stateProvider.state({
         name: 'home',
         url: '/',
@@ -18,7 +22,3 @@ window.angular
     },
   ])
   .component('home', mapComponent);
-
-window.addEventListener('DOMContentLoaded', () => {
-  window.angular.bootstrap(document, ['battleship'], { strictDi: true });
-});
