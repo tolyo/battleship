@@ -1,19 +1,17 @@
 import mapComponent from './map/map-controller.js';
 import appConfig from './configuration.js';
 
-debugger
 window.angular
   .module('battleship', ['ui.router'])
   .config(appConfig)
   .config([
     '$stateProvider',
-    
-    // TODO fix type imports 
+
+    // TODO fix type imports
     // /**
     //  * @param {import("@uirouter/angularjs").StateProvider} $stateProvider
     //  */
     ($stateProvider) => {
-
       $stateProvider.state({
         name: 'home',
         url: '/',
