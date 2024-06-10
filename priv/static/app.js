@@ -1,6 +1,7 @@
 import mapComponent from './map/map-controller.js';
 import appConfig from './configuration.js';
 
+// @ts-ignore
 window.angular
   .module('battleship', ['ui.router'])
   .config(appConfig)

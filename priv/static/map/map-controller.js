@@ -63,9 +63,9 @@ class MapController {
   }
 }
 
-/**
- * @type {angular.IComponentOptions}
- */
+// /**
+//  * @type {angular.IComponentOptions}
+//  */
 export default {
   templateUrl: '/static/map/map.html',
   controller: MapController,

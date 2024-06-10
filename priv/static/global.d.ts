@@ -1,7 +1,7 @@
-declare global {
-  interface Window {
-    angular: ng.IAngularStatic;
-  }
-}
+// declare global {
+//   interface Window {
+//     angular: ng.IAngularStatic;
+//   }
+// }
 
-export {};
+// export {};
