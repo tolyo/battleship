@@ -4,6 +4,7 @@
 #fleetboard,
 #hitboard {
   border: 1px solid #2d6ca0;
+  min-width: 300px;
   width: 300px;
   height: 300px;
 }

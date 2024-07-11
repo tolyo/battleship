@@ -3,15 +3,10 @@ import appConfig from './configuration.js';
 
 // @ts-ignore
 window.angular
-  .module('battleship', ['ui.router'])
+  .module('battleship', ['ng.router'])
   .config(appConfig)
   .config([
     '$stateProvider',
-
-    // TODO fix type imports
-    // /**
-    //  * @param {import("@uirouter/angularjs").StateProvider} $stateProvider
-    //  */
     ($stateProvider) => {
       $stateProvider.state({
         name: 'home',
