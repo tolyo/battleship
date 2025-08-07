@@ -8,3 +8,6 @@ package-lock.json
 /playwright/.cache/
 *.beam
 tsconfig.tsbuildinfo
+_build
+_priv
+priv

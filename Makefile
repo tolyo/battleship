@@ -35,6 +35,12 @@ compile:
 
 start:
 	@echo $(INFO) "Starting development server..."
+	$(MAKE) -j 2 frontend-serve backend-serve
+
+frontend-serve:
+	@$(FRONTEND_CONTEXT) start
+
+backend-serve:	
 	@$(SERVER_CONTEXT) start
 
 lint:

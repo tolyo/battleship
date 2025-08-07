@@ -14,7 +14,7 @@ setup:
 
 start:
 	@echo "$(INFO) Starting BrowserSync..."
-	@npm run browsersync
+	@node browsersync.cjs
 
 lint:
 	@echo "$(INFO) Formatting JavaScript/CSS..."

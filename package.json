@@ -1,16 +1,18 @@
 {
   "private": true,
   "scripts": {
-    "browsersync": "browser-sync start --files './' --ignore './node_modules' --no-inject-changes --reload-delay 1000",
     "typecheck": "./node_modules/.bin/tsc",
     "lint": "./node_modules/.bin/eslint ./ --fix",
-    "format": "./node_modules/.bin/prettier ./ --write",
+    "format": "./node_modules/.bin/prettier ./ --write --cache --log-level=silent",
     "playwright": "./node_modules/.bin/playwright test"
   },
   "dependencies": {
     "@angular-wave/angular.ts": "latest"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "latest",
+    "@rollup/plugin-node-resolve": "latest",
+    "@rollup/plugin-terser": "latest",
     "@playwright/test": "latest",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
@@ -20,6 +22,7 @@
     "eslint-config-airbnb-base": "latest",
     "eslint-config-prettier": "latest",
     "eslint-plugin-import": "latest",
+    "lightningcss": "latest",
     "playwright": "latest",
     "prettier": "latest",
     "typescript": "latest"

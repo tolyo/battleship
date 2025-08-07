@@ -4,7 +4,7 @@ export default function appConfig(
   $httpProvider,
   $urlServiceProvider
 ) {
-  $locationProvider.hashPrefixValue = "";
+  $locationProvider.hashPrefixValue = '';
   $locationProvider.html5Mode = {
     enabled: true,
     requireBase: false,
