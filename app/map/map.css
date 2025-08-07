@@ -19,4 +19,8 @@
       margin-top: 1rem;
     }
   }
+
+  & #state {
+    width: 300px;
+  }
 }

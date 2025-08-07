@@ -14,8 +14,10 @@ start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
         {'_', [
             {"/", cowboy_static, {file, "priv/static/index.html"}},
-
-            {"/profile", battleship_handler, []},
+            %% mock game matcher for now
+            {"/player1", cowboy_static, {file, "priv/static/map.html"}},
+            {"/player2", cowboy_static, {file, "priv/static/map.html"}},
+            {"/ws", battleship_handler, []},
             {"/static/[...]", cowboy_static, {dir, "priv/static"}},
             {"/[...]", cowboy_static, {file, "priv/static/index.html"}}
         ]}

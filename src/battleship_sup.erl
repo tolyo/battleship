@@ -31,7 +31,16 @@ init([]) ->
         intensity => 10,
         period => 10
     },
-    ChildSpecs = [],
+    ChildSpecs = [
+        #{
+            id => battleship_server,
+            start => {battleship_server, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [battleship_server]
+        }
+    ],
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions

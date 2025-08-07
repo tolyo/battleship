@@ -9,6 +9,7 @@
     set_adjacents_blocked/1
 ]).
 -include("battleship.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 -spec init_board() -> board().
 init_board() -> [[?EMPTY || _ <- grid()] || _ <- grid()].

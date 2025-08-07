@@ -1,9 +1,15 @@
-battleship
-=====
+# 🚀 Welcome to your new awesome project!
 
-An OTP application
+This project has been created using **webpack-cli**, you can now run
 
-Build
------
+```
+npm run build
+```
 
-    $ rebar3 compile
+or
+
+```
+yarn build
+```
+
+to bundle your application

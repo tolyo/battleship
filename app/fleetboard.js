@@ -33,12 +33,12 @@ export function removeShip(ship) {
 }
 
 export function applyClassToGrid(row, column, className) {
-  const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
+  const elem = document.getElementById(`fleetboard-${row}-${column}`);
   elem.classList.add(className);
 }
 
 export function removeClassFromGrid(row, column, className) {
-  const elem = window.document.getElementById(`fleetboard-${row}-${column}`);
+  const elem = document.getElementById(`fleetboard-${row}-${column}`);
   elem.classList.remove(className);
 }
 

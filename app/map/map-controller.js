@@ -1,10 +1,14 @@
 /* eslint-disable class-methods-use-this */
 import Fleet from '../model/fleet.js';
 import { addTilesToBoard } from '../fleetboard.js';
-import { FLEET_SIZE } from '../constants.js';
+import { FLEET_SIZE, GRID } from '../constants.js';
 
 class MapController {
-  constructor() {
+  static $inject = ['$scope'];
+
+  constructor($scope) {
+    this.$scope = $scope;
+    this.boardReady = false;
     this.board = document.getElementById('fleetboard');
     this.button = document.getElementById('ready');
     addTilesToBoard(this.board, 'fleetboard');
@@ -24,14 +28,21 @@ class MapController {
   }
 
   handleChildChanges() {
-    const count = Fleet.reduce(
-      (accumulator, ship) => accumulator + ship.elementsBelow.length,
-      0
-    );
+    let count = 0;
+    // We reset the board state each time. Maybe there is a more efficient way of doing this
+    this.boardState = GRID.map(() => GRID.map(() => '_'));
+    Fleet.forEach((ship) => {
+      ship.elementsBelow.forEach((elem) => {
+        const y = elem.dataset.row;
+        const x = elem.dataset.column;
+        this.boardState[y][x] = ship.id;
+      });
+      count += ship.size;
+    });
     if (count === FLEET_SIZE) {
-      this.button.removeAttribute('hidden');
+      this.boardReady = true;
     } else {
-      this.button.setAttribute('hidden', 'true');
+      this.boardReady = false;
     }
   }
 
@@ -61,11 +72,24 @@ class MapController {
   reset() {
     Fleet.forEach((ship) => ship.setOnPlaceholder());
   }
+
+  join() {
+    console.log(this.player);
+    console.log(this.board);
+    const socket = new WebSocket(
+      `/ws?player=${this.player}&board=${this.boardState}`
+    );
+    socket.addEventListener('open', (ev, data) => {
+      console.log(ev);
+      console.log(data);
+    });
+    socket.addEventListener('message', (ev, data) => {
+      console.log(ev);
+      console.log(data);
+    });
+  }
 }
 
-// /**
-//  * @type {angular.IComponentOptions}
-//  */
 export default {
   templateUrl: '/static/map/map.html',
   controller: MapController,
