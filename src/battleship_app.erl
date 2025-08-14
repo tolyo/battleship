@@ -15,10 +15,12 @@ start(_StartType, _StartArgs) ->
         {'_', [
             {"/", cowboy_static, {file, "priv/static/index.html"}},
             %% mock game matcher for now
-            {"/player1", cowboy_static, {file, "priv/static/map.html"}},
-            {"/player2", cowboy_static, {file, "priv/static/map.html"}},
             {"/ws", battleship_handler, []},
             {"/static/[...]", cowboy_static, {dir, "priv/static"}},
+
+            %% public 
+            {"/register", battleship_register_handler, []},
+            {"/login", battleship_login_handler, []},
             {"/[...]", cowboy_static, {file, "priv/static/index.html"}}
         ]}
     ]),

@@ -12,7 +12,7 @@ DONE = "\033[32m✔\033[0m"
 # Export environment variables if needed
 include ./config/dev.env
 
-.PHONY: all clean setup compile start lint check test functional-test quality help
+.PHONY: all clean setup compile start lint check test functional-test quality help db-up db-down db-rebuild
 
 all: compile
 
@@ -34,8 +34,9 @@ compile:
 	@echo $(DONE) " Compile complete."
 
 start:
-	@echo $(INFO) "Starting development server..."
-	$(MAKE) -j 2 frontend-serve backend-serve
+	$(MAKE) frontend-serve &
+	sleep 2
+	$(MAKE) backend-serve
 
 frontend-serve:
 	@$(FRONTEND_CONTEXT) start
@@ -72,6 +73,20 @@ quality:
 	@$(MAKE) test
 	@echo $(DONE) " Quality checks complete."
 
+include ./config/dev.env
+DB_DSN:="host=$(POSTGRES_HOST) user=$(POSTGRES_USER) password=$(POSTGRES_PASSWORD) dbname=$(POSTGRES_DB) port=$(POSTGRES_PORT) sslmode=disable"
+MIGRATE_OPTIONS=-allow-missing -dir="./sql"
+
+db-up: ## up down on database
+	goose -v $(MIGRATE_OPTIONS) postgres $(DB_DSN) up
+
+db-down: ## Migrate down on database
+	goose -v $(MIGRATE_OPTIONS) postgres $(DB_DSN) reset
+
+db-rebuild: ## Reset the database
+	make db-down
+	make db-up
+
 help:
 	@echo "Usage: make [target]"
 	@echo ""
@@ -85,4 +100,7 @@ help:
 	@echo "  test             Run backend tests"
 	@echo "  functional-test  Run frontend Playwright tests"
 	@echo "  quality          Run all lint, check, and test targets"
+	@echo "  db-up            Run up all migrations"
+	@echo "  db-down          Run down all migrations"
+	@echo "  db-rebuild       Rebuild the database"
 	@echo "  help             Show this help message"

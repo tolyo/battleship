@@ -1,0 +1,17 @@
+version: "3.8"
+
+
+volumes:
+  postgres-storage:
+services:
+  db:
+    container_name: battleship_db
+    image: postgres:17.5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-storage:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - ./config/dev.env
+    restart: unless-stopped
