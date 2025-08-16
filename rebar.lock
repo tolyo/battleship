@@ -9,12 +9,21 @@
   1},
  {<<"dotenv_config">>,{pkg,<<"dotenv_config">>,<<"2.3.3">>},0},
  {<<"epgsql">>,{pkg,<<"epgsql">>,<<"4.8.0">>},0},
+ {<<"epgsql_pool">>,
+  {git,"https://github.com/wgnet/epgsql_pool.git",
+       {ref,"f5e492f73752950aab932a1662536e22fc00c717"}},
+  0},
  {<<"eqwalizer_support">>,
   {git_subdir,"https://github.com/whatsapp/eqwalizer.git",
               {ref,"22c719eef1658475ba11f135f0c43dd3cce43cd1"},
               "eqwalizer_support"},
   0},
+ {<<"herd">>,
+  {git,"https://github.com/wgnet/herd.git",
+       {ref,"934847589dcf5a6d2b02a1f546ffe91c04066f17"}},
+  1},
  {<<"jiffy">>,{pkg,<<"jiffy">>,<<"1.1.2">>},1},
+ {<<"pooler">>,{pkg,<<"pooler">>,<<"1.5.3">>},1},
  {<<"ranch">>,
   {git,"https://github.com/ninenines/ranch",
        {ref,"a692f44567034dacf5efcaa24a24183788594eb7"}},
@@ -23,9 +32,11 @@
 {pkg_hash,[
  {<<"dotenv_config">>, <<"F7FE71DF1D58B9A5420CB7A99442E154EDF8634398BEAAF8504CA75FA8F821B4">>},
  {<<"epgsql">>, <<"C491B141B8C37BCE7B67F2079F168F339BB374A7CF9A286CB3B40AD1CD3FABE5">>},
- {<<"jiffy">>, <<"A9B6C9A7EC268E7CF493D028F0A4C9144F59CCB878B1AFE42841597800840A1B">>}]},
+ {<<"jiffy">>, <<"A9B6C9A7EC268E7CF493D028F0A4C9144F59CCB878B1AFE42841597800840A1B">>},
+ {<<"pooler">>, <<"898CD1FA301FC42D4A8ED598CE139B71CA85B54C16AB161152B5CC5FBDCFA1A8">>}]},
 {pkg_hash_ext,[
  {<<"dotenv_config">>, <<"53B514972FFBAFD282C65094A5225EF7445868E0836D4B3608107D066E9D5371">>},
  {<<"epgsql">>, <<"00E550006A62FB439FC7E879419443C889C34605E9B9DC406029D8BAA1AD79D8">>},
- {<<"jiffy">>, <<"BB61BC42A720BBD33CB09A410E48BB79A61012C74CB8B3E75F26D988485CF381">>}]}
+ {<<"jiffy">>, <<"BB61BC42A720BBD33CB09A410E48BB79A61012C74CB8B3E75F26D988485CF381">>},
+ {<<"pooler">>, <<"058D85C5081289B90E97E4DDDBC3BB5A3B4A19A728AB3BC88C689EFCC36A07C7">>}]}
 ].

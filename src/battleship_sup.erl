@@ -32,6 +32,17 @@ init([]) ->
         period => 10
     },
     ChildSpecs = [
+         % Database pool
+         #{
+            id => battleship_db,
+            start => {battleship_db, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [battleship_db]
+        },
+
+        % HTTP server
         #{
             id => battleship_server,
             start => {battleship_server, start_link, []},
