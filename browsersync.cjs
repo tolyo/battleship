@@ -37,7 +37,7 @@ browserSync.watch(['./app/**/*.css'], async (event) => {
 // Watch files for changes
 const excludedFolders = ['node_modules'];
 const sourceRoot = path.join(__dirname, 'app');
-browserSync.watch(['./app/**/*.html'], async (event, file) => {
+browserSync.watch(['./app/**/*.html', './app/**/*.html.dt'], async (event, file) => {
   const shouldExclude = excludedFolders.some((folder) =>
     file.includes(path.join(path.sep, folder, path.sep))
   );
