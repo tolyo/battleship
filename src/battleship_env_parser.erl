@@ -3,7 +3,7 @@
 
 -export([get_parser/0]).
 
-get_parser() -> 
+get_parser() ->
     [
         {<<"POSTGRES_DB">>, str},
         {<<"POSTGRES_USER">>, str},

@@ -38,3 +38,15 @@
     turns :: [#strike{}],
     state :: 'INIT' | 'ACTIVE' | 'FINISHED'
 }).
+
+-record(user, {
+    % UUID as text
+    id :: binary(),
+    username :: binary(),
+    email :: binary(),
+    password_hash :: binary(),
+    rating :: integer(),
+    created_at :: calendar:datetime()
+}).
+
+-type user() :: #user{}.

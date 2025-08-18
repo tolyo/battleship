@@ -18,7 +18,7 @@ start(_StartType, _StartArgs) ->
             {"/ws", battleship_handler, []},
             {"/static/[...]", cowboy_static, {dir, "priv/static"}},
 
-            %% public 
+            %% public
             {"/register", battleship_register_handler, []},
             {"/login", battleship_login_handler, []},
             {"/[...]", cowboy_static, {file, "priv/static/index.html"}}

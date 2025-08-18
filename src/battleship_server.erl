@@ -1,10 +1,11 @@
 -module(battleship_server).
 
 -behaviour(gen_server).
--include("battleship.hrl").
+-include_lib("battleship/include/battleship.hrl").
 
 %% API
--export([start_link/0,
+-export([
+    start_link/0,
     start_game/2,
     next_move/4,
     init/1,

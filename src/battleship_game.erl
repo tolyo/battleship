@@ -6,7 +6,7 @@
     get_player_by_id/2,
     next_move/3
 ]).
--include("battleship.hrl").
+-include_lib("battleship/include/battleship.hrl").
 
 -spec place_fleet_random() -> board().
 place_fleet_random() ->

@@ -8,7 +8,7 @@
     attach_ship/2,
     set_adjacents_blocked/1
 ]).
--include("battleship.hrl").
+-include_lib("battleship/include/battleship.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
 -spec init_board() -> board().

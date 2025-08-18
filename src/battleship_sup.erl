@@ -32,8 +32,8 @@ init([]) ->
         period => 10
     },
     ChildSpecs = [
-         % Database pool
-         #{
+        % Database pool
+        #{
             id => battleship_db,
             start => {battleship_db, start_link, []},
             restart => permanent,
