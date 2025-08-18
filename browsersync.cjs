@@ -37,24 +37,27 @@ browserSync.watch(['./app/**/*.css'], async (event) => {
 // Watch files for changes
 const excludedFolders = ['node_modules'];
 const sourceRoot = path.join(__dirname, 'app');
-browserSync.watch(['./app/**/*.html', './app/**/*.html.dt'], async (event, file) => {
-  const shouldExclude = excludedFolders.some((folder) =>
-    file.includes(path.join(path.sep, folder, path.sep))
-  );
+browserSync.watch(
+  ['./app/**/*.html', './app/**/*.html.dt'],
+  async (event, file) => {
+    const shouldExclude = excludedFolders.some((folder) =>
+      file.includes(path.join(path.sep, folder, path.sep))
+    );
 
-  if (!shouldExclude && (event === 'change' || event === 'add')) {
-    const relativePath = path.relative(sourceRoot, file);
-    const destination = path.join(__dirname, outputDir, relativePath);
+    if (!shouldExclude && (event === 'change' || event === 'add')) {
+      const relativePath = path.relative(sourceRoot, file);
+      const destination = path.join(__dirname, outputDir, relativePath);
 
-    try {
-      await fs.promises.mkdir(path.dirname(destination), { recursive: true });
-      await fs.promises.copyFile(file, destination);
-      console.log(`File "${file}" copied successfully to "${destination}".`);
-    } catch (error) {
-      console.error(`Failed to copy file "${file}":`, error.message);
+      try {
+        await fs.promises.mkdir(path.dirname(destination), { recursive: true });
+        await fs.promises.copyFile(file, destination);
+        console.log(`File "${file}" copied successfully to "${destination}".`);
+      } catch (error) {
+        console.error(`Failed to copy file "${file}":`, error.message);
+      }
     }
   }
-});
+);
 
 async function buildJsBundle() {
   return new Promise((resolve, _) => {

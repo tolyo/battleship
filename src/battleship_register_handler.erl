@@ -20,11 +20,9 @@ init(Req, State) ->
 allowed_methods(Req, State) ->
     {[<<"GET">>, <<"POST">>], Req, State}.
 
-
 %% Provide HTML for GET
 content_types_provided(Req, State) ->
     {[{<<"text/html">>, from_register_form}], Req, State}.
-
 
 %%--------------------------------------------------------------------
 %% GET handler using ErlyDTL template
@@ -35,9 +33,6 @@ from_register_form(Req, State) ->
     {ok, Html} = register_template:render(Bindings),
     {Html, Req, State}.
 
-
-
-
 %% Compile an ErlyDTL template only once per VM run
 -spec compile_once(atom(), string()) -> ok.
 compile_once(Module, TemplatePath) when is_atom(Module), is_list(TemplatePath) ->
@@ -47,13 +42,13 @@ compile_once(Module, TemplatePath) when is_atom(Module), is_list(TemplatePath) -
             erlydtl:compile_file(TemplatePath, Module),
             ok;
         {_Mod, _Path} ->
-            case dotenv_config:get(<<"ENV">>) of
-              <<"dev">> ->
+            case battleship_config:is_dev() of
+                true ->
                     erlydtl:compile_file(TemplatePath, Module),
                     ok;
-                _ ->  
+                _ ->
                     ok
-            end    
+            end
     end.
 
 %% Accept JSON body only for POST
@@ -68,31 +63,36 @@ from_json(Req0, State) ->
     case json:decode(Body) of
         {ok, Map} ->
             Username = maps:get(<<"username">>, Map),
-            Email    = maps:get(<<"email">>, Map),
+            Email = maps:get(<<"email">>, Map),
             Password = maps:get(<<"password">>, Map),
 
             case battleship_user:create(Username, Email, Password) of
                 {ok, UserId} ->
                     Resp = json:encode(#{status => <<"ok">>, user_id => UserId}),
-                    Req2 = cowboy_req:reply(201,
+                    Req2 = cowboy_req:reply(
+                        201,
                         #{<<"content-type">> => <<"application/json">>},
                         Resp,
-                        Req1),
+                        Req1
+                    ),
                     {stop, Req2, State};
-
                 {error, Reason} ->
                     Resp = json:encode(#{status => <<"error">>, reason => Reason}),
-                    Req2 = cowboy_req:reply(400,
+                    Req2 = cowboy_req:reply(
+                        400,
                         #{<<"content-type">> => <<"application/json">>},
                         Resp,
-                        Req1),
+                        Req1
+                    ),
                     {stop, Req2, State}
             end;
         {error, Reason} ->
             Resp = json:encode(#{status => <<"error">>, reason => Reason}),
-            Req2 = cowboy_req:reply(400,
+            Req2 = cowboy_req:reply(
+                400,
                 #{<<"content-type">> => <<"application/json">>},
                 Resp,
-                Req1),
+                Req1
+            ),
             {stop, Req2, State}
     end.
