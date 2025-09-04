@@ -5,6 +5,10 @@ import appConfig from './configuration.js';
 
 angular
   .module('battleship', [])
+  .filter('truthy', () => function (input) {
+      console.log('truthy');
+      return input ? 'true' : 'false';
+    })
   .config(appConfig)
   .config([
     '$stateProvider',

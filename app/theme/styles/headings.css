@@ -16,13 +16,11 @@ h1 {
 }
 
 h2 {
-  font-size: var(--letter-lg);
-  margin-bottom: var(--size-2);
+  margin-bottom: var(--scale-2);
   font-weight: var(--weight-semibold);
 }
 
 h3 {
-  font-size: var(--letter-sm);
   margin-bottom: var(--scale-0);
   font-weight: var(--weight-medium);
   color: var(--color-grey-900);

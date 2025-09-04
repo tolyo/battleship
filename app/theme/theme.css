@@ -1,0 +1,35 @@
+/**
+
+    This theme generated via https://uicolors.app/.
+    Modify as necessary
+
+**/
+
+:root {
+  font-family: 'Inter', sans-serif;
+  --theme-50: #f2f8fd;
+  --theme-100: #e5eef9;
+  --theme-200: #c5ddf2;
+  --theme-300: #92c1e7;
+  --theme-400: #57a0d9;
+  --theme-500: #3f90cf;
+  --theme-600: #2269a7;
+  --theme-700: #1d5587;
+  --theme-800: #1b4871;
+  --theme-900: #1c3e5e;
+  --theme-950: #13283e;
+
+  /* End Swap this out */
+
+  --primary: var(--theme-500) !important;
+  --primary-hover: var(--theme-600) !important;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+main {
+  min-height: 100vh;
+}

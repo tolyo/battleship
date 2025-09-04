@@ -1,6 +1,51 @@
-Register form
-<form ng-post="/register">
-  <input name="username" type="text" />
+<form ng-post="/_register">
+  <h2>Register form</h2>
+  <label ng-class="{ error: errors['username'] }">
+    Username
+    <input
+      name="username"
+      type="text"
+      aria-invalid="{{ errors.username !== undefined }}"
+      ng-keyup="errors = undefined"
+    />
+    <span ng-if="errors.username"> {{ errors.username }} </span>
+  </label>
+
+  <label ng-class="{ 'error': errors.email }">
+    Email
+    <input
+      name="email"
+      type="text"
+      aria-invalid="{{ errors.email !== undefined }}"
+      ng-keyup="errors = undefined"
+    />
+    <span ng-if="errors.email"> {{ errors.email }} </span>
+  </label>
+
+  <label ng-class="{ error: $res }">
+    Password
+    <input
+      name="password"
+      type="password"
+      aria-invalid="{{ errors.password !== undefined }}"
+      ng-keyup="errors = undefined"
+    />
+    <span ng-if="errors.password"> {{ errors.password }} </span>
+  </label>
+
+  <label>
+    Repeat password
+    <input
+      name="repeat-password"
+      type="password"
+      aria-invalid="{{ errors['repeat-password'] !== undefined }}"
+      ng-keyup="errors = undefined"
+    />
+
+    <span ng-if="errors['repeat-password']">
+      {{ errors['repeat-password'] }}
+    </span>
+  </label>
 
   <button type="submit">Submit</button>
 </form>

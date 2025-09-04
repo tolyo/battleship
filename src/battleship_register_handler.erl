@@ -6,7 +6,7 @@
     allowed_methods/2,
     content_types_accepted/2,
     content_types_provided/2,
-    from_json/2,
+    register_post/2,
     register_form/2
 ]).
 
@@ -33,46 +33,53 @@ register_form(Req, State) ->
 
 %% Accept JSON body only for POST
 content_types_accepted(Req, State) ->
-    {[{{<<"application">>, <<"json">>, '*'}, from_json}], Req, State}.
+    {[{{<<"application">>, <<"json">>, '*'}, register_post}], Req, State}.
 
 %%--------------------------------------------------------------------
-%% JSON POST handler
+%% JSON POST handler with generic validation
 %%--------------------------------------------------------------------
-from_json(Req0, State) ->
+register_post(Req0, State) ->
     {ok, Body, Req1} = cowboy_req:read_body(Req0),
-    case json:decode(Body) of
-        {ok, Map} ->
+    Map = json:decode(Body),
+    Errors = validate_fields(Map),
+
+    case maps:size(Errors) of
+        0 ->
             Username = maps:get(<<"username">>, Map),
-            Email = maps:get(<<"email">>, Map),
+            Email    = maps:get(<<"email">>, Map),
             Password = maps:get(<<"password">>, Map),
+
+            logger:info("Username=~p, Email=~p", [Username, Email]),
 
             case battleship_user:create(Username, Email, Password) of
                 {ok, UserId} ->
                     Resp = json:encode(#{status => <<"ok">>, user_id => UserId}),
-                    Req2 = cowboy_req:reply(
-                        201,
-                        #{<<"content-type">> => <<"application/json">>},
-                        Resp,
-                        Req1
-                    ),
+                    Req2 = cowboy_req:reply(201, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
                     {stop, Req2, State};
                 {error, Reason} ->
                     Resp = json:encode(#{status => <<"error">>, reason => Reason}),
-                    Req2 = cowboy_req:reply(
-                        400,
-                        #{<<"content-type">> => <<"application/json">>},
-                        Resp,
-                        Req1
-                    ),
+                    Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
                     {stop, Req2, State}
             end;
-        {error, Reason} ->
-            Resp = json:encode(#{status => <<"error">>, reason => Reason}),
-            Req2 = cowboy_req:reply(
-                400,
-                #{<<"content-type">> => <<"application/json">>},
-                Resp,
-                Req1
-            ),
+        _ ->
+            Resp = json:encode(#{status => <<"error">>, errors => Errors}),
+            Req2 = cowboy_req:reply(422, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
             {stop, Req2, State}
     end.
+
+
+
+%%--------------------------------------------------------------------
+%% Validation entrypoint
+%%--------------------------------------------------------------------
+validate_fields(Map) ->
+    Specs = [
+        {<<"username">>, [battleship_validators:required()]},
+        {<<"email">>,    [battleship_validators:required(), battleship_validators:email()]},
+        {<<"password">>, [battleship_validators:required()]},
+        {<<"repeat-password">>, [battleship_validators:required(), battleship_validators:matches(<<"password">>, "Passwords do not match")]}
+    ],
+    lists:foldl(fun({Field, Rules}, Errors) ->
+            battleship_validators:validate_field(Field, Rules, Map, Errors)
+                end, #{}, Specs).
+

@@ -27,6 +27,7 @@
 @import './theme/styles/menu.css';
 @import './theme/styles/table.css';
 
+@import './theme/theme.css';
 @import './theme/fonts.css';
 
 @import './layout/layout.css';
