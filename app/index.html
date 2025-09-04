@@ -14,19 +14,15 @@
 </head>
 <body ng-app="battleship">
   <header>
-    <nav id="main-layout">
-      <ul class="container">
-        <li>
-          <a href="/">
-            <strong>Battleship</strong>
-          </a>
-        </li>
-        <li>
-          <a ng-sref="register">Register</a>
-        </li>
-      </ul>
+    <a ng-sref="home">
+      <strong>Battleship</strong>
+    </a>
+    <nav>
+      <a ng-sref="register">Register</a>
     </nav>
   </header>
-  
-  <ng-view></ng-view>
+
+  <main ng-view></main>
+
+  <footer></footer>
 </body>

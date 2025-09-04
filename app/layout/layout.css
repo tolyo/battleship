@@ -2,3 +2,7 @@ ng-view {
   display: flex;
   flex-direction: column;
 }
+
+body {
+  background-color: var(--color-grey-200);
+}
