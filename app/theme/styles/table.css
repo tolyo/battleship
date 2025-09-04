@@ -1,0 +1,32 @@
+table {
+  width: 100%;
+  border-spacing: 0;
+  text-indent: 0;
+  color: var(--color-grey-800);
+  border: solid 1px var(--color-grey-200);
+  border-radius: var(--radius-xs);
+  & thead {
+    & th {
+      text-transform: uppercase;
+      border-bottom: solid 1px var(--color-grey-200);
+    }
+  }
+  & th,
+  & td {
+    text-align: start;
+    padding: var(--size-2);
+    & menu {
+      padding: 0;
+      margin: 0;
+      text-align: end;
+    }
+  }
+
+  margin-bottom: var(--scale-0);
+}
+
+/* Actions to be executed with table data should be wrapped inside a menu tag */
+table + menu {
+  display: flex;
+  justify-content: flex-end;
+}

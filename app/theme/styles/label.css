@@ -1,0 +1,15 @@
+label {
+  display: grid;
+  margin-bottom: var(--scale-0);
+  text-transform: capitalize;
+  color: var(--color-grey-700);
+
+  &.error {
+    color: var(--color-red-600);
+    margin-bottom: var(--scale-1);
+  }
+
+  & input {
+    margin-top: var(--scale-neg-6);
+  }
+}

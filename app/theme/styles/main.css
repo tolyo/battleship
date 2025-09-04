@@ -1,0 +1,31 @@
+/* Main tag functions as a container for the content of our page */
+main {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media screen and (max-width: 767px) {
+  main {
+    max-width: 510px;
+    padding: var(--scale-0);
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 991px) {
+  main {
+    max-width: 700px;
+  }
+}
+
+@media screen and (min-width: 992px) and (max-width: 1199px) {
+  main {
+    max-width: 920px;
+  }
+}
+
+@media screen and (min-width: 1200px) {
+  main {
+    max-width: 1130px;
+  }
+}

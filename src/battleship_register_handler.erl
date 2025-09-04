@@ -7,7 +7,7 @@
     content_types_accepted/2,
     content_types_provided/2,
     from_json/2,
-    from_register_form/2
+    register_form/2
 ]).
 
 %%--------------------------------------------------------------------
@@ -22,34 +22,14 @@ allowed_methods(Req, State) ->
 
 %% Provide HTML for GET
 content_types_provided(Req, State) ->
-    {[{<<"text/html">>, from_register_form}], Req, State}.
+    {[{<<"text/html">>, register_form}], Req, State}.
 
 %%--------------------------------------------------------------------
 %% GET handler using ErlyDTL template
 %%--------------------------------------------------------------------
-from_register_form(Req, State) ->
-    compile_once(register_template, "priv/static/register/register.html.dt"),
-    Bindings = #{},
-    {ok, Html} = register_template:render(Bindings),
-    {Html, Req, State}.
-
-%% Compile an ErlyDTL template only once per VM run
--spec compile_once(atom(), string()) -> ok.
-compile_once(Module, TemplatePath) when is_atom(Module), is_list(TemplatePath) ->
-    case code:is_loaded(Module) of
-        false ->
-            %% Compile the template only if not already loaded
-            erlydtl:compile_file(TemplatePath, Module),
-            ok;
-        {_Mod, _Path} ->
-            case battleship_config:is_dev() of
-                true ->
-                    erlydtl:compile_file(TemplatePath, Module),
-                    ok;
-                _ ->
-                    ok
-            end
-    end.
+register_form(Req, State) ->
+    Template = battleship_utils:get_template("priv/static/register/register.html"),
+    {Template, Req, State}.
 
 %% Accept JSON body only for POST
 content_types_accepted(Req, State) ->

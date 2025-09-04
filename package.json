@@ -7,7 +7,9 @@
     "playwright": "./node_modules/.bin/playwright test"
   },
   "dependencies": {
-    "@angular-wave/angular.ts": "latest"
+    "@angular-wave/angular.ts": "latest",
+    "modern-normalize": "latest",
+    "pollen-css": "latest"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "latest",

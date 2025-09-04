@@ -1,15 +1,5 @@
 /* eslint-disable no-param-reassign */
-export default function appConfig(
-  $locationProvider,
-  $httpProvider,
-  $urlServiceProvider
-) {
-  $locationProvider.hashPrefixValue = '';
-  $locationProvider.html5Mode = {
-    enabled: true,
-    requireBase: false,
-    rewriteLinks: false,
-  };
+export default function appConfig($httpProvider) {
   $httpProvider.defaults.withCredentials = true;
   // Error intercepter for ajax requests
   $httpProvider.interceptors.push([
@@ -25,12 +15,6 @@ export default function appConfig(
       },
     }),
   ]);
-
-  $urlServiceProvider.config.strictMode(true);
 }
 
-appConfig.$inject = [
-  '$locationProvider',
-  '$httpProvider',
-  '$urlServiceProvider',
-];
+appConfig.$inject = ['$httpProvider'];

@@ -1,0 +1,22 @@
+button {
+  width: auto;
+  color: white;
+  background-color: var(--theme-500);
+  border: none;
+  padding: var(--size-2) var(--scale-0);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--theme-600);
+  }
+
+  &:active {
+    background-color: var(--theme-700);
+  }
+
+  &:disabled {
+    color: var(--theme-700);
+    background-color: var(--theme-200);
+  }
+}

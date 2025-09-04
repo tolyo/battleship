@@ -1,5 +1,6 @@
 import { angular } from '@angular-wave/angular.ts';
 import mapComponent from './map/map-controller.js';
+import registerComponent from './register/register.js';
 import appConfig from './configuration.js';
 
 angular
@@ -8,13 +9,20 @@ angular
   .config([
     '$stateProvider',
     ($stateProvider) => {
-      $stateProvider.state({
-        name: 'home',
-        url: '',
-        component: 'home',
-      });
+      $stateProvider
+        .state({
+          name: 'register',
+          url: '/register',
+          component: 'register',
+        })
+        .state({
+          name: 'home',
+          url: '/',
+          template: 'Prepare the fleet',
+        });
     },
   ])
+  .component('register', registerComponent)
   .component('home', mapComponent);
 
 document.addEventListener('DOMContentLoaded', () => {

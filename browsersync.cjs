@@ -130,20 +130,3 @@ function cleanBundle() {
 
   console.log(`Cleaned all files from directory: ${outputDir}`);
 }
-
-/**
- * Copies a file from source to destination.
- * @param {string} source - The source file path.
- * @param {string} destination - The destination file path.
- * @returns {Promise<void>} - Resolves when the file is copied, rejects on error.
- */
-function copyFile(source, destination) {
-  return new Promise((resolve, reject) => {
-    fs.copyFile(source, destination, (err) => {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  });
-}

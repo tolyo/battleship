@@ -1,0 +1,14 @@
+menu {
+  align-items: baseline;
+  /* If a menu has a form, it is always a primary action button */
+  & form {
+    padding: 0;
+    & button {
+      margin-right: 0;
+    }
+  }
+
+  & a {
+    margin-right: var(--scale-0);
+  }
+}

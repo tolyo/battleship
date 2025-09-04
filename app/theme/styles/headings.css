@@ -1,0 +1,50 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+  color: var(--color-grey-900);
+  font-family: var(--font-family);
+}
+
+h1 {
+  font-size: var(--size-8);
+  margin-bottom: var(--scale-2);
+  font-weight: var(--weight-bold);
+}
+
+h2 {
+  font-size: var(--letter-lg);
+  margin-bottom: var(--size-2);
+  font-weight: var(--weight-semibold);
+}
+
+h3 {
+  font-size: var(--letter-sm);
+  margin-bottom: var(--scale-0);
+  font-weight: var(--weight-medium);
+  color: var(--color-grey-900);
+}
+
+h4 {
+  font-size: var(--letter-sm);
+  margin-bottom: var(--size-1);
+  font-weight: var(--weight-medium);
+  color: var(--color-grey-900);
+}
+
+h5 {
+  font-size: var(--scale-1);
+  margin-bottom: var(--size-2);
+  font-weight: var(--weight-medium);
+  color: var(--color-grey-800);
+}
+
+h6 {
+  font-size: var(--letter-xs);
+  margin-bottom: var(--size-2);
+  font-weight: var(--weight-light);
+  color: var(--color-grey-700);
+}

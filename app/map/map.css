@@ -24,3 +24,149 @@
     width: 300px;
   }
 }
+
+#fleetboard,
+#hitboard {
+  border: 1px solid #2d6ca0;
+  min-width: 300px;
+  width: 300px;
+  height: 300px;
+}
+
+#hitboard {
+  cursor: pointer;
+}
+
+#fleetboard.disabled,
+#hitboard.disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+
+#fleetboard {
+  margin-right: 10px;
+}
+
+.board-row {
+  float: left;
+}
+
+.fleetboard-tile,
+.hitboard-tile {
+  background-color: #4ba9ff;
+  float: left;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #2d6ca0;
+  box-sizing: border-box;
+}
+
+.fleetboard-tile.droppable-target {
+  background-color: #92d2ff;
+}
+
+.fleetboard-tile[data-state='o'] {
+  background-color: #92d2ff;
+}
+
+.hitboard .hitboard-tile:hover {
+  border: 2px solid #fff757;
+}
+
+.fleetboard-tile.placed,
+.fleetboard-tile.placed:hover {
+  background-color: #c0cc28;
+  border: 1px solid #2d6ca0;
+}
+
+.fleetboard-tile.hit,
+.fleetboard-tile.hit:hover {
+  background-color: #f4363f;
+  border: 1px solid #2d6ca0;
+}
+
+.fleetboard-tile.miss,
+.fleetboard-tile.miss:hover {
+  background-color: #a9a9a9;
+  border: 1px solid #2d6ca0;
+}
+
+.hitboard-tile.hit,
+.hitboard-tile.hit:hover {
+  background-color: #f4363f;
+  border: 1px solid #2d6ca0;
+}
+
+.hitboard-tile.miss,
+.hitboard-tile.miss:hover {
+  background-color: #a9a9a9;
+  border: 1px solid #2d6ca0;
+}
+
+.clear-button {
+  margin-top: 10px;
+  -webkit-user-select: none; /* Provent button highlighinng Chrome all / Safari all */
+  -moz-user-select: none; /* Firefox all */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none; /* Likely future */
+}
+
+.clearfix {
+  overflow: auto;
+}
+
+@-webkit-keyframes shake {
+  from,
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    -webkit-transform: translate3d(-2px, 0, 0);
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    -webkit-transform: translate3d(2px, 0, 0);
+    transform: translate3d(2px, 0, 0);
+  }
+}
+
+@keyframes shake {
+  from,
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0);
+  }
+
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    -webkit-transform: translate3d(-2px, 0, 0);
+    transform: translate3d(-2px, 0, 0);
+  }
+
+  20%,
+  40%,
+  60%,
+  80% {
+    -webkit-transform: translate3d(2px, 0, 0);
+    transform: translate3d(2px, 0, 0);
+  }
+}
+
+.shake {
+  -webkit-animation-name: shake;
+  animation-name: shake;
+}

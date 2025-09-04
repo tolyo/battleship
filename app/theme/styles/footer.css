@@ -1,0 +1,13 @@
+table + footer {
+  /* Table footers should include common controls for actions with data on a table */
+  display: flex;
+  justify-content: flex-end;
+  padding-left: var(--scale-1);
+  & form {
+    margin: 0;
+  }
+
+  & button {
+    margin-right: var(--scale-1);
+  }
+}
