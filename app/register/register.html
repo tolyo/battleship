@@ -1,4 +1,9 @@
-<form id="register" ng-post="/_register">
+<form
+  id="register"
+  ng-post="/_register"
+  ng-if="$ctrl.success === false"
+  success="$ctrl.success = true"
+>
   <h2>Register form</h2>
 
   <label ng-class="{ error: errors.username }">
@@ -48,3 +53,7 @@
 
   <button type="submit">Submit</button>
 </form>
+
+<section ng-if="$ctrl.success">
+  Account successfully created. Proceed to <a ng-sref="login">Log in</a>
+</section>

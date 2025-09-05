@@ -27,3 +27,10 @@ register {
     }
   }
 }
+/* Success notification */
+section {
+  border-radius: var(--radius-md);
+  padding: var(--size-4);
+  color: var(--color-green-600);
+  background: var(--color-green-100);
+}

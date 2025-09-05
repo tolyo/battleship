@@ -1,6 +1,9 @@
-class RegisterController {}
 
 export default {
   templateUrl: '/_register',
-  controller: RegisterController,
+  controller: class {
+    constructor() {
+      this.success = false;
+    }
+  },
 };
