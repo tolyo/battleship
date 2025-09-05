@@ -1,3 +1,15 @@
+@import './styles/anchor.css';
+@import './styles/button.css';
+@import './styles/footer.css';
+@import './styles/form.css';
+@import './styles/headings.css';
+@import './styles/input.css';
+@import './styles/label.css';
+@import './styles/list.css';
+@import './styles/main.css';
+@import './styles/menu.css';
+@import './styles/table.css';
+
 /**
 
     This theme generated via https://uicolors.app/.
@@ -28,8 +40,5 @@
 html,
 body {
   height: 100%;
-}
-
-main {
-  min-height: 100vh;
+  font-family: 'IBM Plex Sans', sans-serif;
 }

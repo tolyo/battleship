@@ -15,23 +15,13 @@
 @import '../node_modules/@angular-wave/angular.ts/css/angular.css';
 @import '../node_modules/pollen-css/dist/pollen.css';
 
-@import './theme/styles/anchor.css';
-@import './theme/styles/button.css';
-@import './theme/styles/footer.css';
-@import './theme/styles/form.css';
-@import './theme/styles/headings.css';
-@import './theme/styles/input.css';
-@import './theme/styles/label.css';
-@import './theme/styles/list.css';
-@import './theme/styles/main.css';
-@import './theme/styles/menu.css';
-@import './theme/styles/table.css';
-
 @import './theme/theme.css';
-@import './theme/fonts.css';
 
+/* Shared */
 @import './layout/layout.css';
 @import './layout/navigation-header.css';
 
+/* Submodules */
 @import './map/map.css';
 @import './model/ship.css';
+@import './register/register.css';
