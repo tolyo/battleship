@@ -77,7 +77,7 @@ validate_fields(Map) ->
         {<<"username">>, [battleship_validators:required()]},
         {<<"email">>,    [battleship_validators:required(), battleship_validators:email()]},
         {<<"password">>, [battleship_validators:required()]},
-        {<<"repeat-password">>, [battleship_validators:required(), battleship_validators:matches(<<"password">>, "Passwords do not match")]}
+        {<<"repeatpassword">>, [battleship_validators:required(), battleship_validators:matches(<<"password">>, "Passwords do not match")]}
     ],
     lists:foldl(fun({Field, Rules}, Errors) ->
             battleship_validators:validate_field(Field, Rules, Map, Errors)

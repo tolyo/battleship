@@ -1,50 +1,49 @@
 <form ng-post="/_register">
   <h2>Register form</h2>
-  <label ng-class="{ error: errors['username'] }">
+
+  <label ng-class="{ error: errors.username }">
     Username
     <input
       name="username"
       type="text"
-      aria-invalid="{{ errors.username !== undefined }}"
-      ng-keyup="errors = undefined"
+      aria-invalid="{{ errors.username !== undefined}}"
+      ng-keyup="errors.username = undefined"
     />
-    <span ng-if="errors.username"> {{ errors.username }} </span>
+    <span>{{ errors.username }}</span>
   </label>
 
-  <label ng-class="{ 'error': errors.email }">
+  <label ng-class="{ error: errors.email }">
     Email
     <input
       name="email"
       type="text"
-      aria-invalid="{{ errors.email !== undefined }}"
-      ng-keyup="errors = undefined"
+      aria-invalid="{{ errors.email !== undefined}}"
+      ng-keyup="errors.email = undefined"
     />
-    <span ng-if="errors.email"> {{ errors.email }} </span>
+    <span>{{ errors.email }}</span>
   </label>
 
-  <label ng-class="{ error: $res }">
+  <label ng-class="{ error: errors.password }">
     Password
     <input
       name="password"
       type="password"
-      aria-invalid="{{ errors.password !== undefined }}"
-      ng-keyup="errors = undefined"
+      aria-invalid="{{ errors.password !== undefined}}"
+      ng-keyup="errors.password = undefined"
     />
-    <span ng-if="errors.password"> {{ errors.password }} </span>
+    <span>{{ errors.password }}</span>
   </label>
 
-  <label>
+  <label ng-class="{ error: errors.repeatpassword }">
     Repeat password
     <input
-      name="repeat-password"
+      name="repeatpassword"
       type="password"
-      aria-invalid="{{ errors['repeat-password'] !== undefined }}"
-      ng-keyup="errors = undefined"
+      aria-invalid="{{ errors.repeatpassword !== undefined }}"
+      ng-keyup="errors.repeatpassword = undefined"
     />
 
-    <span ng-if="errors['repeat-password']">
-      {{ errors['repeat-password'] }}
-    </span>
+    <span>{{ errors.repeatpassword }}</span>
   </label>
 
   <button type="submit">Submit</button>

@@ -9,10 +9,17 @@ input:focus {
   border: 1px solid var(--color-grey-600);
 }
 
+input {
+  & + span {
+    display: none;
+  }
+}
+
 input[aria-invalid='true'] {
   margin-bottom: var(--size-2);
   border: 1px solid var(--color-red-400);
   & + span {
+    display: block;
     color: var(--color-red-500);
     font-size: small;
     text-transform: lowercase;
