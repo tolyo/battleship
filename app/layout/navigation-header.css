@@ -5,6 +5,11 @@ header:first-of-type {
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  nav {
+    display: flex;
+  }
+
   /* Logo */
   & a {
     color: white;

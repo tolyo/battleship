@@ -1,4 +1,3 @@
-
 export default {
   templateUrl: '/_register',
   controller: class {

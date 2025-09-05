@@ -44,15 +44,13 @@ find_by_username(Username) ->
 -spec check_password(binary(), binary()) ->
     {ok, user()} | {error, invalid_credentials} | {error, term()}.
 
-check_password(Username, Password) ->
+check_password(Email, Password) ->
     Sql =
-        "\n"
         "        SELECT id, username, email, password_hash, rating, created_at\n"
         "        FROM users\n"
-        "        WHERE username = $1\n"
-        "          AND password_hash = crypt($2, password_hash);\n"
-        "    ",
-    case battleship_db:query(Sql, [Username, Password]) of
+        "        WHERE email = $1\n"
+        "          AND password_hash = crypt($2, password_hash);\n",
+    case battleship_db:query(Sql, [Email, Password]) of
         {ok, _, [Row]} ->
             {ok, row_to_user(Row)};
         {ok, _, []} ->

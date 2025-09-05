@@ -1,7 +1,9 @@
 import { angular } from '@angular-wave/angular.ts';
 import mapComponent from './map/map-controller.js';
 import registerComponent from './register/register.js';
+import loginComponent from './login/login.js';
 import appConfig from './configuration.js';
+import dashboardComponent from './dashboard/dashboard.js';
 
 angular
   .module('battleship', [])
@@ -11,9 +13,19 @@ angular
     ($stateProvider) => {
       $stateProvider
         .state({
+          name: 'dashboard',
+          url: '/dashboard',
+          component: 'dashboard',
+        })
+        .state({
           name: 'register',
           url: '/register',
           component: 'register',
+        })
+        .state({
+          name: 'login',
+          url: '/login',
+          component: 'login',
         })
         .state({
           name: 'home',
@@ -22,6 +34,8 @@ angular
         });
     },
   ])
+  .component('dashboard', dashboardComponent)
+  .component('login', loginComponent)
   .component('register', registerComponent)
   .component('home', mapComponent);
 

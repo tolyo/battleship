@@ -1,0 +1,29 @@
+login {
+  margin: 0;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* horizontal centering */
+  align-items: center; /* vertical centering */
+
+  h2 {
+    display: flex;
+    justify-content: center;
+  }
+
+  form {
+    padding: var(--size-12);
+    padding-top: var(--size-10);
+    width: var(--width-xs);
+    background-color: white;
+    border-radius: var(--radius-md);
+    margin-top: -20%;
+
+    button {
+      margin-top: var(--size-8);
+      padding: var(--size-4);
+      font-weight: bold;
+      width: auto;
+    }
+  }
+}

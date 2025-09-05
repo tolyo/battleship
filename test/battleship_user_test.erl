@@ -22,11 +22,15 @@ create_user_test_() ->
         ?assertEqual(Username, User#user.username),
 
         %% Test: Valid password
-        {ok, User2} = battleship_user:check_password(Username, Password),
+        {ok, User2} = battleship_user:check_password(Email, Password),
         ?assertEqual(Username, User2#user.username),
 
         %% Test: Invalid password
-        Result = battleship_user:check_password(Username, <<"wrongpass">>),
+        Result = battleship_user:check_password(Email, <<"wrongpass">>),
+        ?assertMatch({error, invalid_credentials}, Result),
+
+        %% Test: Invalid password
+        Result = battleship_user:check_password(<<"nonuser">>, Password),
         ?assertMatch({error, invalid_credentials}, Result),
 
         %% Cleanup
