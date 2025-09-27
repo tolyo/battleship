@@ -79,16 +79,14 @@ login_post(Req0, State) ->
                     {_, Token} = jose_jws:compact(Signed),
 
                     %% Set JWT as secure HTTP-only cookie
-                    Cookie = #{
-                        <<"name">>     => <<"jwt">>,
-                        <<"value">>    => Token,
-                        <<"path">>     => <<"/">>,
-                        <<"httpOnly">> => true,
-                        <<"secure">>   => not battleship_config:is_dev(), %% true in prod, false in dev
-                        <<"maxAge">>   => 3600
+                    Opts = #{
+                        path      => <<"/">>,
+                        http_only => true,
+                        secure    => not battleship_config:is_dev(),
+                        max_age   => 3600
                     },
-
-                    Req2 = cowboy_req:set_resp_cookie(Cookie, Req1),
+                    
+                    Req2 = cowboy_req:set_resp_cookie(<<"SEC_USER">>, Token, Req1, Opts),
 
                     %% Return minimal JSON response
                     Resp = json:encode(#{status => <<"ok">>}),
