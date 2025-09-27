@@ -1,4 +1,4 @@
-import { GRID_SIZE, MapTile } from '../constants.js';
+import { GRID_SIZE, MapTile } from './constants.js';
 
 /**
  * @typedef {'ACTIVE' | 'DAMAGED' | 'KILLED'} ShipState

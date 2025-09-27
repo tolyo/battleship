@@ -1,7 +1,7 @@
 /* eslint-disable class-methods-use-this */
-import Fleet from '../model/fleet.js';
+import Fleet from '../game/fleet.js';
 import { addTilesToBoard } from '../fleetboard.js';
-import { FLEET_SIZE, GRID } from '../constants.js';
+import { FLEET_SIZE, GRID } from '../game/constants.js';
 
 class MapController {
   static $inject = ['$scope'];
@@ -74,17 +74,13 @@ class MapController {
   }
 
   join() {
-    console.log(this.player);
-    console.log(this.board);
     const socket = new WebSocket(
       `/ws?player=${this.player}&board=${this.boardState}`
     );
     socket.addEventListener('open', (ev, data) => {
-      console.log(ev);
       console.log(data);
     });
     socket.addEventListener('message', (ev, data) => {
-      console.log(ev);
       console.log(data);
     });
   }
