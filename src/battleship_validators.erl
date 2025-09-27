@@ -20,9 +20,13 @@ matches(OtherField, Msg) -> {matches, OtherField, list_to_binary(Msg)}.
 %%--------------------------------------------------------------------
 validate_field(Field, Rules, Map, Errors) ->
     Value = maps:get(Field, Map, <<>>),
-    lists:foldl(fun(Rule, Acc) ->
-                        apply_rule(Rule, Field, Value, Map, Acc)
-                end, Errors, Rules).
+    lists:foldl(
+        fun(Rule, Acc) ->
+            apply_rule(Rule, Field, Value, Map, Acc)
+        end,
+        Errors,
+        Rules
+    ).
 
 %%--------------------------------------------------------------------
 %% Rule application
@@ -30,24 +34,24 @@ validate_field(Field, Rules, Map, Errors) ->
 apply_rule({required, Msg}, Field, Value, _Map, Errors) ->
     case Value of
         <<>> -> Errors#{Field => Msg};
-        _    -> Errors
+        _ -> Errors
     end;
-
 apply_rule({email, Msg}, Field, Value, _Map, Errors) ->
     case Value of
         <<>> ->
-            Errors; %% don't complain here, let `required` handle empties
+            %% don't complain here, let `required` handle empties
+            Errors;
         _ ->
             case re:run(Value, "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", [{capture, none}]) of
-                match   -> Errors;              %% valid email
+                %% valid email
+                match -> Errors;
                 nomatch -> Errors#{Field => Msg};
                 {error, _} -> Errors#{Field => <<"Invalid regex evaluation">>}
             end
     end;
-    
 apply_rule({matches, OtherField, Msg}, Field, Value, Map, Errors) ->
     OtherValue = maps:get(OtherField, Map, <<>>),
     case Value =:= OtherValue of
-        true  -> Errors;
+        true -> Errors;
         false -> Errors#{Field => Msg}
     end.

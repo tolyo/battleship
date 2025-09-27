@@ -50,7 +50,7 @@ login_post(Req0, State) ->
     case maps:size(Errors) of
         0 ->
             %% Extract credentials safely
-            Email    = maps:get(<<"email">>, Map),
+            Email = maps:get(<<"email">>, Map),
             Password = maps:get(<<"password">>, Map),
 
             logger:info("Login attempt for Email=~p", [Email]),
@@ -60,19 +60,20 @@ login_post(Req0, State) ->
                 {ok, User} ->
                     %% JWT creation using jose
                     Now = os:system_time(second),
-                    Exp = Now + 3600, %% 1 hour expiry
+                    %% 1 hour expiry
+                    Exp = Now + 3600,
                     Claims = #{
-                        <<"sub">>      => User#user.id,
+                        <<"sub">> => User#user.id,
                         <<"username">> => User#user.username,
-                        <<"iat">>      => Now,
-                        <<"exp">>      => Exp
+                        <<"iat">> => Now,
+                        <<"exp">> => Exp
                     },
 
                     %% Secret key from environment
                     Secret = dotenv_config:get(<<"JWT_KEY">>),
                     JWK = #{
                         <<"kty">> => <<"oct">>,
-                        <<"k">>   => jose_base64url:encode(Secret)
+                        <<"k">> => jose_base64url:encode(Secret)
                     },
                     JWS = #{<<"alg">> => <<"HS256">>},
 
@@ -81,19 +82,20 @@ login_post(Req0, State) ->
 
                     %% Set JWT as secure HTTP-only cookie
                     Opts = #{
-                        path      => <<"/">>,
+                        path => <<"/">>,
                         http_only => false,
-                        secure    => not battleship_config:is_dev(),
-                        max_age   => 3600
+                        secure => not battleship_config:is_dev(),
+                        max_age => 3600
                     },
-                    
+
                     Req2 = cowboy_req:set_resp_cookie(?AUTH_COOKIE, Token, Req1, Opts),
 
                     %% Return minimal JSON response
                     Resp = json:encode(#{status => <<"ok">>}),
-                    Req3 = cowboy_req:reply(200, #{<<"content-type">> => <<"application/json">>}, Resp, Req2),
+                    Req3 = cowboy_req:reply(
+                        200, #{<<"content-type">> => <<"application/json">>}, Resp, Req2
+                    ),
                     {stop, Req3, State};
-
                 {error, invalid_credentials} ->
                     Resp = json:encode(#{
                         status => <<"error">>,
@@ -101,14 +103,17 @@ login_post(Req0, State) ->
                             <<"password">> => <<"invalid username or password">>
                         }
                     }),
-                    Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
+                    Req2 = cowboy_req:reply(
+                        400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
+                    ),
                     {stop, Req2, State}
             end;
-
         _ ->
             %% Validation errors
             Resp = json:encode(#{status => <<"error">>, errors => Errors}),
-            Req2 = cowboy_req:reply(422, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
+            Req2 = cowboy_req:reply(
+                422, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
+            ),
             {stop, Req2, State}
     end.
 
@@ -117,9 +122,13 @@ login_post(Req0, State) ->
 %%--------------------------------------------------------------------
 validate_fields(Map) ->
     Specs = [
-        {<<"email">>,    [battleship_validators:required()]},
+        {<<"email">>, [battleship_validators:required()]},
         {<<"password">>, [battleship_validators:required()]}
     ],
-    lists:foldl(fun({Field, Rules}, Errors) ->
-                        battleship_validators:validate_field(Field, Rules, Map, Errors)
-                end, #{}, Specs).
+    lists:foldl(
+        fun({Field, Rules}, Errors) ->
+            battleship_validators:validate_field(Field, Rules, Map, Errors)
+        end,
+        #{},
+        Specs
+    ).

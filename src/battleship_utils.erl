@@ -1,7 +1,7 @@
 -module(battleship_utils).
 -export([
-    get_random_binary/2, 
-    update_list_at/3, 
+    get_random_binary/2,
+    update_list_at/3,
     get_template/1
 ]).
 
@@ -21,7 +21,7 @@ compile_once(Path) ->
     persistent_term:put({template, Path}, Bin),
     Bin.
 
-get_template(Path) ->    
+get_template(Path) ->
     case battleship_config:is_dev() of
         true ->
             compile_once(Path);
@@ -33,4 +33,3 @@ get_template(Path) ->
                     Bin
             end
     end.
-    

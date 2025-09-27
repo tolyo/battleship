@@ -21,7 +21,7 @@ start(_StartType, _StartArgs) ->
             %% public
             {"/_register", battleship_register_handler, []},
             {"/_login", battleship_login_handler, []},
-            
+
             %% protected
             {"/_dashboard", battleship_auth, {battleship_dashboard_handler, []}},
 

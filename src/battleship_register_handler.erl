@@ -46,7 +46,7 @@ register_post(Req0, State) ->
     case maps:size(Errors) of
         0 ->
             Username = maps:get(<<"username">>, Map),
-            Email    = maps:get(<<"email">>, Map),
+            Email = maps:get(<<"email">>, Map),
             Password = maps:get(<<"password">>, Map),
 
             logger:info("Username=~p, Email=~p", [Username, Email]),
@@ -54,20 +54,24 @@ register_post(Req0, State) ->
             case battleship_user:create(Username, Email, Password) of
                 {ok, UserId} ->
                     Resp = json:encode(#{status => <<"ok">>, user_id => UserId}),
-                    Req2 = cowboy_req:reply(201, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
+                    Req2 = cowboy_req:reply(
+                        201, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
+                    ),
                     {stop, Req2, State};
                 {error, Reason} ->
                     Resp = json:encode(#{status => <<"error">>, reason => Reason}),
-                    Req2 = cowboy_req:reply(400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
+                    Req2 = cowboy_req:reply(
+                        400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
+                    ),
                     {stop, Req2, State}
             end;
         _ ->
             Resp = json:encode(#{status => <<"error">>, errors => Errors}),
-            Req2 = cowboy_req:reply(422, #{<<"content-type">> => <<"application/json">>}, Resp, Req1),
+            Req2 = cowboy_req:reply(
+                422, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
+            ),
             {stop, Req2, State}
     end.
-
-
 
 %%--------------------------------------------------------------------
 %% Validation entrypoint
@@ -75,11 +79,17 @@ register_post(Req0, State) ->
 validate_fields(Map) ->
     Specs = [
         {<<"username">>, [battleship_validators:required()]},
-        {<<"email">>,    [battleship_validators:required(), battleship_validators:email()]},
+        {<<"email">>, [battleship_validators:required(), battleship_validators:email()]},
         {<<"password">>, [battleship_validators:required()]},
-        {<<"repeatpassword">>, [battleship_validators:required(), battleship_validators:matches(<<"password">>, "Passwords do not match")]}
+        {<<"repeatpassword">>, [
+            battleship_validators:required(),
+            battleship_validators:matches(<<"password">>, "Passwords do not match")
+        ]}
     ],
-    lists:foldl(fun({Field, Rules}, Errors) ->
+    lists:foldl(
+        fun({Field, Rules}, Errors) ->
             battleship_validators:validate_field(Field, Rules, Map, Errors)
-                end, #{}, Specs).
-
+        end,
+        #{},
+        Specs
+    ).

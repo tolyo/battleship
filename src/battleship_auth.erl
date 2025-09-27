@@ -30,7 +30,7 @@ require_auth(Req) ->
         {_, Token} ->
             case verify_jwt(Token) of
                 {ok, Claims} -> {ok, Claims, Req};
-                {error, _}   -> {error, unauthorized(Req)}
+                {error, _} -> {error, unauthorized(Req)}
             end;
         false ->
             {error, unauthorized(Req)}
@@ -52,7 +52,7 @@ verify_jwt(Token) ->
     Secret = dotenv_config:get(<<"JWT_KEY">>),
     JWK = #{
         <<"kty">> => <<"oct">>,
-        <<"k">>   => jose_base64url:encode(Secret)
+        <<"k">> => jose_base64url:encode(Secret)
     },
 
     case jose_jwt:verify_strict(JWK, [<<"HS256">>], Token) of
@@ -60,7 +60,7 @@ verify_jwt(Token) ->
             Exp = maps:get(<<"exp">>, Claims, 0),
             Now = os:system_time(second),
             case Now < Exp of
-                true  -> {ok, Claims};
+                true -> {ok, Claims};
                 false -> {error, expired}
             end;
         {false, Reason} ->
