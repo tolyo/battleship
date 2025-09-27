@@ -27,7 +27,7 @@ content_types_provided(Req, State) ->
     {[{<<"text/html">>, login_form}], Req, State}.
 
 %%--------------------------------------------------------------------
-%% GET handler using ErlyDTL template
+%% GET handler for template
 %%--------------------------------------------------------------------
 login_form(Req, State) ->
     Template = battleship_utils:get_template("priv/static/login/login.html"),
