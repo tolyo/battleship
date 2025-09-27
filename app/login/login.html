@@ -1,4 +1,4 @@
-<form ng-post="/_login" data-success="$ctrl.process($res)">
+<form ng-post="/_login" data-success-state="dashboard">
   <h2>Login form</h2>
 
   <label ng-class="{ error: errors.email }">
@@ -25,3 +25,5 @@
 
   <button type="submit">Sign in</button>
 </form>
+
+{{ error.errors }}

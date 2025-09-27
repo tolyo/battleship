@@ -28,7 +28,7 @@ create(Username, Email, Password) ->
 
 find_by_username(Username) ->
     Sql =
-        "SELECT id, username, email, password_hash, rating, created_at\n"
+        "SELECT id, username, email, password_hash, rating, created_at "
         "           FROM users WHERE username = $1;",
     case battleship_db:query(Sql, [Username]) of
         {ok, _, [Row]} ->
@@ -45,11 +45,12 @@ find_by_username(Username) ->
     {ok, user()} | {error, invalid_credentials} | {error, term()}.
 
 check_password(Email, Password) ->
-    Sql =
-        "        SELECT id, username, email, password_hash, rating, created_at\n"
-        "        FROM users\n"
-        "        WHERE email = $1\n"
-        "          AND password_hash = crypt($2, password_hash);\n",
+    Sql = """
+        SELECT id, username, email, password_hash, rating, created_at 
+        FROM users 
+        WHERE email = $1 
+        AND password_hash = crypt($2, password_hash); 
+    """,
     case battleship_db:query(Sql, [Email, Password]) of
         {ok, _, [Row]} ->
             {ok, row_to_user(Row)};
