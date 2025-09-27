@@ -11,6 +11,7 @@
 ]).
 
 -include_lib("battleship/include/battleship.hrl").
+-include_lib("battleship/include/battleship_server.hrl").
 
 %%--------------------------------------------------------------------
 %% Cowboy REST callbacks
@@ -81,12 +82,12 @@ login_post(Req0, State) ->
                     %% Set JWT as secure HTTP-only cookie
                     Opts = #{
                         path      => <<"/">>,
-                        http_only => true,
+                        http_only => false,
                         secure    => not battleship_config:is_dev(),
                         max_age   => 3600
                     },
                     
-                    Req2 = cowboy_req:set_resp_cookie(<<"SEC_USER">>, Token, Req1, Opts),
+                    Req2 = cowboy_req:set_resp_cookie(?AUTH_COOKIE, Token, Req1, Opts),
 
                     %% Return minimal JSON response
                     Resp = json:encode(#{status => <<"ok">>}),

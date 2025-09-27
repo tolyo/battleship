@@ -8,7 +8,7 @@ export default function appConfig($httpProvider) {
       responseError: (response) => {
         if (response.status === 401) {
           // should redirect to error handler
-          window.location.reload();
+          window.location.href = '/login';
         } else {
           return Promise.reject(response);
         }

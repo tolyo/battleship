@@ -23,7 +23,7 @@ start(_StartType, _StartArgs) ->
             {"/_login", battleship_login_handler, []},
             
             %% protected
-            {"/_dashboard", battleship_dashboard_handler, []},
+            {"/_dashboard", battleship_auth, {battleship_dashboard_handler, []}},
 
             {"/[...]", cowboy_static, {file, "priv/static/index.html"}}
         ]}

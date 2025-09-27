@@ -19,5 +19,7 @@ module.exports = {
         allowNamedExports: false,
       },
     ],
+    'class-methods-use-this': 'off',
+    'import/prefer-default-export': 'off',
   },
 };

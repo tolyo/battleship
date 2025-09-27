@@ -4,6 +4,7 @@ import registerComponent from './register/register.js';
 import loginComponent from './login/login.js';
 import appConfig from './configuration.js';
 import dashboardComponent from './dashboard/dashboard.js';
+import { HeaderController } from './layout/header-ctrl.js';
 
 angular
   .module('battleship', [])
@@ -34,6 +35,7 @@ angular
         });
     },
   ])
+  .controller('HeaderController', HeaderController)
   .component('dashboard', dashboardComponent)
   .component('login', loginComponent)
   .component('register', registerComponent)

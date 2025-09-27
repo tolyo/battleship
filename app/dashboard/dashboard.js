@@ -1,4 +1,9 @@
 export default {
   templateUrl: '/_dashboard',
-  controller: class {},
+  controller: class {
+    static $inject = ['$rootScope'];
+    constructor($rootScope) {
+      $rootScope.authenticated = true;
+    }
+  },
 };
