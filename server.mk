@@ -10,6 +10,7 @@ clean:
 setup:
 	@echo "[SETUP] Fetching dependencies..."
 	@rebar3 get-deps
+	@rebar3 dialyzer plt
 
 compile:
 	@echo "[COMPILE] Compiling the project..."
@@ -24,9 +25,9 @@ lint:
 	@rebar3 fmt -w --verbose
 
 check:
-	@echo "[CHECK] Running eqwalize checks..."
-	@./elp eqwalize-all
+	@echo "[CHECK] Running Erlang checks..."
+	@rebar3 dialyzer
 
 test:
-	@echo "[TEST] Running Rebar3 tests..."
+	@echo "[TEST] Running Erlang tests..."
 	@rebar3 eunit

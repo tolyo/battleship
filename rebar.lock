@@ -1,11 +1,11 @@
 {"1.2.0",
 [{<<"cowboy">>,
   {git,"https://github.com/ninenines/cowboy.git",
-       {ref,"1a175e7b563110c4a47c41f2b9c78cdafbcaf063"}},
+       {ref,"e713a630f384f861fa396048f9c881ca183aeda9"}},
   0},
  {<<"cowlib">>,
   {git,"https://github.com/ninenines/cowlib",
-       {ref,"cc04201c1d0e1d5603cd1cde037ab729b192634c"}},
+       {ref,"aca0ad953417b29bab2c41eeb4c37c98606c848b"}},
   1},
  {<<"dotenv_config">>,{pkg,<<"dotenv_config">>,<<"2.3.3">>},0},
  {<<"epgsql">>,{pkg,<<"epgsql">>,<<"4.8.0">>},0},
@@ -15,7 +15,7 @@
   0},
  {<<"eqwalizer_support">>,
   {git_subdir,"https://github.com/whatsapp/eqwalizer.git",
-              {ref,"22c719eef1658475ba11f135f0c43dd3cce43cd1"},
+              {ref,"c4d1098174cec06bd124855f3a28dfd6eda0a581"},
               "eqwalizer_support"},
   0},
  {<<"erlydtl">>,{pkg,<<"erlydtl">>,<<"0.14.0">>},0},
@@ -28,7 +28,7 @@
  {<<"pooler">>,{pkg,<<"pooler">>,<<"1.5.3">>},1},
  {<<"ranch">>,
   {git,"https://github.com/ninenines/ranch",
-       {ref,"a692f44567034dacf5efcaa24a24183788594eb7"}},
+       {ref,"10b51304b26062e0dbfd5e74824324e9a911e269"}},
   1}]}.
 [
 {pkg_hash,[
