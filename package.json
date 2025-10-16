@@ -1,10 +1,6 @@
 {
   "private": true,
   "scripts": {
-    "typecheck": "./node_modules/.bin/tsc",
-    "lint": "./node_modules/.bin/eslint ./app --fix",
-    "format": "./node_modules/.bin/prettier ./ --write --cache --log-level=silent",
-    "playwright": "./node_modules/.bin/playwright test"
   },
   "dependencies": {
     "@angular-wave/angular.ts": "latest",

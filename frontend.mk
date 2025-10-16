@@ -1,31 +1,71 @@
-.PHONY: clean setup start lint check test
+.PHONY: clean clean_build setup start lint check test
 
-INFO = [INFO]
+# -----------------------------------------------------
+#  Configuration
+# -----------------------------------------------------
+INFO      := [INFO]
+BUILD_DIR := dist
+DEPS_DIR  := node_modules
 
+# -----------------------------------------------------
+#  Utility Targets
+# -----------------------------------------------------
+
+## Remove node_modules and lockfile
 clean:
-	@echo "$(INFO) Cleaning up node_modules..."
-	@rm -rf node_modules
+	@if [ -d "$(DEPS_DIR)" ]; then \
+		echo "$(INFO) Removing $(DEPS_DIR)..."; \
+		rm -rf "$(DEPS_DIR)"; \
+	fi
+	@if [ -f "package-lock.json" ]; then \
+		echo "$(INFO) Removing package-lock.json..."; \
+		rm -f "package-lock.json"; \
+	fi
 
-setup:
-	@echo "$(INFO) Installing NPM dependencies..."
-	@npm install
+## Remove build output
+clean_build:
+	@if [ -d "$(BUILD_DIR)" ]; then \
+		echo "$(INFO) Removing $(BUILD_DIR)..."; \
+		rm -rf "$(BUILD_DIR)"; \
+	fi
+
+# -----------------------------------------------------
+#  Setup & Dev Targets
+# -----------------------------------------------------
+
+## Install dependencies and browsers
+setup: clean
+	@echo "$(INFO) Installing npm dependencies..."
+	@npm ci || npm install
 	@echo "$(INFO) Installing Playwright browsers..."
-	@npx playwright install
+	@npx playwright install --with-deps
 
+## Start local dev server
 start:
 	@echo "$(INFO) Starting BrowserSync..."
 	@node browsersync.cjs
 
+# -----------------------------------------------------
+#  Code Quality Targets
+# -----------------------------------------------------
+
+## Run Prettier & ESLint
 lint:
-	@echo "$(INFO) Formatting JavaScript/CSS..."
-	@npm run format
-	@echo "$(INFO) Linting JavaScript..."
-	@npm run lint
+	@echo "$(INFO) Formatting code with Prettier..."
+	@npx prettier --write --cache --log-level=silent .
+	@echo "$(INFO) Linting code with ESLint..."
+	@npx eslint ./app --fix
 
+## Typecheck code with TypeScript
 check:
-	@echo "$(INFO) Typechecking JavaScript..."
-	@npm run typecheck
+	@echo "$(INFO) Typechecking with tsc..."
+	@npx tsc --noEmit
 
+# -----------------------------------------------------
+#  Testing
+# -----------------------------------------------------
+
+## Run Playwright tests
 test:
 	@echo "$(INFO) Running Playwright tests..."
-	@npm run playwright
+	@npx playwright test
