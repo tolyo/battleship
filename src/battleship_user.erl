@@ -1,5 +1,7 @@
 -module(battleship_user).
 
+-import(battleship_db, [query/2]).
+
 -export([
     create/3,
     find_by_username/1,
@@ -15,7 +17,7 @@
 
 create(Username, Email, Password) ->
     Sql = "SELECT register_user($1, $2, $3);",
-    case battleship_db:query(Sql, [Username, Email, Password]) of
+    case query(Sql, [Username, Email, Password]) of
         {ok, _, [{UserId}]} ->
             {ok, UserId};
         {error, Error} ->
@@ -30,7 +32,7 @@ find_by_username(Username) ->
     Sql =
         "SELECT id, username, email, password_hash, rating, created_at "
         "           FROM users WHERE username = $1;",
-    case battleship_db:query(Sql, [Username]) of
+    case query(Sql, [Username]) of
         {ok, _, [Row]} ->
             {ok, row_to_user(Row)};
         {ok, _, []} ->
@@ -51,7 +53,7 @@ check_password(Email, Password) ->
         WHERE email = $1 
         AND password_hash = crypt($2, password_hash); 
     """,
-    case battleship_db:query(Sql, [Email, Password]) of
+    case query(Sql, [Email, Password]) of
         {ok, _, [Row]} ->
             {ok, row_to_user(Row)};
         {ok, _, []} ->

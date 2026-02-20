@@ -44,6 +44,11 @@ setup: clean
 start:
 	@echo "$(INFO) Starting BrowserSync..."
 	@node browsersync.cjs
+	
+## Build prod
+build: clean_build
+	@echo "$(INFO) Starting Rollup..."
+	@npx rollup -c
 
 # -----------------------------------------------------
 #  Code Quality Targets

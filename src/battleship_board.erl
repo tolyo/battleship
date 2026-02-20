@@ -1,4 +1,5 @@
 -module(battleship_board).
+%% @doc Board helpers for placement and strike updates.
 -export([
     init_board/0,
     is_legal/2,
@@ -6,10 +7,15 @@
     get_cell_value/3,
     update_cell_at/4,
     attach_ship/2,
-    set_adjacents_blocked/1
+    set_adjacents_blocked/1,
+    count/2
 ]).
 -include_lib("battleship/include/battleship.hrl").
 -include_lib("eunit/include/eunit.hrl").
+
+%% ------------------------------------------------------------------
+%% Public API.
+%% ------------------------------------------------------------------
 
 -spec init_board() -> board().
 init_board() -> [[?EMPTY || _ <- grid()] || _ <- grid()].
@@ -53,9 +59,13 @@ set_adjacents_blocked(Board) ->
     Coords = [{R, C} || R <- grid(), C <- grid()],
     set_adjacents_blocked(Coords, Board).
 
-%%% ---------------------------------------------------
-%%% Private functions.
-%%% ---------------------------------------------------
+-spec count(board(), grid_state()) -> non_neg_integer().
+count(Board, Value) ->
+    lists:sum([length([Cell || Cell <- Row, Cell =:= Value]) || Row <- Board]).
+
+%% ------------------------------------------------------------------
+%% Private helpers.
+%% ------------------------------------------------------------------
 
 grid() -> lists:seq(1, 10).
 

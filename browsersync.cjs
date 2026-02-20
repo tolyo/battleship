@@ -74,16 +74,19 @@ async function buildJsBundle() {
 }
 
 async function pretty() {
-  return new Promise((resolve, _) => {
-    exec('npm run format', (err, _, stderr) => {
-      if (err) {
-        console.error('Error executing custom command:', stderr);
+  return new Promise((resolve) => {
+    exec(
+      'npx prettier ./ --write --cache --log-level=silent',
+      (err, _, stderr) => {
+        if (err) {
+          console.error('Error executing custom command:', stderr);
+          resolve();
+          return;
+        }
+        console.log('Pretty successfully');
         resolve();
-        return;
       }
-      console.log('Pretty successfully');
-      resolve();
-    });
+    );
   });
 }
 

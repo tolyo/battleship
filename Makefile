@@ -38,6 +38,11 @@ start:
 	sleep 2
 	$(MAKE) backend-serve
 
+build:
+	@echo $(INFO) "Building frontend..."
+	@$(FRONTEND_CONTEXT) build
+	@echo $(DONE) " Build complete."
+
 frontend-serve:
 	@$(FRONTEND_CONTEXT) start
 

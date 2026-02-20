@@ -74,8 +74,11 @@ class MapController {
   }
 
   join() {
+    // Send a JSON-encoded board snapshot for matchmaking.
+    const boardParam = encodeURIComponent(JSON.stringify(this.boardState));
+    const playerParam = encodeURIComponent(this.player || 'player');
     const socket = new WebSocket(
-      `/ws?player=${this.player}&board=${this.boardState}`
+      `/ws?player=${playerParam}&board=${boardParam}`
     );
     socket.addEventListener('open', (ev, data) => {
       console.log(data);

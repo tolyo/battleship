@@ -1,4 +1,5 @@
 -module(battleship_game).
+%% @doc Core game state and move evaluation logic.
 -export([
     place_fleet_random/0,
     init_mock_game/0,
@@ -8,10 +9,14 @@
 ]).
 -include_lib("battleship/include/battleship.hrl").
 
+%% ------------------------------------------------------------------
+%% Public API.
+%% ------------------------------------------------------------------
+
 -spec place_fleet_random() -> board().
 place_fleet_random() ->
     try
-        place_ships(battleship_board:init_grid(), battleship_ship:fleet())
+        place_ships(battleship_board:init_board(), battleship_ship:fleet())
     catch
         _:_ -> place_fleet_random()
     end.
@@ -31,8 +36,8 @@ init_mock_game() ->
 -spec get_player_by_id(#game{}, player_id()) -> #player{}.
 get_player_by_id(Game, Id) ->
     case Id =:= Game#game.player_one#player.id of
-        true -> Game#game.player_two;
-        false -> Game#game.player_one
+        true -> Game#game.player_one;
+        false -> Game#game.player_two
     end.
 
 -spec get_opposite_player(#game{}, #player{}) -> #player{}.
@@ -48,19 +53,27 @@ next_move(Game, Row, Column) ->
     CurrentPlayer =
         case Game#game.turns of
             [] -> get_player_by_id(Game, Game#game.first_turn);
-            [H | _] -> get_player_by_id(Game, H#strike.id)
+            [H | _] -> get_opposite_player(Game, get_player_by_id(Game, H#strike.id))
         end,
     OppositePlayer = get_opposite_player(Game, CurrentPlayer),
     Board = OppositePlayer#player.board,
     case strike(Board, Row, Column) of
         {'MISS', NewBoard} ->
-            battleship_board:update_board(Game, OppositePlayer, NewBoard);
+            update_game(Game, CurrentPlayer, OppositePlayer, NewBoard, 'MISS', Row, Column);
         {'ERROR', _} ->
             error("Wrong move");
         {HitVal, NewBoard} ->
             case battleship_board:count(NewBoard, ?HIT) == battleship_ship:fleet_size() of
                 true ->
-                    Game#game{state = 'FINISHED'};
+                    update_game(
+                        Game#game{state = 'FINISHED'},
+                        CurrentPlayer,
+                        OppositePlayer,
+                        NewBoard,
+                        'HIT',
+                        Row,
+                        Column
+                    );
                 false ->
                     HitCount = battleship_board:count(NewBoard, HitVal),
                     BlockedBoard =
@@ -76,7 +89,7 @@ next_move(Game, Row, Column) ->
                             _ ->
                                 NewBoard
                         end,
-                    battleship_board:update_board(Game, OppositePlayer, BlockedBoard)
+                    update_game(Game, CurrentPlayer, OppositePlayer, BlockedBoard, 'HIT', Row, Column)
             end
     end.
 
@@ -84,6 +97,7 @@ next_move(Game, Row, Column) ->
 %%% Private functions.
 %%% ---------------------------------------------------
 
+-spec strike(board(), row(), column()) -> {strike_res(), board()}.
 strike(Board, Row, Column) ->
     case battleship_board:get_cell_value(Board, Row, Column) of
         ?EMPTY ->
@@ -101,6 +115,22 @@ strike(Board, Row, Column) ->
             }
     end.
 
+-spec update_game(#game{}, #player{}, #player{}, board(), strike_res(), row(), column()) -> #game{}.
+update_game(Game, CurrentPlayer, OppositePlayer, NewBoard, Result, Row, Column) ->
+    Strike = #strike{id = CurrentPlayer#player.id, x = Column, y = Row, res = Result},
+    UpdatedGame = Game#game{turns = [Strike | Game#game.turns]},
+    update_player_board(UpdatedGame, OppositePlayer, NewBoard).
+
+-spec update_player_board(#game{}, #player{}, board()) -> #game{}.
+update_player_board(Game, Player, Board) ->
+    case Player#player.id =:= Game#game.player_one#player.id of
+        true ->
+            Game#game{player_one = Player#player{board = Board}};
+        false ->
+            Game#game{player_two = Player#player{board = Board}}
+    end.
+
+-spec try_place_ship_random(board(), #ship{}, non_neg_integer()) -> board().
 try_place_ship_random(_, _, 0) ->
     throw("Unable to place ship");
 try_place_ship_random(Board, Ship, Count) ->
@@ -112,12 +142,14 @@ try_place_ship_random(Board, Ship, Count) ->
         false -> try_place_ship_random(Board, Ship, Count - 1)
     end.
 
+-spec place_ships(board(), fleet()) -> board().
 place_ships(Board, []) ->
     Board;
 place_ships(Board, [H | T]) ->
     NewBoard = try_place_ship_random(Board, H, 100),
     place_ships(NewBoard, T).
 
+-spec get_random_ship_coordinate() -> {column(), row(), ship_orientation()}.
 get_random_ship_coordinate() ->
     {
         rand:uniform(10),

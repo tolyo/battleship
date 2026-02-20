@@ -19,6 +19,11 @@ angular
           component: 'dashboard',
         })
         .state({
+          name: 'room',
+          url: '/room',
+          component: 'room',
+        })
+        .state({
           name: 'register',
           url: '/register',
           component: 'register',

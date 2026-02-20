@@ -50,6 +50,26 @@ init([]) ->
             shutdown => 5000,
             type => worker,
             modules => [battleship_server]
+        },
+
+        % Game room supervisor
+        #{
+            id => battleship_room_sup,
+            start => {battleship_room_sup, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => supervisor,
+            modules => [battleship_room_sup]
+        },
+
+        % Lobby matchmaking
+        #{
+            id => battleship_lobby,
+            start => {battleship_lobby, start_link, []},
+            restart => permanent,
+            shutdown => 5000,
+            type => worker,
+            modules => [battleship_lobby]
         }
     ],
     {ok, {SupFlags, ChildSpecs}}.
