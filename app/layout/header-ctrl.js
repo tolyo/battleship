@@ -1,11 +1,10 @@
-import { angular } from "@angular-wave/angular.ts";
+import { angular } from '@angular-wave/angular.ts';
 
 export class HeaderController {
-
   static $inject = [angular.$t.$cookie];
 
   /**
-   * @param {ng.CookieService} cookieService 
+   * @param {ng.CookieService} cookieService
    */
   constructor(cookieService) {
     /** @type {ng.CookieService} */

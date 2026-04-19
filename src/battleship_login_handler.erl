@@ -119,7 +119,9 @@ login_post(Req0, State) ->
                     {stop, Req2, State}
             end;
         false ->
-            Resp = json:encode(#{status => <<"error">>, errors => #{<<"body">> => <<"invalid_json">>}}),
+            Resp = json:encode(#{
+                status => <<"error">>, errors => #{<<"body">> => <<"invalid_json">>}
+            }),
             Req2 = cowboy_req:reply(
                 400, #{<<"content-type">> => <<"application/json">>}, Resp, Req1
             ),

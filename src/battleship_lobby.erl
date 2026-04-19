@@ -15,7 +15,8 @@
     name => binary(),
     board => board()
 }.
--type join_reply() :: {waiting, player_id_bin()} | {matched, player_id_bin(), player_id_bin(), room_id()}.
+-type join_reply() ::
+    {waiting, player_id_bin()} | {matched, player_id_bin(), player_id_bin(), room_id()}.
 -type room_entry() :: #{pid := pid(), ref := reference()}.
 
 -record(lobby_player, {
@@ -88,11 +89,13 @@ handle_call({join, Pid, PlayerInfo}, _From, State) ->
             RoomRef = erlang:monitor(process, RoomPid),
             Rooms = (State#state.rooms)#{RoomId => #{pid => RoomPid, ref => RoomRef}},
             notify_player_match(Waiting, Player#lobby_player.player_id, RoomId),
-            {reply, {matched, Player#lobby_player.player_id, Waiting#lobby_player.player_id, RoomId}, State#state{
-                waiting = Rest,
-                rooms = Rooms,
-                counter = State#state.counter + 1
-            }}
+            {reply,
+                {matched, Player#lobby_player.player_id, Waiting#lobby_player.player_id, RoomId},
+                State#state{
+                    waiting = Rest,
+                    rooms = Rooms,
+                    counter = State#state.counter + 1
+                }}
     end;
 handle_call(_Msg, _From, State) ->
     {reply, {error, unknown_request}, State}.
@@ -147,11 +150,15 @@ make_room_id(Counter) ->
     <<<<"room-">>/binary, (integer_to_binary(Counter))/binary>>.
 
 -spec lobby_player_to_room_player(#lobby_player{}) -> map().
-lobby_player_to_room_player(#lobby_player{pid = Pid, player_id = PlayerId, name = Name, board = Board}) ->
+lobby_player_to_room_player(#lobby_player{
+    pid = Pid, player_id = PlayerId, name = Name, board = Board
+}) ->
     #{pid => Pid, id => PlayerId, name => Name, board => Board}.
 
 -spec notify_player_match(#lobby_player{}, player_id_bin(), room_id()) -> ok.
-notify_player_match(#lobby_player{pid = Pid, player_id = PlayerId, name = Name}, OpponentId, RoomId) ->
+notify_player_match(
+    #lobby_player{pid = Pid, player_id = PlayerId, name = Name}, OpponentId, RoomId
+) ->
     Payload = #{
         type => <<"match_found">>,
         room_id => RoomId,

@@ -81,9 +81,11 @@ class MapController {
       `/ws?player=${playerParam}&board=${boardParam}`
     );
     socket.addEventListener('open', (ev, data) => {
+      // eslint-disable-next-line no-console
       console.log(data);
     });
     socket.addEventListener('message', (ev, data) => {
+      // eslint-disable-next-line no-console
       console.log(data);
     });
   }

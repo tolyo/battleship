@@ -170,7 +170,8 @@ can_move(PlayerId, Row, Column, State) ->
                     {error, <<"game_finished">>};
                 _ ->
                     case valid_coords(Row, Column) of
-                        false -> {error, <<"invalid_coordinates">>};
+                        false ->
+                            {error, <<"invalid_coordinates">>};
                         true ->
                             case current_turn_id(State#state.game) =:= PlayerId of
                                 true -> ok;
@@ -189,7 +190,8 @@ do_move(_PlayerId, Row, Column, Game) ->
         _:_ -> {error, <<"invalid_move">>}
     end.
 
--spec handle_player_leave(player_id_bin(), #state{}) -> {noreply, #state{}} | {stop, term(), #state{}}.
+-spec handle_player_leave(player_id_bin(), #state{}) ->
+    {noreply, #state{}} | {stop, term(), #state{}}.
 handle_player_leave(PlayerId, State) ->
     Remaining = maps:remove(PlayerId, State#state.players),
     notify_players(Remaining, #{

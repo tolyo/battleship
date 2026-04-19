@@ -89,7 +89,9 @@ next_move(Game, Row, Column) ->
                             _ ->
                                 NewBoard
                         end,
-                    update_game(Game, CurrentPlayer, OppositePlayer, BlockedBoard, 'HIT', Row, Column)
+                    update_game(
+                        Game, CurrentPlayer, OppositePlayer, BlockedBoard, 'HIT', Row, Column
+                    )
             end
     end.
 

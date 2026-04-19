@@ -123,7 +123,15 @@ parse_board_param(BoardParam) ->
 -spec normalize_board(term()) -> {ok, board()} | {error, term()}.
 normalize_board(Board) when is_list(Board), length(Board) =:= 10 ->
     Rows = [normalize_row(Row) || Row <- Board],
-    case lists:all(fun({ok, _}) -> true; (_) -> false end, Rows) of
+    case
+        lists:all(
+            fun
+                ({ok, _}) -> true;
+                (_) -> false
+            end,
+            Rows
+        )
+    of
         true -> {ok, [Row || {ok, Row} <- Rows]};
         false -> {error, invalid_row}
     end;
@@ -133,7 +141,15 @@ normalize_board(_) ->
 -spec normalize_row(term()) -> {ok, [grid_state()]} | {error, term()}.
 normalize_row(Row) when is_list(Row), length(Row) =:= 10 ->
     Cells = [normalize_cell(Cell) || Cell <- Row],
-    case lists:all(fun({ok, _}) -> true; (_) -> false end, Cells) of
+    case
+        lists:all(
+            fun
+                ({ok, _}) -> true;
+                (_) -> false
+            end,
+            Cells
+        )
+    of
         true -> {ok, [Cell || {ok, Cell} <- Cells]};
         false -> {error, invalid_cell}
     end;
@@ -145,11 +161,16 @@ normalize_cell(Cell) when is_binary(Cell) ->
     normalize_cell(binary_to_list(Cell));
 normalize_cell(Cell) when is_list(Cell) ->
     case Cell of
-        "_" -> {ok, ?EMPTY};
-        "o" -> {ok, ?BLOCKED};
-        "x" -> {ok, ?MISS};
-        "m" -> {ok, ?MISS};
-        "+" -> {ok, ?HIT};
+        "_" ->
+            {ok, ?EMPTY};
+        "o" ->
+            {ok, ?BLOCKED};
+        "x" ->
+            {ok, ?MISS};
+        "m" ->
+            {ok, ?MISS};
+        "+" ->
+            {ok, ?HIT};
         [Digit] when Digit >= $0, Digit =< $9 ->
             {ok, digit_atom(Digit)};
         _ ->
@@ -173,7 +194,9 @@ digit_atom($8) -> '8';
 digit_atom($9) -> '9'.
 
 -spec update_state_from_payload(payload(), ws_state()) -> ws_state().
-update_state_from_payload(#{type := <<"match_found">>, room_id := RoomId, player_id := PlayerId}, State) ->
+update_state_from_payload(
+    #{type := <<"match_found">>, room_id := RoomId, player_id := PlayerId}, State
+) ->
     State#state{room_id = RoomId, player_id = PlayerId};
 update_state_from_payload(_Payload, State) ->
     State.

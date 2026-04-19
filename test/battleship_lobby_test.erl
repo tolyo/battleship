@@ -36,35 +36,32 @@ client_loop(Parent) ->
     end.
 
 lobby_match_test_() ->
-    {setup,
-        fun start_services/0,
-        fun stop_services/1,
-        fun(_) ->
-            fun() ->
-                Parent = self(),
-                Pid1 = spawn(fun() -> client_loop(Parent) end),
-                Pid2 = spawn(fun() -> client_loop(Parent) end),
+    {setup, fun start_services/0, fun stop_services/1, fun(_) ->
+        fun() ->
+            Parent = self(),
+            Pid1 = spawn(fun() -> client_loop(Parent) end),
+            Pid2 = spawn(fun() -> client_loop(Parent) end),
 
-                {waiting, PlayerId1} = battleship_lobby:join(Pid1, #{name => <<"p1">>}),
-                {matched, PlayerId2, PlayerId1, RoomId} = battleship_lobby:join(
-                    Pid2,
-                    #{name => <<"p2">>}
-                ),
+            {waiting, PlayerId1} = battleship_lobby:join(Pid1, #{name => <<"p1">>}),
+            {matched, PlayerId2, PlayerId1, RoomId} = battleship_lobby:join(
+                Pid2,
+                #{name => <<"p2">>}
+            ),
 
-                ?assert(is_binary(PlayerId1)),
-                ?assert(is_binary(PlayerId2)),
-                ?assert(is_binary(RoomId)),
+            ?assert(is_binary(PlayerId1)),
+            ?assert(is_binary(PlayerId2)),
+            ?assert(is_binary(RoomId)),
 
-                {ok, RoomPid} = battleship_lobby:room_pid(RoomId),
-                ?assert(is_process_alive(RoomPid)),
+            {ok, RoomPid} = battleship_lobby:room_pid(RoomId),
+            ?assert(is_process_alive(RoomPid)),
 
-                ?assertEqual(ok, wait_for_match_found(Pid1, RoomId)),
+            ?assertEqual(ok, wait_for_match_found(Pid1, RoomId)),
 
-                Pid1 ! stop,
-                Pid2 ! stop,
-                exit(RoomPid, shutdown)
-            end
-        end}.
+            Pid1 ! stop,
+            Pid2 ! stop,
+            exit(RoomPid, shutdown)
+        end
+    end}.
 
 wait_for_match_found(Pid, RoomId) ->
     receive
