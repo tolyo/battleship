@@ -1,4 +1,3 @@
-/* eslint-disable class-methods-use-this */
 import Fleet from '../game/fleet.js';
 import { addTilesToBoard } from '../fleetboard.js';
 import { FLEET_SIZE, GRID } from '../game/constants.js';
@@ -6,14 +5,20 @@ import { FLEET_SIZE, GRID } from '../game/constants.js';
 class MapController {
   static $inject = ['$scope'];
 
+  /**
+   * @param {ng.RootScopeService} $scope 
+   */
   constructor($scope) {
     this.$scope = $scope;
     this.boardReady = false;
-    this.board = document.getElementById('fleetboard');
-    this.button = document.getElementById('ready');
+    /** @type {HTMLDivElement} */
+    this.board = /** @type {HTMLDivElement} */ (document.getElementById('fleetboard'))
+    /** @type {HTMLButtonElement} */
+    this.button = /** @type {HTMLButtonElement} */ (document.getElementById('ready'));
     addTilesToBoard(this.board, 'fleetboard');
     // Add placeholders
-    const fleetPlaceholder = document.getElementById('fleet');
+    /** @type {HTMLDivElement} */
+    const fleetPlaceholder = /** @type {HTMLDivElement} */ (document.getElementById('fleet'));
     Fleet.forEach((ship) => ship.createPlaceHolder(fleetPlaceholder));
     // Attach ships to them
     Fleet.forEach((ship) => ship.createOnPlaceholder());

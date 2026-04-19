@@ -6,7 +6,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "lib": ["ES2018", "DOM"],
-    "target": "ES5",
+    "target": "esnext",
     "sourceMap": false,
     "declaration": false,
     "incremental": true,
