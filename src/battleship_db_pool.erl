@@ -33,7 +33,7 @@ stop(PoolName0) ->
     pooler:rm_pool(pool_name_to_atom(PoolName0)).
 
 -spec query(pool_name(), epgsql:sql_query(), [epgsql:bind_param()]) ->
-    epgsql:reply() | {error, term()}.
+    term() | {error, term()}.
 query(PoolName0, Sql, Params) ->
     PoolName = pool_name_to_atom(PoolName0),
     case pooler:take_member(PoolName, ?TAKE_TIMEOUT) of

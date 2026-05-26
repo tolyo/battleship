@@ -9,7 +9,7 @@
 -type ship_orientation() :: 'VERTICAL' | 'HORIZONTAL'.
 -type row() :: integer().
 -type column() :: integer().
--type player_id() :: [char()].
+-type player_id() :: binary().
 -type board() :: [[grid_state()]].
 -record(ship, {
     id :: atom(),

@@ -12,7 +12,7 @@ DONE = "\033[32m✔\033[0m"
 # Export environment variables if needed
 include ./config/dev.env
 
-.PHONY: all clean setup compile start lint check test functional-test quality help db-up db-down db-rebuild
+.PHONY: all clean setup compile start format lint check test functional-test quality help db-up db-down db-rebuild
 
 all: compile
 
@@ -48,6 +48,12 @@ frontend-serve:
 
 backend-serve:	
 	@$(SERVER_CONTEXT) start
+
+format:
+	@echo $(INFO) "Formatting project..."
+	@$(FRONTEND_CONTEXT) format
+	@$(SERVER_CONTEXT) format
+	@echo $(DONE) " Format complete."
 
 lint:
 	@echo $(INFO) "Linting project..."
@@ -100,6 +106,7 @@ help:
 	@echo "  setup            Install frontend & server dependencies"
 	@echo "  compile          Compile the server code"
 	@echo "  start            Start the development server"
+	@echo "  format           Format frontend and Erlang code"
 	@echo "  lint             Format & lint frontend and backend"
 	@echo "  check            Run static type checks"
 	@echo "  test             Run backend tests"

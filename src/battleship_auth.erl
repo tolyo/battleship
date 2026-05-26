@@ -63,6 +63,6 @@ verify_jwt(Token) ->
                 true -> {ok, Claims};
                 false -> {error, expired}
             end;
-        {false, Reason} ->
+        {false, Reason, _Jws} ->
             {error, Reason}
     end.

@@ -1,4 +1,4 @@
-.PHONY: clean clean_build setup start lint check test
+.PHONY: clean clean_build setup start build format lint check test
 
 # -----------------------------------------------------
 #  Configuration
@@ -55,6 +55,10 @@ build: clean_build
 # -----------------------------------------------------
 
 ## Run Prettier & ESLint
+format:
+	@echo "$(INFO) Formatting code with Prettier..."
+	@npx prettier --write --cache --log-level=silent .
+
 lint:
 	@echo "$(INFO) Formatting code with Prettier..."
 	@npx prettier --write --cache --log-level=silent .

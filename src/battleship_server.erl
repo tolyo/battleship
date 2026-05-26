@@ -59,7 +59,7 @@ handle_call({next_move, _Player, Row, Column}, _From, State) ->
     NewState = battleship_game:next_move(State, Row, Column),
     {reply, NewState, NewState}.
 
-init([]) -> {ok, #game{}}.
+init([]) -> {ok, battleship_game:init_mock_game()}.
 handle_cast(_Msg, State) -> {noreply, State}.
 handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.

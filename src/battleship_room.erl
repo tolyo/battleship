@@ -277,12 +277,6 @@ strike_to_map(#strike{id = Id, x = X, y = Y, res = Res}) ->
 serialize_board(Board) ->
     [[cell_to_binary(Cell) || Cell <- Row] || Row <- Board].
 
--spec cell_to_binary(term()) -> binary().
+-spec cell_to_binary(grid_state()) -> binary().
 cell_to_binary(Cell) when is_atom(Cell) ->
-    atom_to_binary(Cell, utf8);
-cell_to_binary(Cell) when is_integer(Cell) ->
-    integer_to_binary(Cell);
-cell_to_binary(Cell) when is_binary(Cell) ->
-    Cell;
-cell_to_binary(Cell) when is_list(Cell) ->
-    list_to_binary(Cell).
+    atom_to_binary(Cell, utf8).

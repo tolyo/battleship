@@ -16,6 +16,7 @@
 
 -type ws_state() :: #state{}.
 -type payload() :: map().
+-type ws_frame() :: {text, iodata()}.
 
 %% ------------------------------------------------------------------
 %% Cowboy callbacks.
@@ -29,7 +30,7 @@ init(Req, _State) ->
     Board = parse_board_param(BoardParam),
     {cowboy_websocket, Req, #state{player_name = PlayerParam, board = Board}}.
 
--spec websocket_init(ws_state()) -> {[cowboy_websocket:frame()], ws_state()}.
+-spec websocket_init(ws_state()) -> {[ws_frame()], ws_state()}.
 websocket_init(State = #state{player_name = PlayerName, board = Board}) ->
     PlayerInfo = #{name => PlayerName, board => Board},
     case battleship_lobby:join(self(), PlayerInfo) of
@@ -44,13 +45,13 @@ websocket_init(State = #state{player_name = PlayerName, board = Board}) ->
             }}
     end.
 
--spec websocket_handle(term(), ws_state()) -> {[cowboy_websocket:frame()], ws_state()}.
+-spec websocket_handle(term(), ws_state()) -> {[ws_frame()], ws_state()}.
 websocket_handle({text, Msg}, State) ->
     handle_message(Msg, State);
 websocket_handle(_Data, State) ->
     {[], State}.
 
--spec websocket_info(term(), ws_state()) -> {[cowboy_websocket:frame()], ws_state()}.
+-spec websocket_info(term(), ws_state()) -> {[ws_frame()], ws_state()}.
 websocket_info({socket_send, Payload}, State) ->
     NewState = update_state_from_payload(Payload, State),
     {[{text, json:encode(Payload)}], NewState};
@@ -71,7 +72,7 @@ terminate(_Reason, _Req, State) ->
 %% Private helpers.
 %% ------------------------------------------------------------------
 
--spec handle_message(binary(), ws_state()) -> {[cowboy_websocket:frame()], ws_state()}.
+-spec handle_message(binary(), ws_state()) -> {[ws_frame()], ws_state()}.
 handle_message(Msg, State = #state{room_id = RoomId, player_id = PlayerId}) ->
     try json:decode(Msg) of
         #{<<"type">> := <<"move">>, <<"row">> := Row, <<"column">> := Column} ->

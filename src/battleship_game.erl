@@ -23,8 +23,8 @@ place_fleet_random() ->
 
 -spec init_mock_game() -> #game{}.
 init_mock_game() ->
-    Player1 = #player{id = "1", board = place_fleet_random()},
-    Player2 = #player{id = "2", board = place_fleet_random()},
+    Player1 = #player{id = <<"1">>, board = place_fleet_random()},
+    Player2 = #player{id = <<"2">>, board = place_fleet_random()},
     #game{
         player_one = Player1,
         player_two = Player2,
@@ -99,7 +99,9 @@ next_move(Game, Row, Column) ->
 %%% Private functions.
 %%% ---------------------------------------------------
 
--spec strike(board(), row(), column()) -> {strike_res(), board()}.
+-type strike_value() :: strike_res() | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
+
+-spec strike(board(), row(), column()) -> {strike_value(), board()}.
 strike(Board, Row, Column) ->
     case battleship_board:get_cell_value(Board, Row, Column) of
         ?EMPTY ->

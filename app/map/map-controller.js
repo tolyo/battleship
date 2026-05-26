@@ -6,19 +6,25 @@ class MapController {
   static $inject = ['$scope'];
 
   /**
-   * @param {ng.RootScopeService} $scope 
+   * @param {ng.RootScopeService} $scope
    */
   constructor($scope) {
     this.$scope = $scope;
     this.boardReady = false;
     /** @type {HTMLDivElement} */
-    this.board = /** @type {HTMLDivElement} */ (document.getElementById('fleetboard'))
+    this.board = /** @type {HTMLDivElement} */ (
+      document.getElementById('fleetboard')
+    );
     /** @type {HTMLButtonElement} */
-    this.button = /** @type {HTMLButtonElement} */ (document.getElementById('ready'));
+    this.button = /** @type {HTMLButtonElement} */ (
+      document.getElementById('ready')
+    );
     addTilesToBoard(this.board, 'fleetboard');
     // Add placeholders
     /** @type {HTMLDivElement} */
-    const fleetPlaceholder = /** @type {HTMLDivElement} */ (document.getElementById('fleet'));
+    const fleetPlaceholder = /** @type {HTMLDivElement} */ (
+      document.getElementById('fleet')
+    );
     Fleet.forEach((ship) => ship.createPlaceHolder(fleetPlaceholder));
     // Attach ships to them
     Fleet.forEach((ship) => ship.createOnPlaceholder());

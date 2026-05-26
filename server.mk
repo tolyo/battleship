@@ -1,4 +1,4 @@
-.PHONY: all clean setup compile start lint check test
+.PHONY: all clean setup compile start format lint check test
 
 # Default target
 all: compile
@@ -19,6 +19,10 @@ compile:
 start:
 	@echo "[START] Starting the application shell..."
 	@rebar3 shell --sname app1_shell
+
+format:
+	@echo "[FORMAT] Formatting Erlang files..."
+	@rebar3 fmt -w --verbose
 
 lint:
 	@echo "[LINT] Formatting Erlang files..."

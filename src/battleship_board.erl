@@ -11,7 +11,6 @@
     count/2
 ]).
 -include_lib("battleship/include/battleship.hrl").
--include_lib("eunit/include/eunit.hrl").
 
 %% ------------------------------------------------------------------
 %% Public API.
