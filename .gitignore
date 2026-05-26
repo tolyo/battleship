@@ -11,3 +11,4 @@ tsconfig.tsbuildinfo
 _build
 _priv
 priv
+*.crashdump

@@ -6,7 +6,11 @@
     {applications, [
         kernel,
         stdlib,
-        cowboy
+        cowboy,
+        dotenv_config,
+        epgsql,
+        jose,
+        pooler
     ]},
     {env, []},
     {modules, []},

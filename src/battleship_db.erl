@@ -18,7 +18,7 @@ query(Sql) ->
     query(Sql, []).
 
 query(Sql, Params) ->
-    epgsql_pool:query(?POOL_NAME, Sql, Params).
+    battleship_db_pool:query(?POOL_NAME, Sql, Params).
 
 %% ------------------------------------------------------------------
 %% Delete all rows from a given table
@@ -29,15 +29,16 @@ delete_all(TableName) when is_binary(TableName) ->
     case re:run(TableName, "^[a-zA-Z_][a-zA-Z0-9_]*$") of
         {match, _} ->
             Sql = <<"DELETE FROM ", TableName/binary>>,
-            case catch battleship_db:query(Sql, []) of
-                {'EXIT', Reason} ->
-                    {error, Reason};
+            try battleship_db:query(Sql, []) of
                 {ok, _Any} ->
                     ok;
                 {error, Error} ->
                     {error, Error};
                 Other ->
                     {error, {unexpected_result, Other}}
+            catch
+                Class:Reason ->
+                    {error, {Class, Reason}}
             end;
         nomatch ->
             {error, invalid_table_name}
@@ -68,7 +69,7 @@ init([]) ->
         database => Db
     },
 
-    {ok, _} = epgsql_pool:start(?POOL_NAME, PoolSize, MaxSize, Params),
+    {ok, _} = battleship_db_pool:start(?POOL_NAME, PoolSize, MaxSize, Params),
     io:format("Database pool '~p' started with ~p connections.~n", [?POOL_NAME, PoolSize]),
     {ok, #{}}.
 
@@ -84,6 +85,7 @@ handle_info(_, State) ->
     {noreply, State}.
 
 terminate(_Reason, _State) ->
+    _ = battleship_db_pool:stop(?POOL_NAME),
     ok.
 
 code_change(_, State, _) ->
@@ -91,5 +93,6 @@ code_change(_, State, _) ->
 
 %% Internal
 ensure_pool_app_started() ->
-    {ok, _} = application:ensure_all_started(epgsql_pool),
+    {ok, _} = application:ensure_all_started(epgsql),
+    {ok, _} = application:ensure_all_started(pooler),
     ok.
