@@ -17,13 +17,16 @@ import {
 import { decodeServerMessage } from './server-message.js';
 
 class MapController {
-  static $inject = ['$scope'];
+  static $inject = ['$scope', 'gameState'];
 
   /**
    * @param {ng.RootScopeService} $scope
+   * @param {import('../game/game-state-service.js').GameStateService} gameState
    */
-  constructor($scope) {
+  constructor($scope, gameState) {
     this.$scope = $scope;
+    this.gameState = gameState;
+    this.fleet = Fleet;
     this.boardReady = false;
     /** @type {HTMLDivElement} */
     this.board = /** @type {HTMLDivElement} */ (
@@ -34,14 +37,10 @@ class MapController {
       document.getElementById('hitboard')
     );
     addTilesToBoard(this.board, 'fleetboard');
-    // Add placeholders
     /** @type {HTMLDivElement} */
     this.fleetPlaceholder = /** @type {HTMLDivElement} */ (
       document.getElementById('fleet')
     );
-    Fleet.forEach((ship) => ship.createPlaceHolder(this.fleetPlaceholder));
-    // Attach ships to them
-    Fleet.forEach((ship) => ship.createOnPlaceholder());
 
     /** @type {string[][]} */
     this.boardState = emptyBoardState();
@@ -121,9 +120,9 @@ class MapController {
     const occupiedCells = new Set();
     const nextBoardState = emptyBoardState();
 
-    Fleet.forEach((ship) => {
-      const shipTiles = ship.elementsBelow.filter(isClaimedShipTile);
-      if (shipTiles.length !== ship.size) {
+    this.gameState.fleetShips().forEach((fleetShip) => {
+      const shipTiles = fleetShip.elementsBelow.filter(isClaimedShipTile);
+      if (shipTiles.length !== fleetShip.ship?.size) {
         allShipsPlaced = false;
       }
 
@@ -140,7 +139,8 @@ class MapController {
         }
 
         occupiedCells.add(occupiedKey);
-        nextBoardState[coordinates.row][coordinates.column] = ship.id;
+        nextBoardState[coordinates.row][coordinates.column] =
+          fleetShip.ship?.id ?? '';
         placedCells += 1;
       });
     });
@@ -156,8 +156,8 @@ class MapController {
   }
 
   realignShipsToLayout() {
-    Fleet.forEach((ship) => {
-      ship.realignToLayout();
+    this.gameState.fleetShips().forEach((fleetShip) => {
+      fleetShip.realignToLayout();
     });
   }
 
@@ -187,11 +187,11 @@ class MapController {
 
   tryPlacingShips() {
     this.reset();
-    Fleet.forEach((ship) => {
+    this.gameState.fleetShips().forEach((fleetShip) => {
       let count = 100; // safety to prevent runaway cycle
-      let res = ship.tryRandomLocation();
+      let res = fleetShip.tryRandomLocation();
       while (res === false) {
-        res = ship.tryRandomLocation();
+        res = fleetShip.tryRandomLocation();
         count -= 1;
         if (count === 0) {
           throw new Error('Count exceeded');
@@ -205,7 +205,9 @@ class MapController {
       return;
     }
 
-    Fleet.forEach((ship) => ship.setOnPlaceholder());
+    this.gameState
+      .fleetShips()
+      .forEach((fleetShip) => fleetShip.setOnPlaceholder());
     this.handleChildChanges();
   }
 
@@ -344,11 +346,11 @@ class MapController {
   }
 
   lockFleet() {
-    Fleet.forEach((ship) => ship.setLocked(true));
+    this.gameState.setFleetLocked(true);
   }
 
   unlockFleet() {
-    Fleet.forEach((ship) => ship.setLocked(false));
+    this.gameState.setFleetLocked(false);
   }
 
   /**
@@ -363,8 +365,7 @@ class MapController {
     const result = renderGameState({
       game,
       playerId: this.playerId,
-      fleetPlaceholder: this.fleetPlaceholder,
-      restoredFromUrl: this.restoredFromUrl,
+      fleetShips: this.gameState.fleetShips(),
     });
 
     if (result) {

@@ -11,7 +11,16 @@
     ng-class="{ disabled: !$ctrl.canStrike }"
     ng-disabled="!$ctrl.canStrike"
   ></div>
-  <div id="fleet" ng-class="{ 'room-active': $ctrl.phase === 'playing' }"></div>
+  <div id="fleet" ng-class="{ 'room-active': $ctrl.phase === 'playing' }">
+    <div
+      class="place-holder"
+      ng-repeat="ship in $ctrl.fleet"
+      ng-attr-id="placeholder-{{ship.id}}"
+      ng-style="{ width: ship.placeholderWidth }"
+    >
+      <fleet-ship ship="ship"></fleet-ship>
+    </div>
+  </div>
 </section>
 
 <div id="setup-actions" ng-show="$ctrl.phase === 'setup'">

@@ -141,3 +141,50 @@ room_hit_keeps_player_turn_test() ->
         Pid2 ! stop,
         exit(RoomPid, shutdown)
     end.
+
+room_rejects_move_on_blocked_cell_test() ->
+    Parent = self(),
+    Pid1 = spawn(fun() -> client_loop(Parent) end),
+    Pid2 = spawn(fun() -> client_loop(Parent) end),
+    EmptyBoard = battleship_board:init_board(),
+    TargetBoard = battleship_board:update_cell_at(EmptyBoard, 2, 2, '9'),
+    Player1 = #{pid => Pid1, id => <<"p1">>, name => <<"p1">>, board => TargetBoard},
+    Player2 = #{pid => Pid2, id => <<"p2">>, name => <<"p2">>, board => TargetBoard},
+    {ok, RoomPid} = battleship_room:start_link(<<"room-blocked-test">>, Player1, Player2),
+    unlink(RoomPid),
+    try
+        receive
+            {socket_send, Pid1, #{
+                type := <<"game_state">>,
+                game := #{phase := <<"playing">>, current_turn := BlockedInitialTurn}
+            }} when is_binary(BlockedInitialTurn) ->
+                ok
+        after 1000 ->
+            ?assert(false)
+        end,
+        receive
+            {socket_send, Pid2, #{
+                type := <<"game_state">>,
+                game := #{phase := <<"playing">>, current_turn := BlockedInitialTurn2}
+            }} when is_binary(BlockedInitialTurn2) ->
+                ok
+        after 1000 ->
+            ?assert(false)
+        end,
+
+        {ok, Game} = gen_server:call(RoomPid, state),
+        First = Game#game.first_turn,
+
+        ?assertEqual(ok, gen_server:call(RoomPid, {move, First, 1, 1})),
+        ?assertMatch(
+            {error, <<"invalid_move">>},
+            gen_server:call(RoomPid, {move, First, 0, 0})
+        ),
+
+        {ok, Updated} = gen_server:call(RoomPid, state),
+        ?assertEqual(1, length(Updated#game.turns))
+    after
+        Pid1 ! stop,
+        Pid2 ! stop,
+        exit(RoomPid, shutdown)
+    end.

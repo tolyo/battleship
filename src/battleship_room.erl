@@ -211,12 +211,39 @@ can_move(PlayerId, Row, Column, State) ->
                             {error, <<"invalid_coordinates">>};
                         true ->
                             case current_turn_id(State#state.game) =:= PlayerId of
-                                true -> ok;
+                                true -> can_strike_target(PlayerId, Row, Column, State#state.game);
                                 false -> {error, <<"not_your_turn">>}
                             end
                     end
             end
     end.
+
+-spec can_strike_target(player_id_bin(), integer(), integer(), #game{}) -> ok | {error, binary()}.
+can_strike_target(PlayerId, Row, Column, Game) ->
+    CurrentPlayer = battleship_game:get_player_by_id(Game, PlayerId),
+    Opponent = battleship_game:get_opposite_player(Game, CurrentPlayer),
+    {Row1, Col1} = to_board_coords(Row, Column),
+    case battleship_board:get_cell_value(Opponent#player.board, Row1, Col1) of
+        ?EMPTY -> ok;
+        Cell ->
+            case is_ship_cell(Cell) of
+                true -> ok;
+                false -> {error, <<"invalid_move">>}
+            end
+    end.
+
+-spec is_ship_cell(grid_state()) -> boolean().
+is_ship_cell('0') -> true;
+is_ship_cell('1') -> true;
+is_ship_cell('2') -> true;
+is_ship_cell('3') -> true;
+is_ship_cell('4') -> true;
+is_ship_cell('5') -> true;
+is_ship_cell('6') -> true;
+is_ship_cell('7') -> true;
+is_ship_cell('8') -> true;
+is_ship_cell('9') -> true;
+is_ship_cell(_) -> false.
 
 -spec do_move(player_id_bin(), integer(), integer(), #game{}) -> {ok, #game{}} | {error, binary()}.
 do_move(_PlayerId, Row, Column, Game) ->

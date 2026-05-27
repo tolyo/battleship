@@ -1,12 +1,13 @@
 .ship {
   box-sizing: border-box;
   border: #7f881a 2px solid;
-  background-color: #f0ff20;
-  opacity: 0.5;
+  background-color: rgb(240 255 32 / 70%);
   position: absolute;
   width: 30px;
   height: 30px;
   z-index: 1000;
+  touch-action: none;
+  user-select: none;
 }
 
 .ship.locked {
@@ -32,7 +33,7 @@
 }
 
 .ship.dragged {
-  opacity: 0.6;
+  background-color: rgb(240 255 32 / 85%);
   border: 2px solid #02ff00;
 }
 

@@ -48,3 +48,29 @@ hit_keeps_turn_test() ->
     SecondStrike = hd(NextHitGame#game.turns),
     ?assertEqual(<<"p1">>, SecondStrike#strike.id),
     ?assertEqual('HIT', SecondStrike#strike.res).
+
+sinking_ship_blocks_surrounding_cells_test() ->
+    EmptyBoard = battleship_board:init_board(),
+    TargetBoard = battleship_board:update_cell_at(EmptyBoard, 2, 2, '9'),
+    Player1 = #player{id = <<"p1">>, board = EmptyBoard},
+    Player2 = #player{id = <<"p2">>, board = TargetBoard},
+    Game = #game{
+        player_one = Player1,
+        player_two = Player2,
+        first_turn = <<"p1">>,
+        turns = [],
+        state = 'ACTIVE'
+    },
+
+    HitGame = battleship_game:next_move(Game, 2, 2),
+    OpponentBoard = HitGame#game.player_two#player.board,
+
+    ?assertEqual(?HIT, battleship_board:get_cell_value(OpponentBoard, 2, 2)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 1, 1)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 1, 2)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 1, 3)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 2, 1)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 2, 3)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 3, 1)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 3, 2)),
+    ?assertEqual(?BLOCKED, battleship_board:get_cell_value(OpponentBoard, 3, 3)).
