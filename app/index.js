@@ -12,8 +12,8 @@ angular
   .config([
     '$stateProvider',
     /**
-     * 
-     * @param {ng.StateProvider} $stateProvider 
+     *
+     * @param {ng.StateProvider} $stateProvider
      */
     ($stateProvider) => {
       $stateProvider
@@ -50,4 +50,4 @@ angular
   .component('register', registerComponent)
   .component('home', mapComponent);
 
-  angular.bootstrap(document, ['battleship']);
+angular.bootstrap(document, ['battleship']);

@@ -38,7 +38,9 @@
 
 -spec start_link(room_id(), player_info(), player_info()) -> {ok, pid()} | ignore | {error, term()}.
 start_link(RoomId, Player1, Player2) when is_binary(RoomId) ->
-    gen_server:start_link(?MODULE, [RoomId, ensure_player_info(Player1), ensure_player_info(Player2)], []).
+    gen_server:start_link(
+        ?MODULE, [RoomId, ensure_player_info(Player1), ensure_player_info(Player2)], []
+    ).
 
 -spec move(room_id(), player_id_bin(), integer(), integer()) -> move_result().
 move(RoomId, PlayerId, Row, Column) when
@@ -199,7 +201,8 @@ do_move(_PlayerId, Row, Column, Game) ->
         _:_ -> {error, <<"invalid_move">>}
     end.
 
--spec handle_player_leave(player_id_bin(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
+-spec handle_player_leave(player_id_bin(), #state{}) ->
+    {noreply, #state{}} | {stop, normal, #state{}}.
 handle_player_leave(PlayerId, State) ->
     Remaining = maps:remove(PlayerId, State#state.players),
     notify_players(Remaining, #{
@@ -258,7 +261,8 @@ notify_players(Players, Payload) ->
 -spec notify_player(player_id_bin(), players_map(), map()) -> ok.
 notify_player(PlayerId, Players, Payload) ->
     case maps:get(PlayerId, Players, undefined) of
-        undefined -> ok;
+        undefined ->
+            ok;
         #{pid := Pid} ->
             Pid ! {socket_send, Payload},
             ok

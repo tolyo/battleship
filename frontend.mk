@@ -75,7 +75,7 @@ lint:
 ## Typecheck code with TypeScript
 check:
 	@echo "$(INFO) Typechecking with tsc..."
-	@npx tsc --noEmit
+	@npx tsc --noEmit --pretty false
 
 # -----------------------------------------------------
 #  Testing

@@ -1,4 +1,3 @@
-
 /**
  * @param {ng.HttpProvider} $httpProvider
  */

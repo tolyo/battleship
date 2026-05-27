@@ -120,12 +120,12 @@ export default class Ship {
     document.addEventListener(
       'claim',
       /** @type {EventListener} */ (
-      (e) => {
-        const event = /** @type {CustomEvent<{ id: string }>} */ (e);
-        if (event.detail.id !== this.id) {
-          this.claimTiles();
+        (e) => {
+          const event = /** @type {CustomEvent<{ id: string }>} */ (e);
+          if (event.detail.id !== this.id) {
+            this.claimTiles();
+          }
         }
-      }
       )
     );
 
@@ -513,7 +513,9 @@ export default class Ship {
       tile.dataset.state = MapTile.EMPTY;
     });
     this.elementsBelow = [];
-    document.dispatchEvent(new CustomEvent('claim', { detail: { id: this.id } }));
+    document.dispatchEvent(
+      new CustomEvent('claim', { detail: { id: this.id } })
+    );
   }
 
   resetElementsBelow() {

@@ -10,7 +10,8 @@
 -type row() :: pos_integer().
 -type column() :: pos_integer().
 -type player_id() :: binary().
--type board() :: [[atom()]].
+-type board_cell() :: grid_state().
+-type board() :: [[board_cell()]].
 -record(ship, {
     id :: atom(),
     health :: ship_state(),

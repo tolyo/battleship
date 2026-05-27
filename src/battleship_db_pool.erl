@@ -46,7 +46,8 @@ query(PoolName0, Sql, Params) ->
             {error, pool_overload}
     end.
 
--spec query_with_connection(atom(), pid(), epgsql:sql_query(), [epgsql:bind_param()]) -> query_result().
+-spec query_with_connection(atom(), pid(), epgsql:sql_query(), [epgsql:bind_param()]) ->
+    query_result().
 query_with_connection(PoolName, Connection, Sql, Params) ->
     try epgsql:equery(Connection, Sql, Params) of
         Reply ->

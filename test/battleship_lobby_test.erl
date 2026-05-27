@@ -1,6 +1,7 @@
 -module(battleship_lobby_test).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("battleship/include/battleship.hrl").
 
 start_services() ->
     Lobby = start_service(battleship_lobby, fun battleship_lobby:start_link/0),
@@ -56,6 +57,20 @@ lobby_match_test_() ->
             ?assert(is_process_alive(RoomPid)),
 
             ?assertEqual(ok, wait_for_match_found(Pid1, RoomId)),
+            {ok, Game} = battleship_room:game_state(RoomId),
+            First = Game#game.first_turn,
+            Opponent =
+                case First of
+                    PlayerId1 -> PlayerId2;
+                    PlayerId2 -> PlayerId1
+                end,
+            ?assertEqual(
+                {error, <<"not_your_turn">>}, battleship_room:move(RoomId, Opponent, 0, 0)
+            ),
+            ?assertEqual(ok, battleship_room:move(RoomId, First, 0, 0)),
+            ?assertEqual(ok, wait_for_game_update(RoomId)),
+            {ok, UpdatedGame} = battleship_room:game_state(RoomId),
+            ?assertEqual(1, length(UpdatedGame#game.turns)),
 
             Pid1 ! stop,
             Pid2 ! stop,
@@ -69,6 +84,16 @@ wait_for_match_found(Pid, RoomId) ->
             ok;
         {socket_send, Pid, _Other} ->
             wait_for_match_found(Pid, RoomId)
+    after 1000 ->
+        timeout
+    end.
+
+wait_for_game_update(RoomId) ->
+    receive
+        {socket_send, _Pid, #{type := <<"game_update">>, room_id := RoomId}} ->
+            ok;
+        {socket_send, _Pid, _Other} ->
+            wait_for_game_update(RoomId)
     after 1000 ->
         timeout
     end.
