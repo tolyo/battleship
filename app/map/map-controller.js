@@ -29,26 +29,6 @@ class MapController {
     this.board = /** @type {HTMLDivElement} */ (
       document.getElementById('fleetboard')
     );
-    /** @type {HTMLButtonElement} */
-    this.button = /** @type {HTMLButtonElement} */ (
-      document.getElementById('ready')
-    );
-    /** @type {HTMLButtonElement} */
-    this.randomButton = /** @type {HTMLButtonElement} */ (
-      document.getElementById('random')
-    );
-    /** @type {HTMLButtonElement} */
-    this.resetButton = /** @type {HTMLButtonElement} */ (
-      document.getElementById('reset')
-    );
-    /** @type {HTMLElement} */
-    this.statusElement = /** @type {HTMLElement} */ (
-      document.getElementById('match-status')
-    );
-    /** @type {HTMLElement} */
-    this.setupActions = /** @type {HTMLElement} */ (
-      document.getElementById('setup-actions')
-    );
     /** @type {HTMLDivElement} */
     this.hitboard = /** @type {HTMLDivElement} */ (
       document.getElementById('hitboard')
@@ -84,26 +64,51 @@ class MapController {
     this.hitboardReady = false;
     this.restoredFromUrl = false;
     this.isMyTurn = false;
+    this.canStrike = false;
     /** @type {unknown} */
     this.pendingGame = undefined;
+    /** @type {MutationObserver | undefined} */
+    this.boardObserver = undefined;
+    /** @type {(() => void) | undefined} */
+    this.resizeHandler = undefined;
+  }
 
-    const observer = new MutationObserver(() => this.handleChildChanges());
-    // Start observing the parent node for childList mutations
-    observer.observe(this.board, {
+  $onInit() {
+    const controller = this.viewController();
+    this.boardObserver = new MutationObserver(() =>
+      controller.handleChildChanges()
+    );
+    this.boardObserver.observe(this.board, {
       attributes: true,
       childList: true,
       subtree: true,
     });
-    window.addEventListener('resize', () => this.scheduleShipRealign());
-    this.scheduleShipRealign();
+
+    this.resizeHandler = () => controller.scheduleShipRealign();
+    window.addEventListener('resize', this.resizeHandler);
+    controller.scheduleShipRealign();
 
     const roomId = roomIdFromPath();
     if (roomId) {
-      this.restoreRoom(roomId);
-      return;
+      controller.restoreRoom(roomId);
     }
+  }
 
-    this.syncSetupUi();
+  $onDestroy() {
+    this.boardObserver?.disconnect();
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
+  }
+
+  /**
+   * @returns {MapController}
+   */
+  viewController() {
+    const controller = /** @type {{ $ctrl?: MapController }} */ (this.$scope)
+      .$ctrl;
+
+    return controller ?? this;
   }
 
   handleChildChanges() {
@@ -148,15 +153,6 @@ class MapController {
       this.boardReady = false;
       this.status = 'Place your fleet';
     }
-    this.syncSetupUi();
-  }
-
-  syncSetupUi() {
-    const setupActive = this.phase === 'setup';
-    this.button.disabled = !this.boardReady || !setupActive;
-    this.randomButton.disabled = !setupActive;
-    this.resetButton.disabled = !setupActive;
-    this.statusElement.textContent = this.status;
   }
 
   realignShipsToLayout() {
@@ -220,7 +216,6 @@ class MapController {
 
     if (!this.boardReady) {
       this.status = 'Place your fleet first';
-      this.syncSetupUi();
       return;
     }
 
@@ -240,12 +235,11 @@ class MapController {
     );
     this.socket = socket;
     this.phase = 'waiting';
+    this.lockFleet();
     this.status = 'Connecting...';
-    this.syncSetupUi();
 
     socket.addEventListener('open', () => {
       this.status = 'Waiting for opponent...';
-      this.syncSetupUi();
     });
 
     socket.addEventListener('message', (ev) => {
@@ -265,7 +259,6 @@ class MapController {
       } else if (message.type === 'error') {
         this.status = message.reason || 'Server error';
       }
-      this.syncSetupUi();
     });
 
     socket.addEventListener('close', () => {
@@ -273,8 +266,8 @@ class MapController {
       this.socket = undefined;
       if (this.phase === 'waiting') {
         this.phase = 'setup';
+        this.unlockFleet();
       }
-      this.syncSetupUi();
     });
   }
 
@@ -285,11 +278,11 @@ class MapController {
   enterRoom(message, updateUrl) {
     if (!message.room_id || !message.player_id) {
       this.status = 'Room unavailable';
-      this.syncSetupUi();
       return;
     }
 
     this.phase = 'playing';
+    this.lockFleet();
     this.roomId = message.room_id;
     this.playerId = message.player_id;
     this.opponentId = message.opponent_id;
@@ -310,11 +303,11 @@ class MapController {
     const playerId = storedPlayerId(roomId);
     if (!playerId) {
       this.status = 'Room unavailable';
-      this.syncSetupUi();
       return;
     }
 
     this.phase = 'playing';
+    this.lockFleet();
     this.roomId = roomId;
     this.playerId = playerId;
     this.restoredFromUrl = true;
@@ -338,25 +331,24 @@ class MapController {
       } else if (message.type === 'error') {
         this.status = message.reason || 'Server error';
       }
-      this.syncSetupUi();
     });
     socket.addEventListener('close', () => {
       this.status = 'Disconnected';
       this.socket = undefined;
-      this.syncSetupUi();
     });
   }
 
   showRoomUi() {
-    this.setupActions.hidden = true;
-    this.hitboard.hidden = false;
-    this.hitboard.classList.add('disabled');
-    this.hitboard.setAttribute('aria-disabled', 'true');
-    this.board.classList.add('disabled');
-    this.fleetPlaceholder.classList.add('room-active');
     this.ensureHitboard();
     this.scheduleShipRealign();
-    this.syncSetupUi();
+  }
+
+  lockFleet() {
+    Fleet.forEach((ship) => ship.setLocked(true));
+  }
+
+  unlockFleet() {
+    Fleet.forEach((ship) => ship.setLocked(false));
   }
 
   /**
@@ -371,13 +363,13 @@ class MapController {
     const result = renderGameState({
       game,
       playerId: this.playerId,
-      hitboard: this.hitboard,
       fleetPlaceholder: this.fleetPlaceholder,
       restoredFromUrl: this.restoredFromUrl,
     });
 
     if (result) {
       this.isMyTurn = result.isMyTurn;
+      this.canStrike = this.phase === 'playing' && this.isMyTurn;
       this.status = result.status;
     }
   }

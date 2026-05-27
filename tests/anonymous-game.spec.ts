@@ -100,7 +100,11 @@ test.describe('anonymous game', () => {
       await Promise.all(players.map(joinAnonymousGame));
       await waitForInitialTurns(players);
 
-      for (let move = 0; move < MAX_SHOTS_PER_PLAYER * players.length; move += 1) {
+      for (
+        let move = 0;
+        move < MAX_SHOTS_PER_PLAYER * players.length;
+        move += 1
+      ) {
         if (await gameFinished(players)) {
           break;
         }
@@ -117,10 +121,7 @@ test.describe('anonymous game', () => {
         .poll(async () => Promise.all(players.map(status)))
         .toEqual(['Game finished', 'Game finished']);
     } finally {
-      await Promise.all([
-        playerOneContext.close(),
-        playerTwoContext.close(),
-      ]);
+      await Promise.all([playerOneContext.close(), playerTwoContext.close()]);
     }
   });
 });

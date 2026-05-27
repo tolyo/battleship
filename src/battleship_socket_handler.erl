@@ -30,17 +30,18 @@ init(Req, _State) ->
     RoomIdParam = proplists:get_value(<<"room_id">>, Params, undefined),
     BoardParam = proplists:get_value(<<"board">>, Params, undefined),
     Board = parse_board_param(BoardParam),
-    State = case {RoomIdParam, PlayerIdParam} of
-        {RoomId, PlayerId} when is_binary(RoomId), is_binary(PlayerId) ->
-            #state{
-                player_name = PlayerParam,
-                board = Board,
-                player_id = PlayerId,
-                room_id = RoomId
-            };
-        _ ->
-            #state{player_name = PlayerParam, board = Board}
-    end,
+    State =
+        case {RoomIdParam, PlayerIdParam} of
+            {RoomId, PlayerId} when is_binary(RoomId), is_binary(PlayerId) ->
+                #state{
+                    player_name = PlayerParam,
+                    board = Board,
+                    player_id = PlayerId,
+                    room_id = RoomId
+                };
+            _ ->
+                #state{player_name = PlayerParam, board = Board}
+        end,
     {cowboy_websocket, Req, State}.
 
 -spec websocket_init(ws_state()) -> {[ws_frame()], ws_state()}.

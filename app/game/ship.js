@@ -133,6 +133,11 @@ export default class Ship {
      * @type {boolean}
      */
     this.firstMove = false;
+
+    /**
+     * @type {boolean}
+     */
+    this.locked = false;
   }
 
   /**
@@ -243,6 +248,7 @@ export default class Ship {
     const { width, height } = this.calculateSize();
     this.shipElement.style.width = width;
     this.shipElement.style.height = height;
+    this.applyLockedState();
   }
 
   createOnPlaceholder() {
@@ -288,6 +294,9 @@ export default class Ship {
    * @param {MouseEvent} e
    */
   onmousedown(e) {
+    if (this.locked) {
+      return;
+    }
     if (e.button !== undefined && e.button !== 0) return; // only touch or left click
     // if (e.touches && e.touches.length > 1) return; // support one finger touch only
     // if (['PLAYING', 'ENDED'].includes(gameEngine.getState())) return;
@@ -369,6 +378,9 @@ export default class Ship {
    * Handle rotation
    */
   ondblclick() {
+    if (this.locked) {
+      return;
+    }
     // Cant rotate a ship of size 1
     if (this.size === 1) {
       return;
@@ -573,6 +585,26 @@ export default class Ship {
    */
   isPlaced() {
     return this.elementsBelow.length > 0;
+  }
+
+  /**
+   * @param {boolean} locked
+   */
+  setLocked(locked) {
+    this.locked = locked;
+    this.applyLockedState();
+  }
+
+  applyLockedState() {
+    if (!this.shipElement) {
+      return;
+    }
+
+    this.shipElement.classList.toggle('locked', this.locked);
+    this.shipElement.setAttribute(
+      'aria-disabled',
+      this.locked ? 'true' : 'false'
+    );
   }
 
   /**

@@ -1,22 +1,42 @@
 <section class="player-panel">
-  <span>{{$ctrl.playerLabel}}</span>
-  <strong id="match-status">{{$ctrl.status}}</strong>
+  <span ng-bind="$ctrl.playerLabel"></span>
+  <strong id="match-status" ng-bind="$ctrl.status"></strong>
 </section>
 
 <section id="map">
-  <div id="fleetboard"></div>
-  <div id="hitboard" hidden></div>
-  <div id="fleet"></div>
+  <div id="fleetboard" ng-class="{ disabled: $ctrl.phase === 'playing' }"></div>
+  <div
+    id="hitboard"
+    ng-show="$ctrl.phase === 'playing'"
+    ng-class="{ disabled: !$ctrl.canStrike }"
+    ng-disabled="!$ctrl.canStrike"
+  ></div>
+  <div id="fleet" ng-class="{ 'room-active': $ctrl.phase === 'playing' }"></div>
 </section>
 
-<div id="setup-actions">
+<div id="setup-actions" ng-show="$ctrl.phase === 'setup'">
   <button
     id="ready"
+    disabled
     ng-click="$ctrl.join()"
-    ng-disabled="!$ctrl.boardReady"
+    ng-disabled="!$ctrl.boardReady || $ctrl.phase !== 'setup'"
   >
     Ready
   </button>
-  <button id="random" ng-click="$ctrl.random()">Random</button>
-  <button id="reset" ng-click="$ctrl.reset()">Reset</button>
+
+  <button
+    id="random"
+    ng-disabled="$ctrl.phase !== 'setup'"
+    ng-click="$ctrl.random()"
+  >
+    Random
+  </button>
+
+  <button
+    id="reset"
+    ng-disabled="$ctrl.phase !== 'setup'"
+    ng-click="$ctrl.reset()"
+  >
+    Reset
+  </button>
 </div>

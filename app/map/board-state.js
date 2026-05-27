@@ -27,5 +27,7 @@ export function tileCoordinates(elem) {
  * @returns {boolean}
  */
 export function isClaimedShipTile(elem) {
-  return elem.dataset.state === MapTile.FILLED && tileCoordinates(elem) !== undefined;
+  return (
+    elem.dataset.state === MapTile.FILLED && tileCoordinates(elem) !== undefined
+  );
 }

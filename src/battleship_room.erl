@@ -63,11 +63,14 @@ leave(RoomId, PlayerId, Pid) when is_binary(RoomId), is_binary(PlayerId) ->
     end.
 
 -spec reconnect(room_id(), player_id_bin(), pid()) ->
-    {ok, #{game := map(), opponent_id := player_id_bin()}} | {error, room_not_found | unknown_player}.
+    {ok, #{game := map(), opponent_id := player_id_bin()}}
+    | {error, room_not_found | unknown_player}.
 reconnect(RoomId, PlayerId, Pid) when is_binary(RoomId), is_binary(PlayerId), is_pid(Pid) ->
     case battleship_lobby:room_pid(RoomId) of
-        {ok, RoomPid} -> ensure_reconnect_result(gen_server:call(RoomPid, {reconnect, PlayerId, Pid}));
-        {error, _} -> {error, room_not_found}
+        {ok, RoomPid} ->
+            ensure_reconnect_result(gen_server:call(RoomPid, {reconnect, PlayerId, Pid}));
+        {error, _} ->
+            {error, room_not_found}
     end.
 
 -spec game_state(room_id()) -> {ok, #game{}} | {error, room_not_found}.
@@ -268,7 +271,9 @@ mark_player_disconnected(PlayerId, State) ->
             State;
         Player ->
             demonitor_player(Player),
-            Players = (State#state.players)#{PlayerId => Player#{pid => undefined, ref => undefined}},
+            Players = (State#state.players)#{
+                PlayerId => Player#{pid => undefined, ref => undefined}
+            },
             State#state{players = Players}
     end.
 

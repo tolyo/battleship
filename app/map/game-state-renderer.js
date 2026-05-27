@@ -4,7 +4,6 @@ import { GRID, MapTile } from '../game/constants.js';
  * @typedef {object} RenderGameStateOptions
  * @property {unknown} game
  * @property {string} playerId
- * @property {HTMLDivElement} hitboard
  * @property {HTMLDivElement} fleetPlaceholder
  * @property {boolean} restoredFromUrl
  */
@@ -46,7 +45,6 @@ function isBoard(value) {
 export function renderGameState({
   game,
   playerId,
-  hitboard,
   fleetPlaceholder,
   restoredFromUrl,
 }) {
@@ -54,7 +52,7 @@ export function renderGameState({
     return undefined;
   }
 
-  const turnState = applyTurnState(game, playerId, hitboard);
+  const turnState = applyTurnState(game, playerId);
   const player = currentPlayerFromGame(game, playerId);
   if (player && isBoard(player.board)) {
     applyFleetBoard(player.board);
@@ -70,18 +68,12 @@ export function renderGameState({
 /**
  * @param {Record<string, unknown>} game
  * @param {string} playerId
- * @param {HTMLDivElement} hitboard
  * @returns {RenderGameStateResult}
  */
-function applyTurnState(game, playerId, hitboard) {
+function applyTurnState(game, playerId) {
   const currentTurnId = currentTurnIdFromGame(game);
   const isMyTurn = currentTurnId === playerId;
   const finished = game.phase === 'finished' || game.state === 'FINISHED';
-  hitboard.classList.toggle('disabled', !isMyTurn || finished);
-  hitboard.setAttribute(
-    'aria-disabled',
-    isMyTurn && !finished ? 'false' : 'true'
-  );
 
   if (finished) {
     return { isMyTurn, status: 'Game finished' };
@@ -221,11 +213,9 @@ function applyTurns(turns, playerId) {
  * @param {HTMLDivElement} fleetPlaceholder
  */
 function hideShipElements(fleetPlaceholder) {
-  fleetPlaceholder
-    .querySelectorAll('.ship')
-    .forEach((ship) => {
-      if (ship instanceof HTMLElement) {
-        ship.hidden = true;
-      }
-    });
+  fleetPlaceholder.querySelectorAll('.ship').forEach((ship) => {
+    if (ship instanceof HTMLElement) {
+      ship.hidden = true;
+    }
+  });
 }

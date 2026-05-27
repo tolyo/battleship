@@ -9,6 +9,11 @@
   z-index: 1000;
 }
 
+.ship.locked {
+  cursor: default;
+}
+
+.ship.locked > span,
 .ship.disabled > span {
   cursor: default;
 }
