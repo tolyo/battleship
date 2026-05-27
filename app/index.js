@@ -4,6 +4,7 @@ import registerComponent from './register/register.js';
 import loginComponent from './login/login.js';
 import appConfig from './configuration.js';
 import dashboardComponent from './dashboard/dashboard.js';
+import roomComponent from './gameroom/room.js';
 import { HeaderController } from './layout/header-ctrl.js';
 
 angular
@@ -28,6 +29,11 @@ angular
           component: 'room',
         })
         .state({
+          name: 'activeRoom',
+          url: '/room/:roomId',
+          component: 'room',
+        })
+        .state({
           name: 'register',
           url: '/register',
           component: 'register',
@@ -40,14 +46,15 @@ angular
         .state({
           name: 'home',
           url: '/',
-          template: 'Prepare the fleet',
+          component: 'fleetSetup',
         });
     },
   ])
   .controller('HeaderController', HeaderController)
   .component('dashboard', dashboardComponent)
+  .component('fleetSetup', mapComponent)
   .component('login', loginComponent)
-  .component('register', registerComponent)
-  .component('home', mapComponent);
+  .component('room', roomComponent)
+  .component('register', registerComponent);
 
 angular.bootstrap(document, ['battleship']);

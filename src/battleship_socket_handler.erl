@@ -26,11 +26,41 @@
 init(Req, _State) ->
     Params = cowboy_req:parse_qs(Req),
     PlayerParam = proplists:get_value(<<"player">>, Params, <<"player">>),
+    PlayerIdParam = proplists:get_value(<<"player_id">>, Params, undefined),
+    RoomIdParam = proplists:get_value(<<"room_id">>, Params, undefined),
     BoardParam = proplists:get_value(<<"board">>, Params, undefined),
     Board = parse_board_param(BoardParam),
-    {cowboy_websocket, Req, #state{player_name = PlayerParam, board = Board}}.
+    State = case {RoomIdParam, PlayerIdParam} of
+        {RoomId, PlayerId} when is_binary(RoomId), is_binary(PlayerId) ->
+            #state{
+                player_name = PlayerParam,
+                board = Board,
+                player_id = PlayerId,
+                room_id = RoomId
+            };
+        _ ->
+            #state{player_name = PlayerParam, board = Board}
+    end,
+    {cowboy_websocket, Req, State}.
 
 -spec websocket_init(ws_state()) -> {[ws_frame()], ws_state()}.
+websocket_init(State = #state{room_id = RoomId, player_id = PlayerId}) when
+    is_binary(RoomId), is_binary(PlayerId)
+->
+    case battleship_room:reconnect(RoomId, PlayerId, self()) of
+        {ok, #{game := Game, opponent_id := OpponentId}} ->
+            Payload = #{
+                type => <<"room_joined">>,
+                room_id => RoomId,
+                player_id => PlayerId,
+                opponent_id => OpponentId,
+                game => Game
+            },
+            {[{text, json:encode(Payload)}], State};
+        {error, Reason} ->
+            Payload = #{type => <<"error">>, reason => reconnect_error(Reason)},
+            {[{text, json:encode(Payload)}], State}
+    end;
 websocket_init(State = #state{player_name = PlayerName, board = Board}) ->
     PlayerInfo = #{name => PlayerName, board => Board},
     case battleship_lobby:join(self(), PlayerInfo) of
@@ -64,7 +94,7 @@ terminate(_Reason, _Req, State) ->
     case {State#state.room_id, State#state.player_id} of
         {undefined, _} -> ok;
         {_, undefined} -> ok;
-        {RoomId, PlayerId} -> battleship_room:leave(RoomId, PlayerId)
+        {RoomId, PlayerId} -> battleship_room:leave(RoomId, PlayerId, self())
     end,
     ok.
 
@@ -104,6 +134,12 @@ match_payload(PlayerId, OpponentId, RoomId) ->
         player_id => PlayerId,
         opponent_id => OpponentId
     }.
+
+-spec reconnect_error(room_not_found | unknown_player) -> binary().
+reconnect_error(room_not_found) ->
+    <<"room_not_found">>;
+reconnect_error(unknown_player) ->
+    <<"unknown_player">>.
 
 -spec parse_board_param(binary() | undefined) -> board().
 parse_board_param(undefined) ->

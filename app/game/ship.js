@@ -268,6 +268,22 @@ export default class Ship {
     shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
   }
 
+  realignToLayout() {
+    this.setRotation();
+    const shipElement = this.getShipElement();
+
+    if (this.elementsBelow.length > 0) {
+      const firstTile = this.elementsBelow[0];
+      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
+      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
+      return;
+    }
+
+    const placeHolder = this.getPlaceHolder();
+    shipElement.style.left = `${placeHolder.getBoundingClientRect().left + window.scrollX}px`;
+    shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
+  }
+
   /**
    * @param {MouseEvent} e
    */

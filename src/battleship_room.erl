@@ -5,7 +5,7 @@
 
 -include_lib("battleship/include/battleship.hrl").
 
--export([start_link/3, move/4, leave/2, game_state/1]).
+-export([start_link/3, move/4, leave/2, leave/3, reconnect/3, game_state/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -type room_id() :: binary().
@@ -17,11 +17,11 @@
     board := board()
 }.
 -type player_entry() :: #{
-    pid := pid(),
+    pid := pid() | undefined,
     id := player_id_bin(),
     name := binary(),
     board := board(),
-    ref := reference()
+    ref := reference() | undefined
 }.
 -type players_map() :: #{player_id_bin() => player_entry()}.
 -type move_result() :: ok | {error, binary() | room_not_found}.
@@ -53,9 +53,21 @@ move(RoomId, PlayerId, Row, Column) when
 
 -spec leave(room_id(), player_id_bin()) -> ok.
 leave(RoomId, PlayerId) when is_binary(RoomId), is_binary(PlayerId) ->
+    leave(RoomId, PlayerId, undefined).
+
+-spec leave(room_id(), player_id_bin(), pid() | undefined) -> ok.
+leave(RoomId, PlayerId, Pid) when is_binary(RoomId), is_binary(PlayerId) ->
     case battleship_lobby:room_pid(RoomId) of
-        {ok, Pid} -> gen_server:cast(Pid, {leave, PlayerId});
+        {ok, RoomPid} -> gen_server:cast(RoomPid, {leave, PlayerId, Pid});
         {error, _} -> ok
+    end.
+
+-spec reconnect(room_id(), player_id_bin(), pid()) ->
+    {ok, #{game := map(), opponent_id := player_id_bin()}} | {error, room_not_found | unknown_player}.
+reconnect(RoomId, PlayerId, Pid) when is_binary(RoomId), is_binary(PlayerId), is_pid(Pid) ->
+    case battleship_lobby:room_pid(RoomId) of
+        {ok, RoomPid} -> ensure_reconnect_result(gen_server:call(RoomPid, {reconnect, PlayerId, Pid}));
+        {error, _} -> {error, room_not_found}
     end.
 
 -spec game_state(room_id()) -> {ok, #game{}} | {error, room_not_found}.
@@ -84,6 +96,17 @@ init([RoomId, Player1, Player2]) ->
     {reply, ok | {ok, #game{}} | {error, binary() | unknown_request}, #state{}}.
 handle_call(state, _From, State) ->
     {reply, {ok, State#state.game}, State};
+handle_call({reconnect, PlayerId, Pid}, _From, State) ->
+    case reconnect_player(PlayerId, Pid, State) of
+        {ok, NewState} ->
+            Reply = #{
+                game => game_to_map(NewState#state.game),
+                opponent_id => opponent_id(NewState#state.game, PlayerId)
+            },
+            {reply, {ok, Reply}, NewState};
+        {error, Reason} ->
+            {reply, {error, Reason}, State}
+    end;
 handle_call({move, PlayerId, Row, Column}, _From, State) ->
     case can_move(PlayerId, Row, Column, State) of
         ok ->
@@ -112,17 +135,17 @@ handle_call({move, PlayerId, Row, Column}, _From, State) ->
 handle_call(_Msg, _From, State) ->
     {reply, {error, unknown_request}, State}.
 
--spec handle_cast(term(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
-handle_cast({leave, PlayerId}, State) ->
-    handle_player_leave(PlayerId, State);
+-spec handle_cast(term(), #state{}) -> {noreply, #state{}}.
+handle_cast({leave, PlayerId, Pid}, State) ->
+    handle_player_leave(PlayerId, Pid, State);
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
--spec handle_info(term(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
+-spec handle_info(term(), #state{}) -> {noreply, #state{}}.
 handle_info({'DOWN', _Ref, process, Pid, _Reason}, State) ->
     case player_id_by_pid(Pid, State#state.players) of
         undefined -> {noreply, State};
-        PlayerId -> handle_player_leave(PlayerId, State)
+        PlayerId -> handle_player_leave(PlayerId, Pid, State)
     end;
 handle_info(_Info, State) ->
     {noreply, State}.
@@ -201,24 +224,71 @@ do_move(_PlayerId, Row, Column, Game) ->
         _:_ -> {error, <<"invalid_move">>}
     end.
 
--spec handle_player_leave(player_id_bin(), #state{}) ->
-    {noreply, #state{}} | {stop, normal, #state{}}.
-handle_player_leave(PlayerId, State) ->
-    Remaining = maps:remove(PlayerId, State#state.players),
-    notify_players(Remaining, #{
-        type => <<"opponent_left">>,
-        room_id => State#state.room_id
-    }),
-    case maps:size(Remaining) of
-        0 -> {stop, normal, State#state{players = Remaining}};
-        _ -> {noreply, State#state{players = Remaining}}
+-spec handle_player_leave(player_id_bin(), pid() | undefined, #state{}) ->
+    {noreply, #state{}}.
+handle_player_leave(PlayerId, Pid, State) ->
+    case player_matches_pid(PlayerId, Pid, State#state.players) of
+        true ->
+            notify_other_players(PlayerId, State#state.players, #{
+                type => <<"opponent_left">>,
+                room_id => State#state.room_id
+            }),
+            {noreply, mark_player_disconnected(PlayerId, State)};
+        false ->
+            {noreply, State}
     end.
+
+-spec player_matches_pid(player_id_bin(), pid() | undefined, players_map()) -> boolean().
+player_matches_pid(PlayerId, undefined, Players) ->
+    maps:is_key(PlayerId, Players);
+player_matches_pid(PlayerId, Pid, Players) when is_pid(Pid) ->
+    case maps:get(PlayerId, Players, undefined) of
+        #{pid := Pid} -> true;
+        _ -> false
+    end.
+
+-spec reconnect_player(player_id_bin(), pid(), #state{}) ->
+    {ok, #state{}} | {error, unknown_player}.
+reconnect_player(PlayerId, Pid, State) ->
+    case maps:get(PlayerId, State#state.players, undefined) of
+        undefined ->
+            {error, unknown_player};
+        Player ->
+            demonitor_player(Player),
+            Ref = erlang:monitor(process, Pid),
+            UpdatedPlayer = Player#{pid => Pid, ref => Ref},
+            Players = (State#state.players)#{PlayerId => UpdatedPlayer},
+            {ok, State#state{players = Players}}
+    end.
+
+-spec mark_player_disconnected(player_id_bin(), #state{}) -> #state{}.
+mark_player_disconnected(PlayerId, State) ->
+    case maps:get(PlayerId, State#state.players, undefined) of
+        undefined ->
+            State;
+        Player ->
+            demonitor_player(Player),
+            Players = (State#state.players)#{PlayerId => Player#{pid => undefined, ref => undefined}},
+            State#state{players = Players}
+    end.
+
+-spec demonitor_player(player_entry()) -> ok.
+demonitor_player(#{ref := Ref}) when is_reference(Ref) ->
+    erlang:demonitor(Ref, [flush]),
+    ok;
+demonitor_player(_) ->
+    ok.
 
 -spec player_id_by_pid(pid(), players_map()) -> player_id_bin() | undefined.
 player_id_by_pid(_Pid, Players) when map_size(Players) =:= 0 ->
     undefined;
 player_id_by_pid(Pid, Players) ->
-    Matches = [Id || {Id, #{pid := PlayerPid}} <- maps:to_list(Players), PlayerPid =:= Pid],
+    Matches = [
+        Id
+     || {Id, #{pid := PlayerPid}} <- maps:to_list(Players),
+        is_pid(PlayerPid),
+        PlayerPid =:= Pid
+    ],
     case Matches of
         [Id | _] -> Id;
         _ -> undefined
@@ -229,6 +299,8 @@ current_turn_id(Game) ->
     case Game#game.turns of
         [] ->
             Game#game.first_turn;
+        [#strike{id = PlayerId, res = 'HIT'} | _] ->
+            PlayerId;
         [Last | _] ->
             opponent_id(Game, Last#strike.id)
     end.
@@ -253,18 +325,28 @@ to_board_coords(Row, Column) ->
 -spec notify_players(players_map(), map()) -> ok.
 notify_players(Players, Payload) ->
     lists:foreach(
-        fun(#{pid := Pid}) -> Pid ! {socket_send, Payload} end,
+        fun
+            (#{pid := Pid}) when is_pid(Pid) -> Pid ! {socket_send, Payload};
+            (_) -> ok
+        end,
         maps:values(Players)
     ),
     ok.
+
+-spec notify_other_players(player_id_bin(), players_map(), map()) -> ok.
+notify_other_players(LeavingPlayerId, Players, Payload) ->
+    OtherPlayers = maps:remove(LeavingPlayerId, Players),
+    notify_players(OtherPlayers, Payload).
 
 -spec notify_player(player_id_bin(), players_map(), map()) -> ok.
 notify_player(PlayerId, Players, Payload) ->
     case maps:get(PlayerId, Players, undefined) of
         undefined ->
             ok;
-        #{pid := Pid} ->
+        #{pid := Pid} when is_pid(Pid) ->
             Pid ! {socket_send, Payload},
+            ok;
+        _ ->
             ok
     end,
     ok.
@@ -275,9 +357,31 @@ game_to_map(Game) ->
         player_one => player_to_map(Game#game.player_one),
         player_two => player_to_map(Game#game.player_two),
         first_turn => Game#game.first_turn,
+        current_turn => current_turn_for_map(Game),
+        winner => winner_id(Game),
+        phase => phase(Game),
         turns => [strike_to_map(Strike) || Strike <- Game#game.turns],
         state => Game#game.state
     }.
+
+-spec current_turn_for_map(#game{}) -> player_id_bin() | null.
+current_turn_for_map(Game) ->
+    case Game#game.state of
+        'FINISHED' -> null;
+        _ -> current_turn_id(Game)
+    end.
+
+-spec winner_id(#game{}) -> player_id_bin() | null.
+winner_id(#game{state = 'FINISHED', turns = [#strike{id = PlayerId} | _]}) ->
+    PlayerId;
+winner_id(_) ->
+    null.
+
+-spec phase(#game{}) -> binary().
+phase(#game{state = 'FINISHED'}) ->
+    <<"finished">>;
+phase(_) ->
+    <<"playing">>.
 
 -spec player_to_map(#player{}) -> map().
 player_to_map(#player{id = Id, board = Board}) ->
@@ -303,3 +407,10 @@ ensure_move_result({error, Reason}) when is_binary(Reason) ->
 -spec ensure_game_state({ok, #game{}}) -> {ok, #game{}}.
 ensure_game_state({ok, Game = #game{}}) ->
     {ok, Game}.
+
+-spec ensure_reconnect_result({ok, map()} | {error, unknown_player}) ->
+    {ok, map()} | {error, unknown_player}.
+ensure_reconnect_result({ok, GameInfo}) when is_map(GameInfo) ->
+    {ok, GameInfo};
+ensure_reconnect_result({error, unknown_player}) ->
+    {error, unknown_player}.

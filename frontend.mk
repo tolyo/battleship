@@ -7,7 +7,7 @@ INFO      := [INFO]
 BUILD_DIR := priv/static
 DEPS_DIR  := node_modules
 LIVE_RELOAD_PORT ?= 35729
-LIVE_RELOAD_WATCH_PATHS ?= app priv/static src config/dev.env
+LIVE_RELOAD_WATCH_PATHS ?= priv/static
 
 # -----------------------------------------------------
 #  Utility Targets

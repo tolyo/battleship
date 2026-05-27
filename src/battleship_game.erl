@@ -49,12 +49,7 @@ get_opposite_player(Game, Player) ->
 
 -spec next_move(#game{}, row(), column()) -> #game{}.
 next_move(Game, Row, Column) ->
-    % if the game has no turns the first move is for first turn player
-    CurrentPlayer =
-        case Game#game.turns of
-            [] -> get_player_by_id(Game, Game#game.first_turn);
-            [H | _] -> get_opposite_player(Game, get_player_by_id(Game, H#strike.id))
-        end,
+    CurrentPlayer = current_player(Game),
     OppositePlayer = get_opposite_player(Game, CurrentPlayer),
     Board = OppositePlayer#player.board,
     case strike(Board, Row, Column) of
@@ -98,6 +93,17 @@ next_move(Game, Row, Column) ->
 %%% ---------------------------------------------------
 %%% Private functions.
 %%% ---------------------------------------------------
+
+-spec current_player(#game{}) -> #player{}.
+current_player(Game) ->
+    case Game#game.turns of
+        [] ->
+            get_player_by_id(Game, Game#game.first_turn);
+        [#strike{id = PlayerId, res = 'HIT'} | _] ->
+            get_player_by_id(Game, PlayerId);
+        [#strike{id = PlayerId} | _] ->
+            get_opposite_player(Game, get_player_by_id(Game, PlayerId))
+    end.
 
 -spec strike(board(), row(), column()) -> {grid_state() | strike_res(), board()}.
 strike(Board, Row, Column) ->

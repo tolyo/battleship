@@ -22,7 +22,7 @@ start(_StartType, _StartArgs) ->
 
             %% protected
             {"/_dashboard", battleship_auth, {battleship_dashboard_handler, []}},
-            {"/_room", battleship_auth, {battleship_room_handler, []}},
+            {"/_room", battleship_room_handler, []},
             %% mock game matcher for now
             {"/ws", battleship_socket_handler, []},
 

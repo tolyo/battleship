@@ -1,23 +1,22 @@
-<select ng-model="$ctrl.player">
-  <option value="1">Player 1</option>
-  <option value="2">Player 2</option>
-</select>
-
-{{$ctrl.player}}
+<section class="player-panel">
+  <span>{{$ctrl.playerLabel}}</span>
+  <strong id="match-status">{{$ctrl.status}}</strong>
+</section>
 
 <section id="map">
   <div id="fleetboard"></div>
+  <div id="hitboard" hidden></div>
   <div id="fleet"></div>
-
-  <div id="state">{{ $ctrl.boardState }}</div>
 </section>
 
-<button
-  id="ready"
-  ng-click="$ctrl.join()"
-  ng-if="$ctrl.player && $ctrl.boardReady"
->
-  Ready
-</button>
-<button id="random" ng-click="$ctrl.random()">Random</button>
-<button id="random" ng-click="$ctrl.reset()">Reset</button>
+<div id="setup-actions">
+  <button
+    id="ready"
+    ng-click="$ctrl.join()"
+    ng-disabled="!$ctrl.boardReady"
+  >
+    Ready
+  </button>
+  <button id="random" ng-click="$ctrl.random()">Random</button>
+  <button id="reset" ng-click="$ctrl.reset()">Reset</button>
+</div>

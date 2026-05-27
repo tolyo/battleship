@@ -19,11 +19,13 @@
       <strong>Battleship</strong>
     </a>
     <nav ng-if="!authenticated">
+      <a ng-sref="room">Play anonymously</a>
       <a ng-sref="login">Login</a>
       <a ng-sref="register">Register</a>
     </nav>
 
     <nav ng-if="authenticated">
+      <a ng-sref="room">Play</a>
       <a ng-click="$ctrl.logout()">Logout</a>
     </nav>
   </header>

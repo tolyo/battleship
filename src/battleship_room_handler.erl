@@ -1,13 +1,12 @@
 -module(battleship_room_handler).
 -behaviour(cowboy_handler).
 
-%% @doc Serves the game room HTML shell for authenticated users.
+%% @doc Serves the public game room HTML shell.
 
 -export([init/2]).
 
--spec init(cowboy_req:req(), {term(), map()}) -> {ok, cowboy_req:req(), {term(), map()}}.
-init(Req, {Args, Claims}) ->
-    %% You have Claims available if needed
+-spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
+init(Req, State) ->
     Template = battleship_utils:get_template("priv/static/gameroom/room.html"),
     Req1 = cowboy_req:reply(
         200,
@@ -15,4 +14,4 @@ init(Req, {Args, Claims}) ->
         Template,
         Req
     ),
-    {ok, Req1, {Args, Claims}}.
+    {ok, Req1, State}.

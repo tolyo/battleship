@@ -25,9 +25,19 @@
   }
 }
 
+#setup-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#setup-actions[hidden],
+#hitboard[hidden] {
+  display: none;
+}
+
 #fleetboard,
 #hitboard {
-  border: 1px solid #2d6ca0;
+  outline: 1px solid #2d6ca0;
   min-width: 300px;
   width: 300px;
   height: 300px;
@@ -43,8 +53,21 @@
   cursor: default;
 }
 
+#hitboard.disabled {
+  pointer-events: none;
+}
+
 #fleetboard {
   margin-right: 10px;
+}
+
+#fleet.room-active {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+#fleet.room-active .place-holder {
+  border-color: transparent;
 }
 
 .board-row {
@@ -70,7 +93,7 @@
   background-color: #92d2ff;
 }
 
-.hitboard .hitboard-tile:hover {
+#hitboard .hitboard-tile:hover {
   border: 2px solid #fff757;
 }
 

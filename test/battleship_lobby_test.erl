@@ -57,6 +57,21 @@ lobby_match_test_() ->
             ?assert(is_process_alive(RoomPid)),
 
             ?assertEqual(ok, wait_for_match_found(Pid1, RoomId)),
+            Pid3 = spawn(fun() -> client_loop(Parent) end),
+            ?assertMatch(
+                {ok, #{
+                    game := #{
+                        phase := <<"playing">>,
+                        current_turn := _,
+                        winner := null,
+                        turns := []
+                    },
+                    opponent_id := PlayerId2
+                }},
+                battleship_room:reconnect(RoomId, PlayerId1, Pid3)
+            ),
+            battleship_room:leave(RoomId, PlayerId1, Pid1),
+
             {ok, Game} = battleship_room:game_state(RoomId),
             First = Game#game.first_turn,
             Opponent =
@@ -68,12 +83,13 @@ lobby_match_test_() ->
                 {error, <<"not_your_turn">>}, battleship_room:move(RoomId, Opponent, 0, 0)
             ),
             ?assertEqual(ok, battleship_room:move(RoomId, First, 0, 0)),
-            ?assertEqual(ok, wait_for_game_update(RoomId)),
+            ?assertEqual(ok, wait_for_game_update_from(Pid3, RoomId)),
             {ok, UpdatedGame} = battleship_room:game_state(RoomId),
             ?assertEqual(1, length(UpdatedGame#game.turns)),
 
             Pid1 ! stop,
             Pid2 ! stop,
+            Pid3 ! stop,
             exit(RoomPid, shutdown)
         end
     end}.
@@ -88,12 +104,12 @@ wait_for_match_found(Pid, RoomId) ->
         timeout
     end.
 
-wait_for_game_update(RoomId) ->
+wait_for_game_update_from(Pid, RoomId) ->
     receive
-        {socket_send, _Pid, #{type := <<"game_update">>, room_id := RoomId}} ->
+        {socket_send, Pid, #{type := <<"game_update">>, room_id := RoomId}} ->
             ok;
-        {socket_send, _Pid, _Other} ->
-            wait_for_game_update(RoomId)
+        {socket_send, Pid, _Other} ->
+            wait_for_game_update_from(Pid, RoomId)
     after 1000 ->
         timeout
     end.
