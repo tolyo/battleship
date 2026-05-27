@@ -34,7 +34,7 @@ init_mock_game() ->
     }.
 
 -spec get_player_by_id(#game{}, player_id()) -> #player{}.
-get_player_by_id(Game, Id) ->
+get_player_by_id(Game, Id) when is_binary(Id) ->
     case Id =:= Game#game.player_one#player.id of
         true -> Game#game.player_one;
         false -> Game#game.player_two
@@ -99,9 +99,7 @@ next_move(Game, Row, Column) ->
 %%% Private functions.
 %%% ---------------------------------------------------
 
--type strike_value() :: strike_res() | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
-
--spec strike(board(), row(), column()) -> {strike_value(), board()}.
+-spec strike(board(), row(), column()) -> {grid_state() | strike_res(), board()}.
 strike(Board, Row, Column) ->
     case battleship_board:get_cell_value(Board, Row, Column) of
         ?EMPTY ->
@@ -119,7 +117,8 @@ strike(Board, Row, Column) ->
             }
     end.
 
--spec update_game(#game{}, #player{}, #player{}, board(), strike_res(), row(), column()) -> #game{}.
+-spec update_game(#game{}, #player{}, #player{}, board(), strike_res(), row(), column()) ->
+    #game{}.
 update_game(Game, CurrentPlayer, OppositePlayer, NewBoard, Result, Row, Column) ->
     Strike = #strike{id = CurrentPlayer#player.id, x = Column, y = Row, res = Result},
     UpdatedGame = Game#game{turns = [Strike | Game#game.turns]},

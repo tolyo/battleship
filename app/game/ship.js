@@ -12,6 +12,20 @@ import { GRID_SIZE, MapTile } from './constants.js';
  * @typedef {boolean} GridAlive
  */
 
+/**
+ * @typedef {{ row: number, column: number }} ShipCoordinate
+ */
+
+/**
+ * @typedef {{ row: string, column: string, orientation: ShipOrientation }} ShipLocation
+ */
+
+/**
+ * @typedef {Object} shipElementSize
+ * @property {string} width - px
+ * @property {string} height - px
+ */
+
 export default class Ship {
   /**
    * @param {string} id
@@ -47,6 +61,21 @@ export default class Ship {
      * @type {ShipOrientation}
      */
     this.orientation = 'HORIZONTAL';
+
+    /**
+     * @type {number}
+     */
+    this.column = 0;
+
+    /**
+     * @type {number}
+     */
+    this.row = 0;
+
+    /**
+     * @type {ShipCoordinate[] | undefined}
+     */
+    this.coordinates = undefined;
 
     /**
      * @type {?HTMLElement}
@@ -90,21 +119,40 @@ export default class Ship {
     // Ensure reclaim of tiles in case
     document.addEventListener(
       'claim',
-      /**
-       *
-       * @param {CustomEvent} e
-       */
+      /** @type {EventListener} */ (
       (e) => {
-        if (e.detail.id !== this.id) {
+        const event = /** @type {CustomEvent<{ id: string }>} */ (e);
+        if (event.detail.id !== this.id) {
           this.claimTiles();
         }
       }
+      )
     );
 
     /**
      * @type {boolean}
      */
     this.firstMove = false;
+  }
+
+  /**
+   * @returns {HTMLElement}
+   */
+  getShipElement() {
+    if (!this.shipElement) {
+      throw new Error('Ship element has not been created.');
+    }
+    return this.shipElement;
+  }
+
+  /**
+   * @returns {HTMLElement}
+   */
+  getPlaceHolder() {
+    if (!this.placeHolder) {
+      throw new Error('Ship placeholder has not been created.');
+    }
+    return this.placeHolder;
   }
 
   reset() {
@@ -117,14 +165,21 @@ export default class Ship {
     return this;
   }
 
+  /**
+   * @param {ShipLocation} location
+   * @returns {this}
+   */
   setLocation({ column, row, orientation }) {
-    this.column = column;
-    this.row = row;
+    this.column = parseInt(column, 10);
+    this.row = parseInt(row, 10);
     this.orientation = orientation;
     this.coordinates = undefined;
     return this;
   }
 
+  /**
+   * @returns {ShipCoordinate[]}
+   */
   getShipMapCoordinates() {
     if (this.coordinates !== undefined) {
       return this.coordinates;
@@ -141,6 +196,10 @@ export default class Ship {
     return this.coordinates;
   }
 
+  /**
+   * @param {number} targetRow
+   * @param {number} targetColumn
+   */
   attemptStrike(targetRow, targetColumn) {
     this.getShipMapCoordinates().forEach(({ row, column }, index) => {
       if (targetRow === row && targetColumn === column) {
@@ -188,13 +247,14 @@ export default class Ship {
 
   createOnPlaceholder() {
     this.createDomElement();
-    this.placeHolder.appendChild(this.shipElement);
+    const shipElement = this.getShipElement();
+    this.getPlaceHolder().appendChild(shipElement);
     // set event handlers
-    this.shipElement.onmousedown = (e) => this.onmousedown(e);
+    shipElement.onmousedown = (e) => this.onmousedown(e);
     // override default browser behavior
-    this.shipElement.ondragstart = () => false;
-    this.shipElement.onmouseup = () => false;
-    this.shipElement.ondblclick = () => this.ondblclick();
+    shipElement.ondragstart = () => false;
+    shipElement.onmouseup = () => false;
+    shipElement.ondblclick = () => this.ondblclick();
     this.setOnPlaceholder();
   }
 
@@ -202,8 +262,10 @@ export default class Ship {
     this.clearMapBlocks();
     this.orientation = 'HORIZONTAL';
     this.setRotation();
-    this.shipElement.style.left = `${this.placeHolder.getBoundingClientRect().left + window.scrollX}px`;
-    this.shipElement.style.top = `${this.placeHolder.getBoundingClientRect().top + window.scrollY}px`;
+    const shipElement = this.getShipElement();
+    const placeHolder = this.getPlaceHolder();
+    shipElement.style.left = `${placeHolder.getBoundingClientRect().left + window.scrollX}px`;
+    shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
   }
 
   /**
@@ -219,7 +281,7 @@ export default class Ship {
     // set offsets for the click event
     this.shiftX = e.pageX - shipCoordinates.left;
     this.shiftY = e.pageY - shipCoordinates.top;
-    this.shipElement.classList.add('dragged');
+    this.getShipElement().classList.add('dragged');
     this.firstMove = true;
 
     document.onmousemove = (moveEvt) => this.onmousemove(moveEvt);
@@ -236,25 +298,21 @@ export default class Ship {
     }
     const x = Math.floor(e.pageX - this.shiftX);
     const y = Math.floor(e.pageY - this.shiftY);
-    this.shipElement.style.left = `${x}px`;
-    this.shipElement.style.top = `${y}px`;
-    this.shipElement.hidden = true;
+    const shipElement = this.getShipElement();
+    shipElement.style.left = `${x}px`;
+    shipElement.style.top = `${y}px`;
+    shipElement.hidden = true;
 
     const elementBelow = /** @type {HTMLElement} */ (
       document.elementFromPoint(x + 15, y + 15)
     ); // casting for JSdoc
     this.resetElementsBelow();
     if (elementBelow?.classList?.contains('fleetboard-tile')) {
-      if (
-        this.isLegal(
-          elementBelow.dataset.row,
-          elementBelow.dataset.column,
-          this.orientation
-        )
-      ) {
+      const { row, column } = elementBelow.dataset;
+      if (row && column && this.isLegal(row, column, this.orientation)) {
         this.elementsBelow = this.getElementsBelow(
-          elementBelow.dataset.row,
-          elementBelow.dataset.column,
+          row,
+          column,
           this.orientation
         );
         this.elementsBelow.forEach((el) =>
@@ -265,7 +323,7 @@ export default class Ship {
       }
     }
 
-    this.shipElement.hidden = false;
+    shipElement.hidden = false;
   }
 
   /**
@@ -275,16 +333,18 @@ export default class Ship {
     // clear event bindings
     document.onmousemove = null;
     document.onmouseup = null;
-    this.shipElement.classList.remove('dragged');
+    const shipElement = this.getShipElement();
+    shipElement.classList.remove('dragged');
 
     // Check if legal otherwise recreate on placeholder
     if (this.elementsBelow.length > 0) {
-      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
-      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
+      const firstTile = this.elementsBelow[0];
+      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
+      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
       this.claimTiles();
       // possibly set blocked
     } else {
-      this.shipElement.remove();
+      shipElement.remove();
       this.createOnPlaceholder();
     }
   }
@@ -297,7 +357,13 @@ export default class Ship {
     if (this.size === 1) {
       return;
     }
+    if (this.elementsBelow.length === 0) {
+      return;
+    }
     const { row, column } = this.elementsBelow[0].dataset;
+    if (!row || !column) {
+      return;
+    }
     this.elementsBelow.forEach((e) => e.classList.remove('droppable-target'));
     this.clearMapBlocks();
 
@@ -317,15 +383,10 @@ export default class Ship {
 
   setRotation() {
     const { width, height } = this.calculateSize();
-    this.shipElement.style.width = width;
-    this.shipElement.style.height = height;
+    const shipElement = this.getShipElement();
+    shipElement.style.width = width;
+    shipElement.style.height = height;
   }
-
-  /**
-   * @typedef {Object} shipElementSize
-   * @property {string} width - px
-   * @property {string} height - px
-   */
 
   /**
    * @return {shipElementSize}
@@ -356,18 +417,23 @@ export default class Ship {
    * @returns {HTMLElement[]}
    */
   getElementsBelow(row, column, orientation) {
+    /** @type {HTMLElement[]} */
     const elementsBelow = [];
     const y = parseInt(row, 10);
     const x = parseInt(column, 10);
     if (orientation === 'HORIZONTAL') {
       for (let i = x; i < x + this.size; i += 1) {
         const tile = document.getElementById(`fleetboard-${y}-${i}`);
-        elementsBelow.push(tile);
+        if (tile) {
+          elementsBelow.push(tile);
+        }
       }
     } else {
       for (let i = y; i < y + this.size; i += 1) {
         const tile = document.getElementById(`fleetboard-${i}-${x}`);
-        elementsBelow.push(tile);
+        if (tile) {
+          elementsBelow.push(tile);
+        }
       }
     }
 
@@ -392,6 +458,10 @@ export default class Ship {
       } else {
         for (let i = x; i < x + this.size; i += 1) {
           const tile = document.getElementById(`fleetboard-${y}-${i}`);
+          if (!tile) {
+            res = false;
+            continue;
+          }
           if (tile.dataset.state !== MapTile.EMPTY) {
             res = false;
           }
@@ -411,6 +481,10 @@ export default class Ship {
       } else {
         for (let i = y; i < y + this.size; i += 1) {
           const tile = document.getElementById(`fleetboard-${i}-${x}`);
+          if (!tile) {
+            res = false;
+            continue;
+          }
           if (tile.dataset.state !== MapTile.EMPTY) {
             res = false;
           }
@@ -439,7 +513,7 @@ export default class Ship {
       tile.dataset.state = MapTile.EMPTY;
     });
     this.elementsBelow = [];
-    document.dispatchEvent(new CustomEvent('claim', { detail: this.id }));
+    document.dispatchEvent(new CustomEvent('claim', { detail: { id: this.id } }));
   }
 
   resetElementsBelow() {
@@ -448,7 +522,7 @@ export default class Ship {
   }
 
   getShipCoordinates() {
-    const box = this.shipElement.getBoundingClientRect();
+    const box = this.getShipElement().getBoundingClientRect();
     return {
       left: box.left + window.scrollX,
       top: box.top + window.scrollY,
@@ -490,8 +564,12 @@ export default class Ship {
    */
   // eslint-disable-next-line class-methods-use-this
   getAdjacents(elem) {
-    const row = parseInt(elem.dataset.row, 10);
-    const column = parseInt(elem.dataset.column, 10);
+    const row = parseInt(elem.dataset.row ?? '', 10);
+    const column = parseInt(elem.dataset.column ?? '', 10);
+    if (!Number.isInteger(row) || !Number.isInteger(column)) {
+      return [];
+    }
+    /** @type {ShipCoordinate[]} */
     const coordinates = [];
     // top left
     if (row !== 0 && column !== 0) {
@@ -534,9 +612,11 @@ export default class Ship {
     }
 
     // eslint-disable-next-line no-shadow
-    return coordinates.map(({ row, column }) =>
-      document.getElementById(`fleetboard-${row}-${column}`)
-    );
+    return coordinates
+      .map(({ row, column }) =>
+        document.getElementById(`fleetboard-${row}-${column}`)
+      )
+      .filter((tile) => tile instanceof HTMLElement);
   }
 
   /**
@@ -549,8 +629,13 @@ export default class Ship {
       this.orientation = orientation;
       this.setRotation();
       this.elementsBelow = this.getElementsBelow(row, column, orientation);
-      this.shipElement.style.left = `${this.elementsBelow[0].getBoundingClientRect().left + window.scrollX}px`;
-      this.shipElement.style.top = `${this.elementsBelow[0].getBoundingClientRect().top + window.scrollY}px`;
+      const firstTile = this.elementsBelow[0];
+      if (!firstTile) {
+        return false;
+      }
+      const shipElement = this.getShipElement();
+      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
+      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
       this.claimTiles();
       return true;
     }

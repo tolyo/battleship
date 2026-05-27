@@ -10,11 +10,11 @@
 %% Public API.
 %% ------------------------------------------------------------------
 
--spec start_link() -> {ok, pid()} | {error, term()}.
+-spec start_link() -> {ok, pid()} | ignore | {error, term()}.
 start_link() ->
     supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
--spec start_room(binary(), map(), map()) -> {ok, pid()} | {error, term()}.
+-spec start_room(binary(), map(), map()) -> supervisor:startchild_ret().
 start_room(RoomId, Player1, Player2) ->
     supervisor:start_child(?MODULE, [RoomId, Player1, Player2]).
 
@@ -22,7 +22,7 @@ start_room(RoomId, Player1, Player2) ->
 %% supervisor callbacks.
 %% ------------------------------------------------------------------
 
--spec init(list()) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
+-spec init([]) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
 init([]) ->
     SupFlags = #{
         strategy => simple_one_for_one,

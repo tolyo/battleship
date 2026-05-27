@@ -21,13 +21,16 @@
 
 -define(SERVER, ?MODULE).
 
+-spec start_link() -> {ok, pid()} | ignore | {error, term()}.
 start_link() -> gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+
+-spec stop() -> term().
 stop() -> gen_server:call(?MODULE, stop).
 
--spec add_player1(#player{}) -> {reply, #game{}}.
+-spec add_player1(#player{}) -> #game{}.
 add_player1(Player) -> gen_server:call(?MODULE, {add_player1, Player}).
 
--spec add_player2(#player{}) -> {reply, #game{}}.
+-spec add_player2(#player{}) -> #game{}.
 add_player2(Player) -> gen_server:call(?MODULE, {add_player2, Player}).
 
 -spec start_game(#player{}, #player{}) -> #game{}.
@@ -39,6 +42,7 @@ next_move(Player, Game, Row, Column) ->
 
 %% Callbacks
 
+-spec handle_call(term(), {pid(), term()}, #game{}) -> {reply, #game{}, #game{}}.
 handle_call({add_player1, Player1}, _From, State) ->
     NewState = State#game{player_one = Player1},
     {reply, NewState, NewState};
@@ -59,8 +63,17 @@ handle_call({next_move, _Player, Row, Column}, _From, State) ->
     NewState = battleship_game:next_move(State, Row, Column),
     {reply, NewState, NewState}.
 
+-spec init([]) -> {ok, #game{}}.
 init([]) -> {ok, battleship_game:init_mock_game()}.
+
+-spec handle_cast(term(), #game{}) -> {noreply, #game{}}.
 handle_cast(_Msg, State) -> {noreply, State}.
+
+-spec handle_info(term(), #game{}) -> {noreply, #game{}}.
 handle_info(_Info, State) -> {noreply, State}.
+
+-spec terminate(term(), #game{}) -> ok.
 terminate(_Reason, _State) -> ok.
+
+-spec code_change(term(), #game{}, term()) -> {ok, #game{}}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.

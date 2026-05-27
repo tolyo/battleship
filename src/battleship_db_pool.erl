@@ -1,6 +1,7 @@
 -module(battleship_db_pool).
 
 -export([start/4, stop/1, query/3]).
+-export_type([pool_name/0, connection_params/0, query_result/0]).
 
 -define(TAKE_TIMEOUT, 1000).
 -define(QUEUE_MAX, 50).
@@ -13,6 +14,9 @@
     password := iodata(),
     database := string()
 }.
+-type query_result() ::
+    epgsql:reply(tuple())
+    | {error, pool_overload | {query_failed, throw | error | exit, term()}}.
 
 -spec start(pool_name(), non_neg_integer(), non_neg_integer(), connection_params()) ->
     {ok, pid()} | {error, term()}.
@@ -32,8 +36,7 @@ start(PoolName0, InitCount, MaxCount, Params) ->
 stop(PoolName0) ->
     pooler:rm_pool(pool_name_to_atom(PoolName0)).
 
--spec query(pool_name(), epgsql:sql_query(), [epgsql:bind_param()]) ->
-    term() | {error, term()}.
+-spec query(pool_name(), epgsql:sql_query(), [epgsql:bind_param()]) -> query_result().
 query(PoolName0, Sql, Params) ->
     PoolName = pool_name_to_atom(PoolName0),
     case pooler:take_member(PoolName, ?TAKE_TIMEOUT) of
@@ -43,6 +46,7 @@ query(PoolName0, Sql, Params) ->
             {error, pool_overload}
     end.
 
+-spec query_with_connection(atom(), pid(), epgsql:sql_query(), [epgsql:bind_param()]) -> query_result().
 query_with_connection(PoolName, Connection, Sql, Params) ->
     try epgsql:equery(Connection, Sql, Params) of
         Reply ->
@@ -58,6 +62,7 @@ query_with_connection(PoolName, Connection, Sql, Params) ->
             {error, {query_failed, Class, Reason}}
     end.
 
+-spec pool_name_to_atom(pool_name()) -> atom().
 pool_name_to_atom(Name) when is_atom(Name) ->
     Name;
 pool_name_to_atom(Name) when is_binary(Name) ->

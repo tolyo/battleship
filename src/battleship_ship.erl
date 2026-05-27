@@ -2,7 +2,7 @@
 -export([create/2, fleet/0, fleet_size/0]).
 -include_lib("battleship/include/battleship.hrl").
 
--spec create(atom(), integer()) -> #ship{}.
+-spec create(atom(), non_neg_integer()) -> #ship{}.
 create(Id, Size) ->
     #ship{
         id = Id,
@@ -14,7 +14,7 @@ create(Id, Size) ->
         orientation = 'HORIZONTAL'
     }.
 
--spec fleet() -> [#ship{}].
+-spec fleet() -> fleet().
 fleet() ->
     [
         create('0', 4),
@@ -29,5 +29,10 @@ fleet() ->
         create('9', 1)
     ].
 
--spec fleet_size() -> integer().
-fleet_size() -> lists:sum([Ship#ship.size || Ship <- fleet()]).
+-spec fleet_size() -> non_neg_integer().
+fleet_size() -> fleet_size(fleet()).
+
+fleet_size([]) ->
+    0;
+fleet_size([Ship | Ships]) ->
+    Ship#ship.size + fleet_size(Ships).

@@ -32,14 +32,28 @@ export function removeShip(ship) {
   });
 }
 
+/**
+ * @param {number} row
+ * @param {number} column
+ * @param {string} className
+ */
 export function applyClassToGrid(row, column, className) {
   const elem = document.getElementById(`fleetboard-${row}-${column}`);
-  elem.classList.add(className);
+  if (elem) {
+    elem.classList.add(className);
+  }
 }
 
+/**
+ * @param {number} row
+ * @param {number} column
+ * @param {string} className
+ */
 export function removeClassFromGrid(row, column, className) {
   const elem = document.getElementById(`fleetboard-${row}-${column}`);
-  elem.classList.remove(className);
+  if (elem) {
+    elem.classList.remove(className);
+  }
 }
 
 export function reset() {

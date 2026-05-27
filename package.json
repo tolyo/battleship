@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {},
   "dependencies": {
-    "@angular-wave/angular.ts": "latest",
+    "@angular-wave/angular.ts": "file:../ng/angular.ts",
     "modern-normalize": "latest",
     "pollen-css": "latest"
   },
@@ -11,10 +11,11 @@
     "@rollup/plugin-commonjs": "latest",
     "@rollup/plugin-node-resolve": "latest",
     "@rollup/plugin-terser": "latest",
+    "chokidar": "latest",
+    "rollup": "latest",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",
-    "browser-sync": "latest",
     "eslint": "latest",
     "eslint-config-airbnb-base": "latest",
     "eslint-config-prettier": "latest",

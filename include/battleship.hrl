@@ -7,24 +7,24 @@
     ?EMPTY | ?BLOCKED | ?HIT | ?MISS | '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'.
 -type strike_res() :: 'MISS' | 'HIT' | 'ERROR'.
 -type ship_orientation() :: 'VERTICAL' | 'HORIZONTAL'.
--type row() :: integer().
--type column() :: integer().
+-type row() :: pos_integer().
+-type column() :: pos_integer().
 -type player_id() :: binary().
--type board() :: [[grid_state()]].
+-type board() :: [[atom()]].
 -record(ship, {
     id :: atom(),
     health :: ship_state(),
     orientation :: ship_orientation(),
-    column :: number(),
-    row :: number(),
-    hitcount :: number(),
-    size :: number()
+    column :: non_neg_integer(),
+    row :: non_neg_integer(),
+    hitcount :: non_neg_integer(),
+    size :: non_neg_integer()
 }).
 -type fleet() :: [#ship{}].
 -record(strike, {
     id :: player_id(),
-    x :: number(),
-    y :: number(),
+    x :: pos_integer(),
+    y :: pos_integer(),
     res :: strike_res()
 }).
 -record(player, {

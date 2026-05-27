@@ -29,6 +29,11 @@ class MapController {
     // Attach ships to them
     Fleet.forEach((ship) => ship.createOnPlaceholder());
 
+    /** @type {string[][]} */
+    this.boardState = GRID.map(() => GRID.map(() => '_'));
+    /** @type {string | undefined} */
+    this.player = undefined;
+
     const observer = new MutationObserver(() => this.handleChildChanges());
     // Start observing the parent node for childList mutations
     observer.observe(this.board, {
@@ -44,8 +49,11 @@ class MapController {
     this.boardState = GRID.map(() => GRID.map(() => '_'));
     Fleet.forEach((ship) => {
       ship.elementsBelow.forEach((elem) => {
-        const y = elem.dataset.row;
-        const x = elem.dataset.column;
+        const y = Number(elem.dataset.row);
+        const x = Number(elem.dataset.column);
+        if (!Number.isInteger(y) || !Number.isInteger(x)) {
+          return;
+        }
         this.boardState[y][x] = ship.id;
       });
       count += ship.size;
@@ -91,13 +99,13 @@ class MapController {
     const socket = new WebSocket(
       `/ws?player=${playerParam}&board=${boardParam}`
     );
-    socket.addEventListener('open', (ev, data) => {
+    socket.addEventListener('open', (ev) => {
       // eslint-disable-next-line no-console
-      console.log(data);
+      console.log(ev);
     });
-    socket.addEventListener('message', (ev, data) => {
+    socket.addEventListener('message', (ev) => {
       // eslint-disable-next-line no-console
-      console.log(data);
+      console.log(ev.data);
     });
   }
 }

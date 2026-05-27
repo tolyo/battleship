@@ -6,24 +6,35 @@
 
 -define(POOL_NAME, battleship_db_pool).
 
+-type query_result() :: battleship_db_pool:query_result().
+-type delete_error() ::
+    invalid_table_name
+    | {unexpected_result, term()}
+    | {throw | error | exit, term()}
+    | term().
+
 %%% Public API %%%
 
+-spec start_link() -> {ok, pid()} | ignore | {error, term()}.
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
+-spec stop() -> term().
 stop() ->
     gen_server:call(?MODULE, stop).
 
+-spec query(epgsql:sql_query()) -> query_result().
 query(Sql) ->
     query(Sql, []).
 
+-spec query(epgsql:sql_query(), [epgsql:bind_param()]) -> query_result().
 query(Sql, Params) ->
     battleship_db_pool:query(?POOL_NAME, Sql, Params).
 
 %% ------------------------------------------------------------------
 %% Delete all rows from a given table
 %% ------------------------------------------------------------------
--spec delete_all(binary()) -> ok | {error, term()}.
+-spec delete_all(binary()) -> ok | {error, delete_error()}.
 delete_all(TableName) when is_binary(TableName) ->
     %% Validate table name to allow only valid SQL identifiers
     case re:run(TableName, "^[a-zA-Z_][a-zA-Z0-9_]*$") of
@@ -46,6 +57,7 @@ delete_all(TableName) when is_binary(TableName) ->
 
 %%% Callbacks %%%
 
+-spec init([]) -> {ok, #{}}.
 init([]) ->
     % Load .env config
     dotenv_config:init(battleship_env_parser, ["config/dev.env"]),
@@ -73,25 +85,32 @@ init([]) ->
     io:format("Database pool '~p' started with ~p connections.~n", [?POOL_NAME, PoolSize]),
     {ok, #{}}.
 
+-spec handle_call(term(), {pid(), term()}, term()) ->
+    {reply, ok, term()} | {stop, normal, ok, term()}.
 handle_call(stop, _From, State) ->
     {stop, normal, ok, State};
 handle_call(_, _, State) ->
     {reply, ok, State}.
 
+-spec handle_cast(term(), term()) -> {noreply, term()}.
 handle_cast(_, State) ->
     {noreply, State}.
 
+-spec handle_info(term(), term()) -> {noreply, term()}.
 handle_info(_, State) ->
     {noreply, State}.
 
+-spec terminate(term(), term()) -> ok.
 terminate(_Reason, _State) ->
     _ = battleship_db_pool:stop(?POOL_NAME),
     ok.
 
+-spec code_change(term(), term(), term()) -> {ok, term()}.
 code_change(_, State, _) ->
     {ok, State}.
 
 %% Internal
+-spec ensure_pool_app_started() -> ok.
 ensure_pool_app_started() ->
     {ok, _} = application:ensure_all_started(epgsql),
     {ok, _} = application:ensure_all_started(pooler),

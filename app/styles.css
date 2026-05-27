@@ -12,7 +12,7 @@
 
 /* Modern Normalize for consistent baseline styles */
 @import '../node_modules/modern-normalize/modern-normalize.css';
-@import '../node_modules/@angular-wave/angular.ts/css/angular.css';
+@import '../node_modules/@angular-wave/angular.ts/dist/angular.css';
 @import '../node_modules/pollen-css/dist/pollen.css';
 
 @import './theme/theme.css';

@@ -121,7 +121,7 @@ parse_board_param(BoardParam) ->
         _:_ -> battleship_game:place_fleet_random()
     end.
 
--spec normalize_board(term()) -> {ok, board()} | {error, term()}.
+-spec normalize_board(term()) -> {ok, board()} | {error, invalid_board | invalid_row}.
 normalize_board(Board) when is_list(Board), length(Board) =:= 10 ->
     Rows = [normalize_row(Row) || Row <- Board],
     case
@@ -139,7 +139,7 @@ normalize_board(Board) when is_list(Board), length(Board) =:= 10 ->
 normalize_board(_) ->
     {error, invalid_board}.
 
--spec normalize_row(term()) -> {ok, [grid_state()]} | {error, term()}.
+-spec normalize_row(term()) -> {ok, [grid_state()]} | {error, invalid_row | invalid_cell}.
 normalize_row(Row) when is_list(Row), length(Row) =:= 10 ->
     Cells = [normalize_cell(Cell) || Cell <- Row],
     case
@@ -157,7 +157,7 @@ normalize_row(Row) when is_list(Row), length(Row) =:= 10 ->
 normalize_row(_) ->
     {error, invalid_row}.
 
--spec normalize_cell(term()) -> {ok, grid_state()} | {error, term()}.
+-spec normalize_cell(term()) -> {ok, grid_state()} | {error, invalid_cell}.
 normalize_cell(Cell) when is_binary(Cell) ->
     normalize_cell(binary_to_list(Cell));
 normalize_cell(Cell) when is_list(Cell) ->
@@ -182,7 +182,7 @@ normalize_cell(Cell) when is_integer(Cell), Cell >= 0, Cell =< 9 ->
 normalize_cell(_) ->
     {error, invalid_cell}.
 
--spec digit_atom(integer()) -> grid_state().
+-spec digit_atom($0 | $1 | $2 | $3 | $4 | $5 | $6 | $7 | $8 | $9) -> grid_state().
 digit_atom($0) -> '0';
 digit_atom($1) -> '1';
 digit_atom($2) -> '2';

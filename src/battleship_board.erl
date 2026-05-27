@@ -34,7 +34,7 @@ is_cell_empty(Board, Row, Column) ->
 get_cell_value(Board, Row, Column) ->
     lists:nth(Column, lists:nth(Row, Board)).
 
--spec update_cell_at(board(), row(), column(), any()) -> board().
+-spec update_cell_at(board(), row(), column(), grid_state()) -> board().
 update_cell_at(Board, Row, Column, Value) ->
     battleship_utils:update_list_at(
         Board,
@@ -60,13 +60,25 @@ set_adjacents_blocked(Board) ->
 
 -spec count(board(), grid_state()) -> non_neg_integer().
 count(Board, Value) ->
-    lists:sum([length([Cell || Cell <- Row, Cell =:= Value]) || Row <- Board]).
+    count_rows(Board, Value).
 
 %% ------------------------------------------------------------------
 %% Private helpers.
 %% ------------------------------------------------------------------
 
 grid() -> lists:seq(1, 10).
+
+count_rows([], _Value) ->
+    0;
+count_rows([Row | Rows], Value) ->
+    count_row(Row, Value) + count_rows(Rows, Value).
+
+count_row([], _Value) ->
+    0;
+count_row([Value | Cells], Value) ->
+    1 + count_row(Cells, Value);
+count_row([_Cell | Cells], Value) ->
+    count_row(Cells, Value).
 
 is_adjacent_cells_empty(Board, Row, Column) ->
     lists:all(fun({R, C}) -> is_cell_empty(Board, R, C) end, get_adjacent_coordinates(Row, Column)).

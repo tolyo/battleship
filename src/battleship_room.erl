@@ -24,7 +24,7 @@
     ref := reference()
 }.
 -type players_map() :: #{player_id_bin() => player_entry()}.
--type move_result() :: ok | {error, binary()}.
+-type move_result() :: ok | {error, binary() | room_not_found}.
 
 -record(state, {
     room_id :: room_id(),
@@ -36,28 +36,30 @@
 %% Public API.
 %% ------------------------------------------------------------------
 
--spec start_link(room_id(), player_info(), player_info()) -> {ok, pid()} | {error, term()}.
-start_link(RoomId, Player1, Player2) ->
-    gen_server:start_link(?MODULE, [RoomId, Player1, Player2], []).
+-spec start_link(room_id(), player_info(), player_info()) -> {ok, pid()} | ignore | {error, term()}.
+start_link(RoomId, Player1, Player2) when is_binary(RoomId) ->
+    gen_server:start_link(?MODULE, [RoomId, ensure_player_info(Player1), ensure_player_info(Player2)], []).
 
 -spec move(room_id(), player_id_bin(), integer(), integer()) -> move_result().
-move(RoomId, PlayerId, Row, Column) ->
+move(RoomId, PlayerId, Row, Column) when
+    is_binary(RoomId), is_binary(PlayerId), is_integer(Row), is_integer(Column)
+->
     case battleship_lobby:room_pid(RoomId) of
-        {ok, Pid} -> gen_server:call(Pid, {move, PlayerId, Row, Column});
+        {ok, Pid} -> ensure_move_result(gen_server:call(Pid, {move, PlayerId, Row, Column}));
         {error, _} -> {error, room_not_found}
     end.
 
 -spec leave(room_id(), player_id_bin()) -> ok.
-leave(RoomId, PlayerId) ->
+leave(RoomId, PlayerId) when is_binary(RoomId), is_binary(PlayerId) ->
     case battleship_lobby:room_pid(RoomId) of
         {ok, Pid} -> gen_server:cast(Pid, {leave, PlayerId});
         {error, _} -> ok
     end.
 
 -spec game_state(room_id()) -> {ok, #game{}} | {error, room_not_found}.
-game_state(RoomId) ->
+game_state(RoomId) when is_binary(RoomId) ->
     case battleship_lobby:room_pid(RoomId) of
-        {ok, Pid} -> gen_server:call(Pid, state);
+        {ok, Pid} -> ensure_game_state(gen_server:call(Pid, state));
         {error, _} -> {error, room_not_found}
     end.
 
@@ -65,7 +67,7 @@ game_state(RoomId) ->
 %% gen_server callbacks.
 %% ------------------------------------------------------------------
 
--spec init(list()) -> {ok, #state{}}.
+-spec init([room_id() | player_info()]) -> {ok, #state{}}.
 init([RoomId, Player1, Player2]) ->
     Game = init_game(Player1, Player2),
     Players = players_from_infos([Player1, Player2]),
@@ -76,7 +78,8 @@ init([RoomId, Player1, Player2]) ->
     }),
     {ok, #state{room_id = RoomId, game = Game, players = Players}}.
 
--spec handle_call(term(), {pid(), term()}, #state{}) -> {reply, term(), #state{}}.
+-spec handle_call(term(), {pid(), term()}, #state{}) ->
+    {reply, ok | {ok, #game{}} | {error, binary() | unknown_request}, #state{}}.
 handle_call(state, _From, State) ->
     {reply, {ok, State#state.game}, State};
 handle_call({move, PlayerId, Row, Column}, _From, State) ->
@@ -107,13 +110,13 @@ handle_call({move, PlayerId, Row, Column}, _From, State) ->
 handle_call(_Msg, _From, State) ->
     {reply, {error, unknown_request}, State}.
 
--spec handle_cast(term(), #state{}) -> {noreply, #state{}} | {stop, term(), #state{}}.
+-spec handle_cast(term(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
 handle_cast({leave, PlayerId}, State) ->
     handle_player_leave(PlayerId, State);
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
--spec handle_info(term(), #state{}) -> {noreply, #state{}} | {stop, term(), #state{}}.
+-spec handle_info(term(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
 handle_info({'DOWN', _Ref, process, Pid, _Reason}, State) ->
     case player_id_by_pid(Pid, State#state.players) of
         undefined -> {noreply, State};
@@ -133,6 +136,12 @@ code_change(_OldVsn, State, _Extra) ->
 %% ------------------------------------------------------------------
 %% Private helpers.
 %% ------------------------------------------------------------------
+
+-spec ensure_player_info(player_info()) -> player_info().
+ensure_player_info(#{pid := Pid, id := Id, name := Name, board := Board} = PlayerInfo) when
+    is_pid(Pid), is_binary(Id), is_binary(Name), is_list(Board)
+->
+    PlayerInfo.
 
 -spec init_game(player_info(), player_info()) -> #game{}.
 init_game(Player1, Player2) ->
@@ -190,8 +199,7 @@ do_move(_PlayerId, Row, Column, Game) ->
         _:_ -> {error, <<"invalid_move">>}
     end.
 
--spec handle_player_leave(player_id_bin(), #state{}) ->
-    {noreply, #state{}} | {stop, term(), #state{}}.
+-spec handle_player_leave(player_id_bin(), #state{}) -> {noreply, #state{}} | {stop, normal, #state{}}.
 handle_player_leave(PlayerId, State) ->
     Remaining = maps:remove(PlayerId, State#state.players),
     notify_players(Remaining, #{
@@ -235,7 +243,7 @@ valid_coords(Row, Column) when is_integer(Row), is_integer(Column) ->
 valid_coords(_, _) ->
     false.
 
--spec to_board_coords(integer(), integer()) -> {integer(), integer()}.
+-spec to_board_coords(integer(), integer()) -> {row(), column()}.
 to_board_coords(Row, Column) ->
     {Row + 1, Column + 1}.
 
@@ -251,7 +259,9 @@ notify_players(Players, Payload) ->
 notify_player(PlayerId, Players, Payload) ->
     case maps:get(PlayerId, Players, undefined) of
         undefined -> ok;
-        #{pid := Pid} -> Pid ! {socket_send, Payload}
+        #{pid := Pid} ->
+            Pid ! {socket_send, Payload},
+            ok
     end,
     ok.
 
@@ -280,3 +290,12 @@ serialize_board(Board) ->
 -spec cell_to_binary(grid_state()) -> binary().
 cell_to_binary(Cell) when is_atom(Cell) ->
     atom_to_binary(Cell, utf8).
+-spec ensure_move_result(ok | {error, binary()}) -> ok | {error, binary()}.
+ensure_move_result(ok) ->
+    ok;
+ensure_move_result({error, Reason}) when is_binary(Reason) ->
+    {error, Reason}.
+
+-spec ensure_game_state({ok, #game{}}) -> {ok, #game{}}.
+ensure_game_state({ok, Game = #game{}}) ->
+    {ok, Game}.

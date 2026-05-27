@@ -4,8 +4,10 @@
 #  Configuration
 # -----------------------------------------------------
 INFO      := [INFO]
-BUILD_DIR := dist
+BUILD_DIR := priv/static
 DEPS_DIR  := node_modules
+LIVE_RELOAD_PORT ?= 35729
+LIVE_RELOAD_WATCH_PATHS ?= app priv/static src config/dev.env
 
 # -----------------------------------------------------
 #  Utility Targets
@@ -42,13 +44,18 @@ setup: clean
 
 ## Start local dev server
 start:
-	@echo "$(INFO) Starting BrowserSync..."
-	@node browsersync.cjs
+	@echo "$(INFO) Starting frontend watcher..."
+	@LIVE_RELOAD_ENABLED=1 LIVE_RELOAD_PORT=$(LIVE_RELOAD_PORT) npx rollup -c rollup.server.mjs --watch & \
+	rollup_pid=$$!; \
+	node dev_reload.mjs --port $(LIVE_RELOAD_PORT) $(LIVE_RELOAD_WATCH_PATHS) & \
+	reload_pid=$$!; \
+	trap 'kill $$rollup_pid $$reload_pid 2>/dev/null || true' INT TERM EXIT; \
+	wait $$rollup_pid $$reload_pid
 	
 ## Build prod
 build: clean_build
 	@echo "$(INFO) Starting Rollup..."
-	@npx rollup -c
+	@npx rollup -c rollup.server.mjs
 
 # -----------------------------------------------------
 #  Code Quality Targets

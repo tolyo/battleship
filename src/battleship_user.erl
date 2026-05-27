@@ -10,11 +10,12 @@
 
 -include_lib("battleship/include/battleship.hrl").
 
+-type user_error() :: invalid_credentials | term().
+
 %% @doc Create a user by calling register_user/3 in DB.
--spec create(binary(), binary(), binary()) ->
-    {ok, binary()} | {error, term()}.
 %% Username, Email, Password -> {ok, UserId}
 
+-spec create(binary(), binary(), binary()) -> {ok, binary()} | {error, user_error()}.
 create(Username, Email, Password) ->
     Sql = "SELECT register_user($1, $2, $3);",
     case query(Sql, [Username, Email, Password]) of
@@ -25,9 +26,7 @@ create(Username, Email, Password) ->
     end.
 
 %% @doc Find a user by username. Returns #user{} or not_found.
--spec find_by_username(binary()) ->
-    {ok, user()} | not_found | {error, term()}.
-
+-spec find_by_username(binary()) -> {ok, user()} | not_found | {error, term()}.
 find_by_username(Username) ->
     Sql =
         "SELECT id, username, email, password_hash, rating, created_at "
@@ -43,9 +42,7 @@ find_by_username(Username) ->
 
 %% @doc Check a password using pgcrypto's crypt().
 %% Returns {ok, #user{}} if valid, or {error, invalid_credentials}.
--spec check_password(binary(), binary()) ->
-    {ok, user()} | {error, invalid_credentials} | {error, term()}.
-
+-spec check_password(binary(), binary()) -> {ok, user()} | {error, user_error()}.
 check_password(Email, Password) ->
     Sql = """
         SELECT id, username, email, password_hash, rating, created_at 
