@@ -12,7 +12,7 @@ DONE = "\033[32m✔\033[0m"
 # Export environment variables if needed
 include ./config/dev.env
 
-.PHONY: all clean setup compile start format lint check test functional-test quality help db-up db-down db-rebuild
+.PHONY: all clean setup compile start format lint check test functional-test quality help db-start db-up db-down db-rebuild
 
 all: compile
 
@@ -33,10 +33,21 @@ compile:
 	@$(SERVER_CONTEXT) compile
 	@echo $(DONE) " Compile complete."
 
-start:
-	$(MAKE) frontend-serve &
-	sleep 2
-	$(MAKE) backend-serve
+start: db-start
+	@set -e; \
+	setsid $(MAKE) frontend-serve & \
+	frontend_pid=$$!; \
+	cleanup() { \
+		kill -TERM -$$frontend_pid 2>/dev/null || kill $$frontend_pid 2>/dev/null || true; \
+		wait $$frontend_pid 2>/dev/null || true; \
+	}; \
+	trap cleanup INT TERM EXIT; \
+	sleep 2; \
+	$(MAKE) backend-serve; \
+	status=$$?; \
+	cleanup; \
+	trap - INT TERM EXIT; \
+	exit $$status
 
 build:
 	@echo $(INFO) "Building frontend..."
@@ -48,6 +59,20 @@ frontend-serve:
 
 backend-serve:	
 	@$(SERVER_CONTEXT) start
+
+db-start:
+	@echo $(INFO) "Starting database..."
+	@docker compose up -d db
+	@echo $(INFO) "Waiting for database..."
+	@for attempt in $$(seq 1 30); do \
+		if docker compose exec -T db pg_isready -U "$(POSTGRES_USER)" -d "$(POSTGRES_DB)" >/dev/null 2>&1; then \
+			exit 0; \
+		fi; \
+		sleep 1; \
+	done; \
+	docker compose ps db; \
+	docker compose logs --tail=40 db; \
+	exit 1
 
 format:
 	@echo $(INFO) "Formatting project..."

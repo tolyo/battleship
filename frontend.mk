@@ -45,12 +45,20 @@ setup: clean
 ## Start local dev server
 start:
 	@echo "$(INFO) Starting frontend watcher..."
-	@LIVE_RELOAD_ENABLED=1 LIVE_RELOAD_PORT=$(LIVE_RELOAD_PORT) npx rollup -c rollup.server.mjs --watch & \
-	rollup_pid=$$!; \
-	node dev_reload.mjs --port $(LIVE_RELOAD_PORT) $(LIVE_RELOAD_WATCH_PATHS) & \
-	reload_pid=$$!; \
-	trap 'kill $$rollup_pid $$reload_pid 2>/dev/null || true' INT TERM EXIT; \
-	wait $$rollup_pid $$reload_pid
+	@bash -c 'set -e; \
+		LIVE_RELOAD_ENABLED=1 LIVE_RELOAD_PORT=$(LIVE_RELOAD_PORT) npx rollup -c rollup.server.mjs --watch & \
+		rollup_pid=$$!; \
+		node dev_reload.mjs --port $(LIVE_RELOAD_PORT) $(LIVE_RELOAD_WATCH_PATHS) & \
+		reload_pid=$$!; \
+		cleanup() { \
+			kill $$rollup_pid $$reload_pid 2>/dev/null || true; \
+			wait $$rollup_pid $$reload_pid 2>/dev/null || true; \
+		}; \
+		trap cleanup INT TERM EXIT; \
+		wait -n $$rollup_pid $$reload_pid; \
+		status=$$?; \
+		cleanup; \
+		exit $$status'
 	
 ## Build prod
 build: clean_build

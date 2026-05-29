@@ -26,6 +26,10 @@ function isServerMessage(value) {
  * @returns {ServerMessage}
  */
 export function decodeServerMessage(data) {
+  if (isServerMessage(data)) {
+    return data;
+  }
+
   if (typeof data !== 'string') {
     return { type: 'unknown' };
   }

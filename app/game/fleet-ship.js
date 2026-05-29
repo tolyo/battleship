@@ -1,4 +1,4 @@
-import { GRID_SIZE, MapTile } from './constants.js';
+import { GRID_SIZE } from './constants.js';
 
 /**
  * @typedef {'VERTICAL' | 'HORIZONTAL'} ShipOrientation
@@ -13,15 +13,17 @@ import { GRID_SIZE, MapTile } from './constants.js';
  */
 
 export class FleetShipController {
-  static $inject = ['$element', 'gameState'];
+  static $inject = ['$element', 'gameState', 'fleetLayout'];
 
   /**
    * @param {Element} $element
    * @param {import('./game-state-service.js').GameStateService} gameState
+   * @param {import('./fleet-layout-service.js').FleetLayoutService} fleetLayout
    */
-  constructor($element, gameState) {
+  constructor($element, gameState, fleetLayout) {
     this.$element = $element;
     this.gameState = gameState;
+    this.fleetLayout = fleetLayout;
     /** @type {import('./ship.js').default | undefined} */
     this.ship = undefined;
     /** @type {HTMLElement | undefined} */
@@ -43,10 +45,8 @@ export class FleetShipController {
     this.unsubscribeFleetLock = undefined;
     /** @type {(() => void) | undefined} */
     this.unregisterFleetShip = undefined;
-    /** @type {((event: Event) => void) | undefined} */
-    this.claimListener = undefined;
-    /** @type {((event: PointerEvent) => void) | undefined} */
-    this.pointerDownListener = undefined;
+    /** @type {(() => void) | undefined} */
+    this.resizeHandler = undefined;
   }
 
   $postLink() {
@@ -69,27 +69,12 @@ export class FleetShipController {
     this.unsubscribeFleetLock = this.gameState.subscribeFleetLock((locked) => {
       this.setLocked(locked);
     });
-    this.unregisterFleetShip = this.gameState.registerFleetShip(this);
-
-    this.claimListener = (event) => {
-      const customEvent = /** @type {CustomEvent<{ id: string }>} */ (event);
-      if (customEvent.detail.id !== this.ship?.id) {
-        this.claimTiles();
-      }
-    };
-    document.addEventListener('claim', this.claimListener);
-
-    this.pointerDownListener = (event) => {
-      if (
-        event.target instanceof HTMLElement &&
-        event.target.id !== this.ship?.id
-      ) {
-        this.claimTiles();
-      }
-    };
-    document.addEventListener('pointerdown', this.pointerDownListener);
+    this.unregisterFleetShip = this.fleetLayout.registerFleetShip(this);
 
     this.setOnPlaceholder();
+    this.resizeHandler = () => this.scheduleRealign();
+    window.addEventListener('resize', this.resizeHandler);
+    this.scheduleRealign();
   }
 
   /**
@@ -140,6 +125,17 @@ export class FleetShipController {
     shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
   }
 
+  scheduleRealign() {
+    const realign = () => this.realignToLayout();
+
+    requestAnimationFrame(() => {
+      realign();
+      requestAnimationFrame(realign);
+    });
+
+    document.fonts?.ready.then(realign).catch(() => {});
+  }
+
   /**
    * @param {{ row: number, column: number }[]} coordinates
    */
@@ -152,12 +148,16 @@ export class FleetShipController {
     const sorted = [...coordinates].sort((left, right) =>
       left.row === right.row ? left.column - right.column : left.row - right.row
     );
-    const sameRow = sorted.every((coordinate) => coordinate.row === sorted[0].row);
+    const sameRow = sorted.every(
+      (coordinate) => coordinate.row === sorted[0].row
+    );
     this.orientation = sameRow ? 'HORIZONTAL' : 'VERTICAL';
     this.setRotation();
     this.elementsBelow = sorted
       .map((coordinate) =>
-        document.getElementById(`fleetboard-${coordinate.row}-${coordinate.column}`)
+        document.getElementById(
+          `fleetboard-${coordinate.row}-${coordinate.column}`
+        )
       )
       .filter((tile) => tile instanceof HTMLElement);
 
@@ -421,30 +421,22 @@ export class FleetShipController {
       return false;
     }
 
-    return this.getElementsBelow(row, column, orientation).every((tile) => {
-      if (tile.dataset.state !== MapTile.EMPTY) {
-        return false;
-      }
-
-      return this.getAdjacents(tile).every(
-        (adjacent) => adjacent.dataset.state !== MapTile.FILLED
-      );
-    });
+    return this.gameState.canPlaceSetupShip(
+      this.ship.id,
+      this.coordinatesFromElements(
+        this.getElementsBelow(row, column, orientation)
+      )
+    );
   }
 
   clearMapBlocks() {
     this.elementsBelow.forEach((tile) => {
-      this.getAdjacents(tile).forEach((adjacentTile) => {
-        if (adjacentTile.dataset.state === MapTile.BLOCKED) {
-          adjacentTile.dataset.state = MapTile.EMPTY;
-        }
-      });
-      tile.dataset.state = MapTile.EMPTY;
+      tile.classList.remove('droppable-target');
     });
+    if (this.ship) {
+      this.gameState.clearSetupShip(this.ship.id);
+    }
     this.elementsBelow = [];
-    document.dispatchEvent(
-      new CustomEvent('claim', { detail: { id: this.ship?.id } })
-    );
   }
 
   resetElementsBelow() {
@@ -464,89 +456,31 @@ export class FleetShipController {
 
   claimTiles() {
     this.elementsBelow.forEach((tile) => {
-      tile.dataset.state = MapTile.FILLED;
-      this.blockAdjacents(tile);
       tile.classList.remove('droppable-target');
     });
+    if (this.ship) {
+      this.gameState.placeSetupShip(
+        this.ship.id,
+        this.coordinatesFromElements(this.elementsBelow)
+      );
+    }
   }
 
   /**
-   * @param {HTMLElement} tile
+   * @param {HTMLElement[]} elements
+   * @returns {ShipCoordinate[]}
    */
-  blockAdjacents(tile) {
-    this.getAdjacents(tile).forEach((adjacentTile) => {
-      if (adjacentTile.dataset.state === MapTile.EMPTY) {
-        adjacentTile.dataset.state = MapTile.BLOCKED;
-      }
-    });
-  }
-
-  /**
-   * @param {HTMLElement} elem
-   * @returns {HTMLElement[]}
-   */
-  getAdjacents(elem) {
-    const row = parseInt(elem.dataset.row ?? '', 10);
-    const column = parseInt(elem.dataset.column ?? '', 10);
-    if (!Number.isInteger(row) || !Number.isInteger(column)) {
-      return [];
-    }
-    /** @type {ShipCoordinate[]} */
-    const coordinates = [];
-
-    if (row !== 0 && column !== 0) {
-      coordinates.push({ row: row - 1, column: column - 1 });
-    }
-    if (row !== 0) {
-      coordinates.push({ row: row - 1, column });
-    }
-    if (row !== 0 && column !== 9) {
-      coordinates.push({ row: row - 1, column: column + 1 });
-    }
-    if (column !== 0) {
-      coordinates.push({ row, column: column - 1 });
-    }
-    if (column !== 9) {
-      coordinates.push({ row, column: column + 1 });
-    }
-    if (row !== 9 && column !== 0) {
-      coordinates.push({ row: row + 1, column: column - 1 });
-    }
-    if (row !== 9) {
-      coordinates.push({ row: row + 1, column });
-    }
-    if (row !== 9 && column !== 9) {
-      coordinates.push({ row: row + 1, column: column + 1 });
-    }
-
-    return coordinates
-      .map(({ row, column }) =>
-        document.getElementById(`fleetboard-${row}-${column}`)
-      )
-      .filter((tile) => tile instanceof HTMLElement);
-  }
-
-  /**
-   * @returns {boolean}
-   */
-  tryRandomLocation() {
-    this.setOnPlaceholder();
-    const { row, column, orientation } = getRandomShipCoordinate();
-    if (this.isLegal(row, column, orientation)) {
-      this.orientation = orientation;
-      this.setRotation();
-      this.elementsBelow = this.getElementsBelow(row, column, orientation);
-      const firstTile = this.elementsBelow[0];
-      if (!firstTile) {
-        return false;
-      }
-      const shipElement = this.getShipElement();
-      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
-      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
-      this.claimTiles();
-      return true;
-    }
-    return false;
+  coordinatesFromElements(elements) {
+    return elements
+      .map((element) => ({
+        row: Number(element.dataset.row),
+        column: Number(element.dataset.column),
+      }))
+      .filter(
+        (coordinate) =>
+          Number.isInteger(coordinate.row) &&
+          Number.isInteger(coordinate.column)
+      );
   }
 
   /**
@@ -563,11 +497,8 @@ export class FleetShipController {
     this.activePointerId = undefined;
     this.unsubscribeFleetLock?.();
     this.unregisterFleetShip?.();
-    if (this.claimListener) {
-      document.removeEventListener('claim', this.claimListener);
-    }
-    if (this.pointerDownListener) {
-      document.removeEventListener('pointerdown', this.pointerDownListener);
+    if (this.resizeHandler) {
+      window.removeEventListener('resize', this.resizeHandler);
     }
   }
 }
@@ -590,25 +521,3 @@ export default {
   `,
   controller: FleetShipController,
 };
-
-function getRandomTile() {
-  return `${Math.floor(Math.random() * 9)}`;
-}
-
-/**
- * @returns {ShipOrientation}
- */
-function getRandomOrientation() {
-  if (Math.round(Math.random()) > 0) {
-    return 'HORIZONTAL';
-  }
-  return 'VERTICAL';
-}
-
-function getRandomShipCoordinate() {
-  return {
-    row: getRandomTile(),
-    column: getRandomTile(),
-    orientation: getRandomOrientation(),
-  };
-}

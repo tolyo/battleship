@@ -7,7 +7,13 @@ import dashboardComponent from './dashboard/dashboard.js';
 import roomComponent from './gameroom/room.js';
 import { HeaderController } from './layout/header-ctrl.js';
 import { GameStateService } from './game/game-state-service.js';
+import { BattleRoomClientService } from './game/battle-room-client-service.js';
+import { FleetLayoutService } from './game/fleet-layout-service.js';
+import { FleetSetupService } from './game/fleet-setup-service.js';
 import fleetShipComponent from './game/fleet-ship.js';
+import boardGridComponent from './map/board-grid.js';
+import { SessionService } from './session/session-service.js';
+import { RoomSessionService } from './room/room-session-service.js';
 
 angular
   .module('battleship', [])
@@ -52,8 +58,14 @@ angular
         });
     },
   ])
-  .factory('gameState', () => new GameStateService())
+  .service('gameState', GameStateService)
+  .service('session', SessionService)
+  .service('roomSession', RoomSessionService)
+  .service('fleetLayout', FleetLayoutService)
+  .service('fleetSetup', FleetSetupService)
+  .service('battleRoomClient', BattleRoomClientService)
   .controller('HeaderController', HeaderController)
+  .component('boardGrid', boardGridComponent)
   .component('dashboard', dashboardComponent)
   .component('fleetShip', fleetShipComponent)
   .component('fleetSetup', mapComponent)
