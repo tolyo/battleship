@@ -12,7 +12,7 @@ DONE = "\033[32m✔\033[0m"
 # Export environment variables if needed
 include ./config/dev.env
 
-.PHONY: all clean setup compile start format lint check test functional-test quality help db-start db-up db-down db-rebuild
+.PHONY: all clean setup compile start format lint check unit-test unit-test-tap test functional-test quality help db-start db-up db-down db-rebuild
 
 all: compile
 
@@ -91,6 +91,16 @@ check:
 	@$(FRONTEND_CONTEXT) check
 	@$(SERVER_CONTEXT) check
 	@echo $(DONE) " Static checks complete."
+
+unit-test:
+	@echo $(INFO) "Running frontend unit tests..."
+	@$(FRONTEND_CONTEXT) unit-test
+	@echo $(DONE) " Frontend unit tests complete."
+
+unit-test-tap:
+	@echo $(INFO) "Running frontend unit tests as TAP..."
+	@$(FRONTEND_CONTEXT) unit-test-tap
+	@echo $(DONE) " Frontend unit TAP complete."
 
 test:
 	@echo $(INFO) "Running backend tests..."

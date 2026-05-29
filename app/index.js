@@ -11,7 +11,11 @@ import { BattleRoomClientService } from './game/battle-room-client-service.js';
 import { FleetLayoutService } from './game/fleet-layout-service.js';
 import { FleetSetupService } from './game/fleet-setup-service.js';
 import fleetShipComponent from './game/fleet-ship.js';
+import battleBoardComponent from './map/battle-board.js';
 import boardGridComponent from './map/board-grid.js';
+import fleetBoardComponent from './map/fleet-board.js';
+import gameStatusComponent from './map/game-status.js';
+import setupActionsComponent from './map/setup-actions.js';
 import { SessionService } from './session/session-service.js';
 import { RoomSessionService } from './room/room-session-service.js';
 
@@ -65,12 +69,16 @@ angular
   .service('fleetSetup', FleetSetupService)
   .service('battleRoomClient', BattleRoomClientService)
   .controller('HeaderController', HeaderController)
+  .component('battleBoard', battleBoardComponent)
   .component('boardGrid', boardGridComponent)
   .component('dashboard', dashboardComponent)
+  .component('fleetBoard', fleetBoardComponent)
   .component('fleetShip', fleetShipComponent)
   .component('fleetSetup', mapComponent)
+  .component('gameStatus', gameStatusComponent)
   .component('login', loginComponent)
   .component('room', roomComponent)
-  .component('register', registerComponent);
+  .component('register', registerComponent)
+  .component('setupActions', setupActionsComponent);
 
 angular.bootstrap(document, ['battleship']);

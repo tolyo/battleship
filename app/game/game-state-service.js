@@ -1,18 +1,31 @@
 import Fleet from './fleet.js';
-import { emptyBoardState } from '../map/board-state.js';
-import { gameViewModelFromState } from '../map/game-view-model.js';
+import { emptyBoardState } from './board-state.js';
 import {
-  allFleetShipsPlaced,
-  boardStateFromPlacements,
-  canPlaceSetupShip,
-  randomFleetPlacements,
-} from './fleet-placement.js';
+  canPlaceSetupShip as canPlaceSetupShipState,
+  clearSetupShip as clearSetupShipState,
+  placeSetupShip as placeSetupShipState,
+  randomizeFleet as randomizeFleetState,
+  rebuildSetupBoard as rebuildSetupBoardState,
+  resetSetupFleet as resetSetupFleetState,
+} from './fleet-setup-state.js';
+import { emptyTileRows } from './board-rows.js';
 import {
-  emptyTileRows,
-  rowsFromTiles,
-  rowsWithSunkState,
-  setupRowsFromDataState,
-} from './board-rows.js';
+  connectionError,
+  disconnectWaiting,
+  enterBattleRoom,
+  enterWaiting as enterWaitingState,
+  enterRoom,
+  isRestoring,
+  moveForStrike,
+  opponentDisconnected,
+  receiveGameState,
+  returnToSetup,
+  roomUnavailable,
+  serverError,
+  startRestore,
+  tryEnterWaiting,
+  waitingForOpponent,
+} from './battle-room-state.js';
 
 export class GameStateService {
   static $inject = ['roomSession'];
@@ -26,7 +39,7 @@ export class GameStateService {
     this.boardReady = false;
     /** @type {string[][]} */
     this.boardState = emptyBoardState();
-    /** @type {Record<string, import('../map/game-view-model.js').Coordinate[]>} */
+    /** @type {Record<string, import('./game-view-model.js').Coordinate[]>} */
     this.shipPlacements = {};
     /** @type {string} */
     this.player = roomSession.anonymousPlayerName();
@@ -49,159 +62,75 @@ export class GameStateService {
     this.fleetRows = emptyTileRows('fleetboard');
     this.hitRows = emptyTileRows('hitboard');
     this.fleetLocked = false;
-    /** @type {Set<(locked: boolean) => void>} */
-    this.fleetLockListeners = new Set();
   }
 
   /**
    * @param {boolean} locked
    */
   setFleetLocked(locked) {
-    if (this.fleetLocked === locked) {
-      return;
-    }
-
     this.fleetLocked = locked;
-    this.fleetLockListeners.forEach((listener) => listener(locked));
-  }
-
-  /**
-   * @param {(locked: boolean) => void} listener
-   * @returns {() => void}
-   */
-  subscribeFleetLock(listener) {
-    this.fleetLockListeners.add(listener);
-    listener(this.fleetLocked);
-
-    return () => {
-      this.fleetLockListeners.delete(listener);
-    };
   }
 
   resetSetupFleet() {
-    if (this.phase !== 'setup') {
-      return;
-    }
-
-    this.shipPlacements = {};
-    this.rebuildSetupBoard();
+    resetSetupFleetState(this);
   }
 
   randomizeFleet() {
-    if (this.phase !== 'setup') {
-      return;
-    }
-
-    this.shipPlacements = randomFleetPlacements();
-    this.rebuildSetupBoard();
+    randomizeFleetState(this);
   }
 
   /**
    * @param {string} shipId
-   * @param {import('../map/game-view-model.js').Coordinate[]} coordinates
+   * @param {import('./game-view-model.js').Coordinate[]} coordinates
    */
   placeSetupShip(shipId, coordinates) {
-    if (this.phase !== 'setup') {
-      return;
-    }
-
-    this.shipPlacements = {
-      ...this.shipPlacements,
-      [shipId]: coordinates,
-    };
-    this.rebuildSetupBoard();
+    placeSetupShipState(this, shipId, coordinates);
   }
 
   /**
    * @param {string} shipId
    */
   clearSetupShip(shipId) {
-    if (this.phase !== 'setup') {
-      return;
-    }
-
-    const { [shipId]: _removed, ...nextPlacements } = this.shipPlacements;
-    this.shipPlacements = nextPlacements;
-    this.rebuildSetupBoard();
+    clearSetupShipState(this, shipId);
   }
 
   /**
    * @param {string} shipId
-   * @param {import('../map/game-view-model.js').Coordinate[]} coordinates
+   * @param {import('./game-view-model.js').Coordinate[]} coordinates
    * @returns {boolean}
    */
   canPlaceSetupShip(shipId, coordinates) {
-    if (this.phase !== 'setup') {
-      return false;
-    }
-
-    return canPlaceSetupShip(this.shipPlacements, shipId, coordinates);
+    return canPlaceSetupShipState(this, shipId, coordinates);
   }
 
   rebuildSetupBoard() {
-    const { boardState, tileDataState } = boardStateFromPlacements(
-      this.shipPlacements
-    );
-
-    this.boardState = boardState;
-    this.fleetRows = setupRowsFromDataState(tileDataState);
-    if (allFleetShipsPlaced(this.shipPlacements)) {
-      this.boardReady = true;
-      this.status = 'Ready to join';
-    } else {
-      this.boardReady = false;
-      this.status = 'Place your fleet';
-    }
+    rebuildSetupBoardState(this);
   }
 
   enterWaiting() {
-    this.phase = 'waiting';
-    this.setFleetLocked(true);
-    this.status = 'Connecting...';
+    enterWaitingState(this);
   }
 
   waitingForOpponent() {
-    this.status = 'Waiting for opponent...';
+    waitingForOpponent(this);
   }
 
   /**
    * @returns {boolean}
    */
   tryEnterWaiting() {
-    if (this.phase !== 'setup') {
-      return false;
-    }
-
-    if (!this.boardReady) {
-      this.status = 'Place your fleet first';
-      return false;
-    }
-
-    this.enterWaiting();
-    return true;
+    return tryEnterWaiting(this);
   }
 
   disconnectWaiting() {
-    this.status = 'Disconnected';
-    if (this.phase === 'waiting') {
-      this.phase = 'setup';
-      this.setFleetLocked(false);
-    }
+    disconnectWaiting(this);
   }
 
   /**
    * @param {string} status
    */
   returnToSetup(status) {
-    this.phase = 'setup';
-    this.roomId = undefined;
-    this.playerId = undefined;
-    this.opponentId = undefined;
-    this.isMyTurn = false;
-    this.canStrike = false;
-    this.pendingGame = undefined;
-    this.setFleetLocked(false);
-    this.status = status;
+    returnToSetup(this, status);
   }
 
   /**
@@ -210,12 +139,7 @@ export class GameStateService {
    * @param {string | undefined} opponentId
    */
   enterRoom(roomId, playerId, opponentId) {
-    this.phase = 'playing';
-    this.setFleetLocked(true);
-    this.roomId = roomId;
-    this.playerId = playerId;
-    this.opponentId = opponentId;
-    this.status = 'In room';
+    enterRoom(this, roomId, playerId, opponentId);
   }
 
   /**
@@ -223,18 +147,14 @@ export class GameStateService {
    * @param {string} playerId
    */
   startRestore(roomId, playerId) {
-    this.phase = 'playing';
-    this.setFleetLocked(true);
-    this.roomId = roomId;
-    this.playerId = playerId;
-    this.status = 'Reconnecting...';
+    startRestore(this, roomId, playerId);
   }
 
   /**
    * @returns {boolean}
    */
   isRestoring() {
-    return this.status === 'Reconnecting...';
+    return isRestoring(this);
   }
 
   /**
@@ -245,55 +165,19 @@ export class GameStateService {
    *   game: unknown
    * }} room
    * @returns {{
-   *   shipCoordinatesById: Record<string, import('../map/game-view-model.js').Coordinate[]> | undefined
+   *   shipCoordinatesById: Record<string, import('./game-view-model.js').Coordinate[]> | undefined
    * } | undefined}
    */
   enterBattleRoom(room) {
-    if (!room.roomId || !room.playerId) {
-      this.roomUnavailable();
-      return undefined;
-    }
-
-    this.enterRoom(room.roomId, room.playerId, room.opponentId);
-    const shipCoordinatesById = this.receiveGameState(
-      room.game ?? this.pendingGame
-    );
-    this.pendingGame = undefined;
-    return { shipCoordinatesById };
+    return enterBattleRoom(this, room);
   }
 
   /**
    * @param {unknown} game
-   * @returns {Record<string, import('../map/game-view-model.js').Coordinate[]> | undefined}
+   * @returns {Record<string, import('./game-view-model.js').Coordinate[]> | undefined}
    */
   receiveGameState(game) {
-    if (!this.playerId) {
-      this.pendingGame = game;
-      return undefined;
-    }
-
-    const viewModel = gameViewModelFromState(game, this.playerId);
-    if (!viewModel) {
-      return undefined;
-    }
-
-    this.isMyTurn = viewModel.isMyTurn;
-    this.canStrike = this.phase === 'playing' && viewModel.isMyTurn;
-    this.status = viewModel.status;
-    this.fleetRows = rowsWithSunkState(
-      rowsFromTiles('fleetboard', viewModel.fleetTiles),
-      viewModel.sunkClusters
-    );
-    this.hitRows = rowsFromTiles('hitboard', viewModel.hitTiles);
-    return viewModel.shipCoordinatesById;
-  }
-
-  /**
-   * @param {unknown} game
-   * @returns {Record<string, import('../map/game-view-model.js').Coordinate[]> | undefined}
-   */
-  receiveBattleRoomGame(game) {
-    return this.receiveGameState(game);
+    return receiveGameState(this, game);
   }
 
   /**
@@ -301,40 +185,27 @@ export class GameStateService {
    * @returns {{ row: number, column: number } | undefined}
    */
   moveForStrike(tile) {
-    if (
-      this.phase !== 'playing' ||
-      !this.isMyTurn ||
-      tile.state === 'hit' ||
-      tile.state === 'miss'
-    ) {
-      return undefined;
-    }
-
-    return {
-      row: tile.row,
-      column: tile.column,
-    };
+    return moveForStrike(this, tile);
   }
 
   roomUnavailable() {
-    this.status = 'Room unavailable';
+    roomUnavailable(this);
   }
 
   opponentDisconnected() {
-    this.status = 'Opponent disconnected';
+    opponentDisconnected(this);
   }
 
   connectionError() {
-    this.status = 'connection_error';
+    connectionError(this);
   }
 
   /**
    * @param {string} reason
    */
   serverError(reason) {
-    this.status = reason;
+    serverError(this, reason);
   }
-
 }
 
 /**

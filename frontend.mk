@@ -1,4 +1,4 @@
-.PHONY: clean clean_build setup start build format lint check test
+.PHONY: clean clean_build setup start build format lint check unit-test unit-test-tap test
 
 # -----------------------------------------------------
 #  Configuration
@@ -84,6 +84,15 @@ lint:
 check:
 	@echo "$(INFO) Typechecking with tsc..."
 	@npx tsc --noEmit --pretty false
+	@$(MAKE) -f frontend.mk unit-test
+
+unit-test:
+	@echo "$(INFO) Running JS unit tests..."
+	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "tests/unit/**/*.test.js"
+
+unit-test-tap:
+	@echo "$(INFO) Running JS unit tests as TAP..."
+	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "tests/unit/**/*.test.js"
 
 # -----------------------------------------------------
 #  Testing

@@ -1,60 +1,16 @@
-<section class="player-panel">
-  <span ng-bind="$ctrl.gameState.playerLabel"></span>
-  <strong id="match-status">{{$ctrl.gameState.status}}</strong>
-</section>
+<game-status state="$ctrl.gameState"></game-status>
 
 <section id="map">
-  <board-grid
-    board-id="fleetboard"
-    tile-class="fleetboard-tile"
-    rows="$ctrl.gameState.fleetRows"
-    disabled="$ctrl.gameState.phase === 'playing'"
-  ></board-grid>
-  <board-grid
-    board-id="hitboard"
-    tile-class="hitboard-tile"
-    rows="$ctrl.gameState.hitRows"
-    hidden="$ctrl.gameState.phase !== 'playing'"
-    disabled="!$ctrl.gameState.canStrike"
-    on-tile-click="$ctrl.strike(tile)"
-  ></board-grid>
-  <div
-    id="fleet"
-    ng-class="{ 'room-active': $ctrl.gameState.phase === 'playing' }"
-  >
-    <div
-      class="place-holder"
-      ng-repeat="ship in $ctrl.gameState.fleet"
-      ng-attr-id="placeholder-{{ship.id}}"
-      ng-style="{ width: ship.placeholderWidth }"
-    >
-      <fleet-ship ship="ship"></fleet-ship>
-    </div>
-  </div>
+  <fleet-board state="$ctrl.gameState"></fleet-board>
+  <battle-board
+    state="$ctrl.gameState"
+    on-strike="$ctrl.strike(tile)"
+  ></battle-board>
 </section>
 
-<div id="setup-actions" ng-show="$ctrl.gameState.phase === 'setup'">
-  <button
-    id="ready"
-    ng-click="$ctrl.join()"
-    ng-disabled="!$ctrl.gameState.boardReady || $ctrl.gameState.phase !== 'setup'"
-  >
-    Ready
-  </button>
-
-  <button
-    id="random"
-    ng-disabled="$ctrl.gameState.phase !== 'setup'"
-    ng-click="$ctrl.random()"
-  >
-    Random
-  </button>
-
-  <button
-    id="reset"
-    ng-disabled="$ctrl.gameState.phase !== 'setup'"
-    ng-click="$ctrl.reset()"
-  >
-    Reset
-  </button>
-</div>
+<setup-actions
+  state="$ctrl.gameState"
+  on-ready="$ctrl.join()"
+  on-random="$ctrl.random()"
+  on-reset="$ctrl.reset()"
+></setup-actions>

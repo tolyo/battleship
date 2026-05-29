@@ -1,4 +1,10 @@
-import { GRID, MapTile } from '../game/constants.js';
+import { GRID, MapTile } from './constants.js';
+import {
+  fleetTileViews,
+  hitTileViews,
+  shipCoordinatesById,
+  sunkClusters,
+} from './board-view-model.js';
 
 /**
  * @typedef {'empty' | 'ship' | 'hit' | 'miss'} TileState
@@ -69,14 +75,6 @@ export function gameViewModelFromState(game, playerId) {
  */
 function isRecord(value) {
   return typeof value === 'object' && value !== null;
-}
-
-/**
- * @param {unknown} value
- * @returns {value is string}
- */
-function isShipCell(value) {
-  return typeof value === 'string' && /^[0-9]$/.test(value);
 }
 
 /**
@@ -195,190 +193,4 @@ function currentTurnIdFromGame(game) {
   }
 
   return undefined;
-}
-
-/**
- * @param {unknown[][]} board
- * @returns {BoardTileView[]}
- */
-function fleetTileViews(board) {
-  return tileViews(board, true);
-}
-
-/**
- * @param {unknown[][]} board
- * @returns {BoardTileView[]}
- */
-function hitTileViews(board) {
-  return tileViews(board, false);
-}
-
-/**
- * @param {unknown[][]} board
- * @param {boolean} revealShips
- * @returns {BoardTileView[]}
- */
-function tileViews(board, revealShips) {
-  return GRID.flatMap((row) =>
-    GRID.map((column) => {
-      const cell = board[row]?.[column];
-      if (isShipCell(cell) && revealShips) {
-        return {
-          row,
-          column,
-          state: /** @type {const} */ ('ship'),
-          shipId: cell,
-        };
-      }
-      if (cell === MapTile.HIT || cell === MapTile.BLOCKED) {
-        return { row, column, state: /** @type {const} */ ('hit') };
-      }
-      if (cell === MapTile.MISS || cell === 'x') {
-        return { row, column, state: /** @type {const} */ ('miss') };
-      }
-      return { row, column, state: /** @type {const} */ ('empty') };
-    })
-  );
-}
-
-/**
- * @param {unknown[][]} board
- * @returns {Record<string, Coordinate[]>}
- */
-function shipCoordinatesById(board) {
-  const coordinatesByShipId = /** @type {Record<string, Coordinate[]>} */ ({});
-
-  GRID.forEach((row) => {
-    GRID.forEach((column) => {
-      const cell = board[row]?.[column];
-      if (!isShipCell(cell)) {
-        return;
-      }
-
-      coordinatesByShipId[cell] ??= [];
-      coordinatesByShipId[cell].push({ row, column });
-    });
-  });
-
-  return coordinatesByShipId;
-}
-
-/**
- * @param {unknown[][]} board
- * @returns {SunkClusterView[]}
- */
-function sunkClusters(board) {
-  /** @type {Set<string>} */
-  const visited = new Set();
-  /** @type {SunkClusterView[]} */
-  const clusters = [];
-
-  GRID.forEach((row) => {
-    GRID.forEach((column) => {
-      if (
-        visited.has(tileKey(row, column)) ||
-        board[row]?.[column] !== MapTile.HIT
-      ) {
-        return;
-      }
-
-      const coordinates = collectHitCluster(board, row, column, visited);
-      if (!hasAdjacentShipCell(board, coordinates)) {
-        clusters.push({
-          coordinates,
-          orientation: clusterOrientation(coordinates),
-        });
-      }
-    });
-  });
-
-  return clusters;
-}
-
-/**
- * @param {unknown[][]} board
- * @param {number} startRow
- * @param {number} startColumn
- * @param {Set<string>} visited
- * @returns {Coordinate[]}
- */
-function collectHitCluster(board, startRow, startColumn, visited) {
-  /** @type {Coordinate[]} */
-  const cluster = [];
-  /** @type {Coordinate[]} */
-  const pending = [{ row: startRow, column: startColumn }];
-
-  while (pending.length > 0) {
-    const coordinate = pending.pop();
-    if (
-      coordinate &&
-      !visited.has(tileKey(coordinate.row, coordinate.column)) &&
-      board[coordinate.row]?.[coordinate.column] === MapTile.HIT
-    ) {
-      visited.add(tileKey(coordinate.row, coordinate.column));
-      cluster.push(coordinate);
-      adjacentCoordinates(coordinate.row, coordinate.column).forEach(
-        (adjacent) => {
-          if (board[adjacent.row]?.[adjacent.column] === MapTile.HIT) {
-            pending.push(adjacent);
-          }
-        }
-      );
-    }
-  }
-
-  return cluster;
-}
-
-/**
- * @param {unknown[][]} board
- * @param {Coordinate[]} cluster
- * @returns {boolean}
- */
-function hasAdjacentShipCell(board, cluster) {
-  return cluster.some((coordinate) =>
-    adjacentCoordinates(coordinate.row, coordinate.column).some((adjacent) =>
-      isShipCell(board[adjacent.row]?.[adjacent.column])
-    )
-  );
-}
-
-/**
- * @param {Coordinate[]} cluster
- * @returns {'horizontal' | 'vertical'}
- */
-function clusterOrientation(cluster) {
-  return cluster.length > 1 &&
-    cluster.every((coordinate) => coordinate.row === cluster[0].row)
-    ? 'horizontal'
-    : 'vertical';
-}
-
-/**
- * @param {number} row
- * @param {number} column
- * @returns {Coordinate[]}
- */
-function adjacentCoordinates(row, column) {
-  return [
-    { row: row - 1, column },
-    { row: row + 1, column },
-    { row, column: column - 1 },
-    { row, column: column + 1 },
-  ].filter(
-    (coordinate) =>
-      coordinate.row >= 0 &&
-      coordinate.row <= 9 &&
-      coordinate.column >= 0 &&
-      coordinate.column <= 9
-  );
-}
-
-/**
- * @param {number} row
- * @param {number} column
- * @returns {string}
- */
-function tileKey(row, column) {
-  return `${row}:${column}`;
 }

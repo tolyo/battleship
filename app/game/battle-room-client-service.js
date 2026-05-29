@@ -1,10 +1,11 @@
-import { decodeServerMessage } from '../map/server-message.js';
+import { decodeServerMessage } from './server-message.js';
 import {
   battleRoomEvent,
   lobbyUrl,
   moveMessage,
   restoreUrl,
 } from './game-protocol.js';
+import { SessionTimeout } from '../session/session-timeout.js';
 
 /**
  * @typedef {{
@@ -28,8 +29,7 @@ export class BattleRoomClientService {
     this.roomSession = roomSession;
     this.gameState = gameState;
     this.fleetLayout = fleetLayout;
-    /** @type {number | undefined} */
-    this.restoreTimer = undefined;
+    this.restoreTimeout = new SessionTimeout();
   }
 
   joinLobby() {
@@ -66,9 +66,10 @@ export class BattleRoomClientService {
       playerId,
     });
 
-    this.restoreTimer = window.setTimeout(() => {
-      this.restoreFailed(roomId, 'Room unavailable');
-    }, options.timeoutMs ?? 5000);
+    this.restoreTimeout.start(
+      () => this.restoreFailed(roomId, 'Room unavailable'),
+      options.timeoutMs ?? 5000
+    );
 
     return true;
   }
@@ -90,7 +91,7 @@ export class BattleRoomClientService {
   }
 
   close() {
-    this.clearRestoreTimer();
+    this.restoreTimeout.clear();
     this.session.close();
   }
 
@@ -105,7 +106,7 @@ export class BattleRoomClientService {
         }
       },
       onMessage: (data) => {
-        this.clearRestoreTimer();
+        this.restoreTimeout.clear();
         this.handleEvent(battleRoomEvent(decodeServerMessage(data)), context);
       },
       onClose: () => this.handleClose(context),
@@ -135,7 +136,7 @@ export class BattleRoomClientService {
     } else if (event.type === 'room_entered') {
       this.enterRoom(event.message, event.updateUrl);
     } else if (event.type === 'game_received') {
-      this.placeFleetShips(this.gameState.receiveBattleRoomGame(event.game));
+      this.placeFleetShips(this.gameState.receiveGameState(event.game));
     } else if (event.type === 'opponent_left') {
       this.gameState.opponentDisconnected();
     } else if (event.type === 'room_unavailable') {
@@ -146,7 +147,7 @@ export class BattleRoomClientService {
   }
 
   /**
-   * @param {import('../map/server-message.js').ServerMessage} message
+   * @param {import('./server-message.js').ServerMessage} message
    * @param {boolean} updateUrl
    */
   enterRoom(message, updateUrl) {
@@ -168,7 +169,7 @@ export class BattleRoomClientService {
   }
 
   /**
-   * @param {Record<string, import('../map/game-view-model.js').Coordinate[]> | undefined} shipCoordinatesById
+   * @param {Record<string, import('./game-view-model.js').Coordinate[]> | undefined} shipCoordinatesById
    */
   placeFleetShips(shipCoordinatesById) {
     if (shipCoordinatesById) {
@@ -225,12 +226,5 @@ export class BattleRoomClientService {
     this.roomSession.showHome();
     this.gameState.returnToSetup(status);
     this.close();
-  }
-
-  clearRestoreTimer() {
-    if (this.restoreTimer !== undefined) {
-      window.clearTimeout(this.restoreTimer);
-      this.restoreTimer = undefined;
-    }
   }
 }

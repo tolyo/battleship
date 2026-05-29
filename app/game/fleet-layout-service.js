@@ -32,7 +32,7 @@ export class FleetLayoutService {
   }
 
   /**
-   * @param {Record<string, import('../map/game-view-model.js').Coordinate[]>} shipCoordinatesById
+   * @param {Record<string, import('./game-view-model.js').Coordinate[]>} shipCoordinatesById
    */
   placeFleetShips(shipCoordinatesById) {
     this.fleetShips().forEach((fleetShip) => {
@@ -40,17 +40,8 @@ export class FleetLayoutService {
         return;
       }
 
-      const liveCoordinates = shipCoordinatesById[fleetShip.ship.id] ?? [];
-      const coordinates =
-        liveCoordinates.length > 0
-          ? liveCoordinates
-          : fleetShip.elementsBelow.map((tile) => ({
-              row: Number(tile.dataset.row),
-              column: Number(tile.dataset.column),
-            }));
-
       fleetShip.placeOnBoardCoordinates(
-        coordinates.filter(
+        (shipCoordinatesById[fleetShip.ship.id] ?? []).filter(
           (coordinate) =>
             Number.isInteger(coordinate.row) &&
             Number.isInteger(coordinate.column)

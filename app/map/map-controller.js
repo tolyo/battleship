@@ -1,4 +1,4 @@
-class MapController {
+export class MapController {
   static $inject = ['gameState', 'battleRoomClient', 'fleetSetup'];
 
   /**

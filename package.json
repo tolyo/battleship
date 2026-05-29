@@ -1,5 +1,6 @@
 {
   "private": true,
+  "type": "module",
   "scripts": {},
   "dependencies": {
     "@angular-wave/angular.ts": "0.29.2",
@@ -11,18 +12,20 @@
     "@rollup/plugin-commonjs": "latest",
     "@rollup/plugin-node-resolve": "latest",
     "@rollup/plugin-terser": "latest",
-    "chokidar": "latest",
-    "rollup": "latest",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",
+    "chokidar": "latest",
     "eslint": "latest",
     "eslint-config-airbnb-base": "latest",
     "eslint-config-prettier": "latest",
     "eslint-plugin-import": "latest",
+    "jasmine": "^6.2.0",
+    "jasmine-reporters": "^2.5.2",
     "lightningcss": "latest",
     "playwright": "latest",
     "prettier": "latest",
+    "rollup": "latest",
     "typescript": "latest"
   }
 }

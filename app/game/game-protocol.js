@@ -44,7 +44,7 @@ export function isRoomUnavailableReason(reason) {
  *   type: 'waiting'
  * } | {
  *   type: 'room_entered',
- *   message: import('../map/server-message.js').ServerMessage,
+ *   message: import('./server-message.js').ServerMessage,
  *   updateUrl: boolean
  * } | {
  *   type: 'game_received',
@@ -63,7 +63,7 @@ export function isRoomUnavailableReason(reason) {
  */
 
 /**
- * @param {import('../map/server-message.js').ServerMessage} message
+ * @param {import('./server-message.js').ServerMessage} message
  * @returns {BattleRoomEvent}
  */
 export function battleRoomEvent(message) {

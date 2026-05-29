@@ -1,7 +1,7 @@
 import { GRID, MapTile } from './constants.js';
 
 /**
- * @typedef {import('../map/game-view-model.js').BoardTileView & {
+ * @typedef {import('./game-view-model.js').BoardTileView & {
  *   boardName: string,
  *   dataState: string,
  *   sunk: boolean,
@@ -48,7 +48,7 @@ export function setupRowsFromDataState(dataState) {
 
 /**
  * @param {string} boardName
- * @param {import('../map/game-view-model.js').BoardTileView[]} tiles
+ * @param {import('./game-view-model.js').BoardTileView[]} tiles
  * @returns {BoardGridTile[][]}
  */
 export function rowsFromTiles(boardName, tiles) {
@@ -68,7 +68,7 @@ export function rowsFromTiles(boardName, tiles) {
 
 /**
  * @param {BoardGridTile[][]} rows
- * @param {import('../map/game-view-model.js').SunkClusterView[]} clusters
+ * @param {import('./game-view-model.js').SunkClusterView[]} clusters
  * @returns {BoardGridTile[][]}
  */
 export function rowsWithSunkState(rows, clusters) {
@@ -106,7 +106,7 @@ export function rowsWithSunkState(rows, clusters) {
 }
 
 /**
- * @param {import('../map/game-view-model.js').BoardTileView | undefined} tile
+ * @param {import('./game-view-model.js').BoardTileView | undefined} tile
  * @returns {string}
  */
 function dataStateForTile(tile) {
@@ -131,7 +131,7 @@ function dataStateForTile(tile) {
 
 /**
  * @param {string} boardName
- * @param {import('../map/game-view-model.js').BoardTileView} tile
+ * @param {import('./game-view-model.js').BoardTileView} tile
  * @param {string=} dataState
  * @returns {BoardGridTile}
  */

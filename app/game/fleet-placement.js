@@ -1,9 +1,9 @@
 import Fleet from './fleet.js';
 import { FLEET_SIZE, GRID, MapTile } from './constants.js';
-import { emptyBoardState } from '../map/board-state.js';
+import { emptyBoardState } from './board-state.js';
 
 /**
- * @param {Record<string, import('../map/game-view-model.js').Coordinate[]>} placements
+ * @param {Record<string, import('./game-view-model.js').Coordinate[]>} placements
  * @returns {{
  *   boardState: string[][],
  *   tileDataState: string[][],
@@ -56,7 +56,7 @@ export function boardStateFromPlacements(placements) {
 }
 
 /**
- * @param {Record<string, import('../map/game-view-model.js').Coordinate[]>} placements
+ * @param {Record<string, import('./game-view-model.js').Coordinate[]>} placements
  * @returns {boolean}
  */
 export function allFleetShipsPlaced(placements) {
@@ -65,11 +65,11 @@ export function allFleetShipsPlaced(placements) {
 }
 
 /**
- * @returns {Record<string, import('../map/game-view-model.js').Coordinate[]>}
+ * @returns {Record<string, import('./game-view-model.js').Coordinate[]>}
  */
 export function randomFleetPlacements() {
   const nextBoardState = emptyBoardState();
-  /** @type {Record<string, import('../map/game-view-model.js').Coordinate[]>} */
+  /** @type {Record<string, import('./game-view-model.js').Coordinate[]>} */
   const nextPlacements = {};
 
   Fleet.forEach((ship) => {
@@ -88,12 +88,17 @@ export function randomFleetPlacements() {
 }
 
 /**
- * @param {Record<string, import('../map/game-view-model.js').Coordinate[]>} placements
+ * @param {Record<string, import('./game-view-model.js').Coordinate[]>} placements
  * @param {string} shipId
- * @param {import('../map/game-view-model.js').Coordinate[]} coordinates
+ * @param {import('./game-view-model.js').Coordinate[]} coordinates
  * @returns {boolean}
  */
 export function canPlaceSetupShip(placements, shipId, coordinates) {
+  const ship = Fleet.find((candidate) => candidate.id === shipId);
+  if (!ship || coordinates.length !== ship.size) {
+    return false;
+  }
+
   const board = boardStateFromPlacements({
     ...placements,
     [shipId]: [],
@@ -103,8 +108,28 @@ export function canPlaceSetupShip(placements, shipId, coordinates) {
 }
 
 /**
+ * @param {string} row
+ * @param {string} column
+ * @param {'VERTICAL' | 'HORIZONTAL'} orientation
+ * @param {number} size
+ * @returns {import('./game-view-model.js').Coordinate[]}
+ */
+export function shipCoordinatesFromStart(row, column, orientation, size) {
+  const y = parseInt(row, 10);
+  const x = parseInt(column, 10);
+  if (!Number.isInteger(y) || !Number.isInteger(x)) {
+    return [];
+  }
+
+  return GRID.slice(0, size).map((offset) => ({
+    row: orientation === 'VERTICAL' ? y + offset : y,
+    column: orientation === 'HORIZONTAL' ? x + offset : x,
+  }));
+}
+
+/**
  * @param {unknown} coordinate
- * @returns {coordinate is import('../map/game-view-model.js').Coordinate}
+ * @returns {coordinate is import('./game-view-model.js').Coordinate}
  */
 function isCoordinate(coordinate) {
   return (
@@ -121,7 +146,7 @@ function isCoordinate(coordinate) {
 
 /**
  * @param {string[][]} boardState
- * @param {import('../map/game-view-model.js').Coordinate[]} coordinates
+ * @param {import('./game-view-model.js').Coordinate[]} coordinates
  * @returns {boolean}
  */
 function canPlaceOnBoard(boardState, coordinates) {
@@ -146,7 +171,7 @@ function canPlaceOnBoard(boardState, coordinates) {
 
 /**
  * @param {number} size
- * @returns {import('../map/game-view-model.js').Coordinate[]}
+ * @returns {import('./game-view-model.js').Coordinate[]}
  */
 function randomShipCoordinates(size) {
   const orientation = Math.round(Math.random()) > 0 ? 'HORIZONTAL' : 'VERTICAL';
@@ -164,7 +189,7 @@ function randomShipCoordinates(size) {
 /**
  * @param {number} size
  * @param {string[][]} boardState
- * @returns {import('../map/game-view-model.js').Coordinate[] | undefined}
+ * @returns {import('./game-view-model.js').Coordinate[] | undefined}
  */
 function findRandomShipPlacement(size, boardState) {
   return Array.from({ length: 1000 }, () => randomShipCoordinates(size)).find(

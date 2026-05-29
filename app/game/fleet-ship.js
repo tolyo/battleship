@@ -1,15 +1,20 @@
-import { GRID_SIZE } from './constants.js';
+import {
+  alignElementTo,
+  coordinatesFromElements,
+  elementPagePosition,
+  fleetBoardTileAt,
+  fleetBoardTileFromPoint,
+  fleetBoardTilesForShip,
+  orientationFromCoordinates,
+  setElementPosition,
+  shipElementSize,
+  sortedCoordinates,
+  tileDataset,
+} from './fleet-ship-geometry.js';
+import { shipCoordinatesFromStart } from './fleet-placement.js';
 
 /**
  * @typedef {'VERTICAL' | 'HORIZONTAL'} ShipOrientation
- */
-
-/**
- * @typedef {{ row: number, column: number }} ShipCoordinate
- */
-
-/**
- * @typedef {{ width: string, height: string }} ShipElementSize
  */
 
 export class FleetShipController {
@@ -24,7 +29,7 @@ export class FleetShipController {
     this.$element = $element;
     this.gameState = gameState;
     this.fleetLayout = fleetLayout;
-    /** @type {import('./ship.js').default | undefined} */
+    /** @type {import('./fleet.js').FleetShip | undefined} */
     this.ship = undefined;
     /** @type {HTMLElement | undefined} */
     this.placeHolder = undefined;
@@ -34,15 +39,12 @@ export class FleetShipController {
     this.elementsBelow = [];
     /** @type {ShipOrientation} */
     this.orientation = 'HORIZONTAL';
-    this.locked = false;
     this.dragging = false;
     /** @type {number | undefined} */
     this.activePointerId = undefined;
     this.firstMove = false;
     this.shiftX = 0;
     this.shiftY = 0;
-    /** @type {(() => void) | undefined} */
-    this.unsubscribeFleetLock = undefined;
     /** @type {(() => void) | undefined} */
     this.unregisterFleetShip = undefined;
     /** @type {(() => void) | undefined} */
@@ -66,9 +68,6 @@ export class FleetShipController {
     this.placeHolder = placeHolder;
     this.shipElement = shipElement;
     this.setRotation();
-    this.unsubscribeFleetLock = this.gameState.subscribeFleetLock((locked) => {
-      this.setLocked(locked);
-    });
     this.unregisterFleetShip = this.fleetLayout.registerFleetShip(this);
 
     this.setOnPlaceholder();
@@ -105,8 +104,7 @@ export class FleetShipController {
     this.setRotation();
     const shipElement = this.getShipElement();
     const placeHolder = this.getPlaceHolder();
-    shipElement.style.left = `${placeHolder.getBoundingClientRect().left + window.scrollX}px`;
-    shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
+    alignElementTo(shipElement, placeHolder);
   }
 
   realignToLayout() {
@@ -115,14 +113,12 @@ export class FleetShipController {
 
     if (this.elementsBelow.length > 0) {
       const firstTile = this.elementsBelow[0];
-      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
-      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
+      alignElementTo(shipElement, firstTile);
       return;
     }
 
     const placeHolder = this.getPlaceHolder();
-    shipElement.style.left = `${placeHolder.getBoundingClientRect().left + window.scrollX}px`;
-    shipElement.style.top = `${placeHolder.getBoundingClientRect().top + window.scrollY}px`;
+    alignElementTo(shipElement, placeHolder);
   }
 
   scheduleRealign() {
@@ -145,20 +141,11 @@ export class FleetShipController {
       return;
     }
 
-    const sorted = [...coordinates].sort((left, right) =>
-      left.row === right.row ? left.column - right.column : left.row - right.row
-    );
-    const sameRow = sorted.every(
-      (coordinate) => coordinate.row === sorted[0].row
-    );
-    this.orientation = sameRow ? 'HORIZONTAL' : 'VERTICAL';
+    const sorted = sortedCoordinates(coordinates);
+    this.orientation = orientationFromCoordinates(sorted);
     this.setRotation();
     this.elementsBelow = sorted
-      .map((coordinate) =>
-        document.getElementById(
-          `fleetboard-${coordinate.row}-${coordinate.column}`
-        )
-      )
+      .map((coordinate) => fleetBoardTileAt(coordinate))
       .filter((tile) => tile instanceof HTMLElement);
 
     const firstTile = this.elementsBelow[0];
@@ -169,22 +156,21 @@ export class FleetShipController {
     }
 
     shipElement.hidden = false;
-    shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
-    shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
+    alignElementTo(shipElement, firstTile);
   }
 
   onDoubleClick() {
     if (
       !this.ship ||
-      this.locked ||
+      this.gameState.fleetLocked ||
       this.ship.size === 1 ||
       this.elementsBelow.length === 0
     ) {
       return;
     }
 
-    const { row, column } = this.elementsBelow[0].dataset;
-    if (!row || !column) {
+    const tile = tileDataset(this.elementsBelow[0]);
+    if (!tile) {
       return;
     }
 
@@ -193,12 +179,16 @@ export class FleetShipController {
     );
     this.clearMapBlocks();
 
-    if (this.isLegal(row, column, this.getOppositeOrientation())) {
+    if (this.isLegal(tile.row, tile.column, this.getOppositeOrientation())) {
       this.orientation = this.getOppositeOrientation();
       this.setRotation();
     }
 
-    this.elementsBelow = this.getElementsBelow(row, column, this.orientation);
+    this.elementsBelow = this.getElementsBelow(
+      tile.row,
+      tile.column,
+      this.orientation
+    );
     this.claimTiles();
   }
 
@@ -258,7 +248,7 @@ export class FleetShipController {
    * @returns {boolean}
    */
   startDrag(event) {
-    if (!this.ship || this.locked) {
+    if (!this.ship || this.gameState.fleetLocked) {
       return false;
     }
     if (event.button !== undefined && event.button !== 0) {
@@ -286,21 +276,18 @@ export class FleetShipController {
     const x = Math.floor(event.pageX - this.shiftX);
     const y = Math.floor(event.pageY - this.shiftY);
     const shipElement = this.getShipElement();
-    shipElement.style.left = `${x}px`;
-    shipElement.style.top = `${y}px`;
+    setElementPosition(shipElement, { left: x, top: y });
     shipElement.hidden = true;
 
-    const elementBelow = /** @type {HTMLElement | null} */ (
-      document.elementFromPoint(x + 15, y + 15)
-    );
+    const elementBelow = fleetBoardTileFromPoint(x, y);
     this.resetElementsBelow();
 
-    if (elementBelow?.classList?.contains('fleetboard-tile')) {
-      const { row, column } = elementBelow.dataset;
-      if (row && column && this.isLegal(row, column, this.orientation)) {
+    if (elementBelow) {
+      const tile = tileDataset(elementBelow);
+      if (tile && this.isLegal(tile.row, tile.column, this.orientation)) {
         this.elementsBelow = this.getElementsBelow(
-          row,
-          column,
+          tile.row,
+          tile.column,
           this.orientation
         );
         this.elementsBelow.forEach((element) =>
@@ -320,8 +307,7 @@ export class FleetShipController {
 
     if (this.elementsBelow.length > 0) {
       const firstTile = this.elementsBelow[0];
-      shipElement.style.left = `${firstTile.getBoundingClientRect().left + window.scrollX}px`;
-      shipElement.style.top = `${firstTile.getBoundingClientRect().top + window.scrollY}px`;
+      alignElementTo(shipElement, firstTile);
       this.claimTiles();
     } else {
       this.setOnPlaceholder();
@@ -329,30 +315,10 @@ export class FleetShipController {
   }
 
   setRotation() {
-    const { width, height } = this.calculateSize();
+    const { width, height } = shipElementSize(this.ship, this.orientation);
     const shipElement = this.getShipElement();
     shipElement.style.width = width;
     shipElement.style.height = height;
-  }
-
-  /**
-   * @returns {ShipElementSize}
-   */
-  calculateSize() {
-    if (!this.ship) {
-      return { width: `${GRID_SIZE}px`, height: `${GRID_SIZE}px` };
-    }
-
-    return {
-      width:
-        this.orientation === 'HORIZONTAL'
-          ? `${GRID_SIZE * this.ship.size}px`
-          : `${GRID_SIZE}px`,
-      height:
-        this.orientation === 'VERTICAL'
-          ? `${GRID_SIZE * this.ship.size}px`
-          : `${GRID_SIZE}px`,
-    };
   }
 
   /**
@@ -373,27 +339,7 @@ export class FleetShipController {
       return [];
     }
 
-    /** @type {HTMLElement[]} */
-    const elementsBelow = [];
-    const y = parseInt(row, 10);
-    const x = parseInt(column, 10);
-    if (orientation === 'HORIZONTAL') {
-      for (let i = x; i < x + this.ship.size; i += 1) {
-        const tile = document.getElementById(`fleetboard-${y}-${i}`);
-        if (tile instanceof HTMLElement) {
-          elementsBelow.push(tile);
-        }
-      }
-    } else {
-      for (let i = y; i < y + this.ship.size; i += 1) {
-        const tile = document.getElementById(`fleetboard-${i}-${x}`);
-        if (tile instanceof HTMLElement) {
-          elementsBelow.push(tile);
-        }
-      }
-    }
-
-    return elementsBelow;
+    return fleetBoardTilesForShip(row, column, orientation, this.ship.size);
   }
 
   /**
@@ -407,25 +353,9 @@ export class FleetShipController {
       return false;
     }
 
-    const y = parseInt(row, 10);
-    const x = parseInt(column, 10);
-    if (!Number.isInteger(y) || !Number.isInteger(x)) {
-      return false;
-    }
-
-    const maxOffset = this.ship.size - 1;
-    if (
-      (orientation === 'HORIZONTAL' && x + maxOffset >= 10) ||
-      (orientation === 'VERTICAL' && y + maxOffset >= 10)
-    ) {
-      return false;
-    }
-
     return this.gameState.canPlaceSetupShip(
       this.ship.id,
-      this.coordinatesFromElements(
-        this.getElementsBelow(row, column, orientation)
-      )
+      shipCoordinatesFromStart(row, column, orientation, this.ship.size)
     );
   }
 
@@ -447,11 +377,7 @@ export class FleetShipController {
   }
 
   getShipCoordinates() {
-    const box = this.getShipElement().getBoundingClientRect();
-    return {
-      left: box.left + window.scrollX,
-      top: box.top + window.scrollY,
-    };
+    return elementPagePosition(this.getShipElement());
   }
 
   claimTiles() {
@@ -461,41 +387,14 @@ export class FleetShipController {
     if (this.ship) {
       this.gameState.placeSetupShip(
         this.ship.id,
-        this.coordinatesFromElements(this.elementsBelow)
+        coordinatesFromElements(this.elementsBelow)
       );
     }
-  }
-
-  /**
-   * @param {HTMLElement[]} elements
-   * @returns {ShipCoordinate[]}
-   */
-  coordinatesFromElements(elements) {
-    return elements
-      .map((element) => ({
-        row: Number(element.dataset.row),
-        column: Number(element.dataset.column),
-      }))
-      .filter(
-        (coordinate) =>
-          Number.isInteger(coordinate.row) &&
-          Number.isInteger(coordinate.column)
-      );
-  }
-
-  /**
-   * @param {boolean} locked
-   */
-  setLocked(locked) {
-    this.locked = locked;
-    this.shipElement?.classList.toggle('locked', locked);
-    this.shipElement?.setAttribute('aria-disabled', locked ? 'true' : 'false');
   }
 
   $onDestroy() {
     this.dragging = false;
     this.activePointerId = undefined;
-    this.unsubscribeFleetLock?.();
     this.unregisterFleetShip?.();
     if (this.resizeHandler) {
       window.removeEventListener('resize', this.resizeHandler);
@@ -510,7 +409,8 @@ export default {
   template: `
     <div
       class="ship"
-      ng-class="{ locked: $ctrl.locked }"
+      ng-class="{ locked: $ctrl.gameState.fleetLocked }"
+      ng-attr-aria-disabled="{{$ctrl.gameState.fleetLocked ? 'true' : 'false'}}"
       ng-attr-id="{{$ctrl.ship.id}}"
       ng-on-pointerdown="$ctrl.onPointerDown($event)"
       ng-on-pointermove="$ctrl.onPointerMove($event)"

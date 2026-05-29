@@ -23,4 +23,14 @@ module.exports = {
     'import/prefer-default-export': 'off',
     'no-param-reassign': 'off',
   },
+  overrides: [
+    {
+      files: ['tests/unit/**/*.test.js'],
+      env: {
+        jasmine: true,
+        browser: false,
+        node: true,
+      },
+    },
+  ],
 };

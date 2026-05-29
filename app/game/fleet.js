@@ -1,22 +1,39 @@
-import Ship from './ship.js';
+import { GRID_SIZE } from './constants.js';
 
 /**
- * @type {Ship[]}
+ * @typedef {{ id: string, size: number, placeholderWidth: string }} FleetShip
+ */
+
+/**
+ * @type {FleetShip[]}
  */
 export default [
-  new Ship('0', 4),
+  ship('0', 4),
 
-  new Ship('1', 3),
-  new Ship('2', 3),
+  ship('1', 3),
+  ship('2', 3),
 
   // 3 destroyers
-  new Ship('3', 2),
-  new Ship('4', 2),
-  new Ship('5', 2),
+  ship('3', 2),
+  ship('4', 2),
+  ship('5', 2),
 
   // 4 torpedo boats
-  new Ship('6', 1),
-  new Ship('7', 1),
-  new Ship('8', 1),
-  new Ship('9', 1),
+  ship('6', 1),
+  ship('7', 1),
+  ship('8', 1),
+  ship('9', 1),
 ];
+
+/**
+ * @param {string} id
+ * @param {number} size
+ * @returns {FleetShip}
+ */
+function ship(id, size) {
+  return Object.freeze({
+    id,
+    size,
+    placeholderWidth: `${size * GRID_SIZE}px`,
+  });
+}
