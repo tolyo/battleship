@@ -2,7 +2,7 @@
     {description, "An OTP application"},
     {vsn, "0.1.0"},
     {registered, []},
-    {mod, {battleship_app, []}},
+    {mod, {app, []}},
     {applications, [
         kernel,
         stdlib,
@@ -12,7 +12,9 @@
         jose,
         pooler
     ]},
-    {env, []},
+    {env, [
+        {rulesets, [{<<"battleship">>, battleship_rules}]}
+    ]},
     {modules, []},
 
     {licenses, ["Apache-2.0"]},

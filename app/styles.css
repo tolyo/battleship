@@ -24,6 +24,6 @@
 /* Submodules */
 @import './dashboard/dashboard.css';
 @import './map/map.css';
-@import './game/ship.css';
+@import './game/components/unit.css';
 @import './register/register.css';
 @import './login/login.css';

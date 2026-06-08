@@ -1,7 +1,6 @@
 -module(battleship_board_test).
 
 -include_lib("eunit/include/eunit.hrl").
--import(battleship_board, [init_board/0, is_legal/2]).
 
 init_board_test() ->
     [

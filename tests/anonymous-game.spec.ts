@@ -14,17 +14,17 @@ async function joinAnonymousGame(player: Player) {
   await player.page.getByRole('button', { name: 'Random' }).click();
   await expect(player.page.locator('#ready')).toBeEnabled();
   await player.page.getByRole('button', { name: 'Ready' }).click();
-  await expect(player.page.locator('#hitboard')).toBeVisible();
+  await expect(player.page.locator('#target-board')).toBeVisible();
 }
 
 async function status(player: Player) {
   return player.page.locator('#match-status').textContent();
 }
 
-async function hitboardEnabled(player: Player) {
+async function targetBoardEnabled(player: Player) {
   return player.page
-    .locator('#hitboard')
-    .evaluate((hitboard) => !hitboard.classList.contains('disabled'));
+    .locator('#target-board')
+    .evaluate((targetBoard) => !targetBoard.classList.contains('disabled'));
 }
 
 async function waitForInitialTurns(players: Player[]) {
@@ -40,13 +40,13 @@ async function activePlayer(players: Player[]) {
         return 2;
       }
 
-      const enabled = await Promise.all(players.map(hitboardEnabled));
+      const enabled = await Promise.all(players.map(targetBoardEnabled));
       return enabled.filter(Boolean).length === 1 ? 1 : 0;
     })
     .toBeGreaterThan(0);
 
   for (const player of players) {
-    if (await hitboardEnabled(player)) {
+    if (await targetBoardEnabled(player)) {
       return player;
     }
   }
@@ -67,7 +67,7 @@ async function clickNextRowMajorTarget(player: Player) {
   const row = Math.floor(player.nextShot / GRID_SIZE);
   const column = player.nextShot % GRID_SIZE;
   player.nextShot += 1;
-  await player.page.locator(`#hitboard-${row}-${column}`).click();
+  await player.page.locator(`#target-board-${row}-${column}`).click();
 }
 
 test.describe('anonymous game', () => {

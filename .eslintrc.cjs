@@ -25,7 +25,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['tests/unit/**/*.test.js'],
+      files: ['app/**/*.test.js'],
       env: {
         jasmine: true,
         browser: false,

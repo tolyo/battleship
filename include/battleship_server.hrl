@@ -1,1 +1,0 @@
--define(AUTH_COOKIE, <<"SEC_USER">>).

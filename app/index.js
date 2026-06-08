@@ -1,23 +1,25 @@
 import { angular } from '@angular-wave/angular.ts';
-import mapComponent from './map/map-controller.js';
+import setupPageComponent from './map/setup-page-controller.js';
 import registerComponent from './register/register.js';
 import loginComponent from './login/login.js';
 import appConfig from './configuration.js';
 import dashboardComponent from './dashboard/dashboard.js';
-import roomComponent from './gameroom/room.js';
+import roomComponent from './room-page/room.js';
 import { HeaderController } from './layout/header-ctrl.js';
-import { GameStateService } from './game/game-state-service.js';
-import { BattleRoomClientService } from './game/battle-room-client-service.js';
-import { FleetLayoutService } from './game/fleet-layout-service.js';
-import { FleetSetupService } from './game/fleet-setup-service.js';
-import fleetShipComponent from './game/fleet-ship.js';
-import battleBoardComponent from './map/battle-board.js';
-import boardGridComponent from './map/board-grid.js';
-import fleetBoardComponent from './map/fleet-board.js';
-import gameStatusComponent from './map/game-status.js';
-import setupActionsComponent from './map/setup-actions.js';
-import { SessionService } from './session/session-service.js';
-import { RoomSessionService } from './room/room-session-service.js';
+import { MatchStateService } from './game/services/match-state-service.js';
+import { RoomClientService } from './game/services/room-client-service.js';
+import { SetupService } from './game/services/setup-service.js';
+import { TargetService } from './game/services/target-service.js';
+import { MatchViewService } from './game/services/match-view-service.js';
+import { RoomEntryService } from './game/services/room-entry-service.js';
+import unitComponent from './game/components/unit.js';
+import targetBoardComponent from './game/components/target-board.js';
+import boardGridComponent from './game/components/board-grid.js';
+import boardComponent from './game/components/board.js';
+import statusPanelComponent from './game/components/status-panel.js';
+import setupControlsComponent from './game/components/setup-controls.js';
+import { ConnectionService } from './transport/connection-service.js';
+import { RoomStoreService } from './room-store/room-store-service.js';
 
 angular
   .module('battleship', [])
@@ -58,27 +60,29 @@ angular
         .state({
           name: 'home',
           url: '/',
-          component: 'fleetSetup',
+          component: 'setupPage',
         });
     },
   ])
-  .service('gameState', GameStateService)
-  .service('session', SessionService)
-  .service('roomSession', RoomSessionService)
-  .service('fleetLayout', FleetLayoutService)
-  .service('fleetSetup', FleetSetupService)
-  .service('battleRoomClient', BattleRoomClientService)
+  .service('matchState', MatchStateService)
+  .service('connection', ConnectionService)
+  .service('roomStore', RoomStoreService)
+  .service('setup', SetupService)
+  .service('target', TargetService)
+  .service('matchView', MatchViewService)
+  .service('roomEntry', RoomEntryService)
+  .service('roomClient', RoomClientService)
   .controller('HeaderController', HeaderController)
-  .component('battleBoard', battleBoardComponent)
+  .component('targetBoard', targetBoardComponent)
   .component('boardGrid', boardGridComponent)
   .component('dashboard', dashboardComponent)
-  .component('fleetBoard', fleetBoardComponent)
-  .component('fleetShip', fleetShipComponent)
-  .component('fleetSetup', mapComponent)
-  .component('gameStatus', gameStatusComponent)
+  .component('board', boardComponent)
+  .component('unit', unitComponent)
+  .component('setupPage', setupPageComponent)
+  .component('statusPanel', statusPanelComponent)
   .component('login', loginComponent)
   .component('room', roomComponent)
   .component('register', registerComponent)
-  .component('setupActions', setupActionsComponent);
+  .component('setupControls', setupControlsComponent);
 
 angular.bootstrap(document, ['battleship']);

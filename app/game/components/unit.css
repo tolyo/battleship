@@ -1,0 +1,47 @@
+.unit {
+  box-sizing: border-box;
+  border: #7f881a 2px solid;
+  background-color: rgb(240 255 32 / 70%);
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  z-index: 1000;
+  touch-action: none;
+  user-select: none;
+}
+
+.unit.locked {
+  cursor: default;
+}
+
+.unit.locked > span,
+.unit.disabled > span {
+  cursor: default;
+}
+
+.unit.killed {
+  border: #8d2124 2px solid;
+}
+
+.unit span {
+  background: white;
+  opacity: 0.2;
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: pointer;
+}
+
+.unit.dragged {
+  background-color: rgb(240 255 32 / 85%);
+  border: 2px solid #02ff00;
+  pointer-events: none;
+}
+
+.unit.error {
+  animation: shake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  border: #f4363f 2px solid;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

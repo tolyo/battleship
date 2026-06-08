@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {},
   "dependencies": {
-    "@angular-wave/angular.ts": "0.29.2",
+    "@angular-wave/angular.ts": "0.30.0",
     "modern-normalize": "latest",
     "pollen-css": "latest"
   },

@@ -1,16 +1,29 @@
-<game-status state="$ctrl.gameState"></game-status>
+<status-panel
+  player-label="$ctrl.state.playerLabel"
+  status="$ctrl.state.status"
+></status-panel>
 
 <section id="map">
-  <fleet-board state="$ctrl.gameState"></fleet-board>
-  <battle-board
-    state="$ctrl.gameState"
-    on-strike="$ctrl.strike(tile)"
-  ></battle-board>
+  <board
+    rows="$ctrl.state.ownRows"
+    disabled="$ctrl.state.unitsLocked"
+    active="$ctrl.state.isPlaying"
+    units="$ctrl.state.units"
+    unit-placements="$ctrl.state.unitPlacements"
+    setup-active="$ctrl.state.isSetup"
+  ></board>
+  <target-board
+    rows="$ctrl.state.targetRows"
+    hidden="!$ctrl.state.isPlaying"
+    disabled="!$ctrl.state.canSubmitMove"
+    on-submit="$ctrl.roomClient.submitMove(tile)"
+  ></target-board>
 </section>
 
-<setup-actions
-  state="$ctrl.gameState"
-  on-ready="$ctrl.join()"
-  on-random="$ctrl.random()"
-  on-reset="$ctrl.reset()"
-></setup-actions>
+<setup-controls
+  setup-active="$ctrl.state.isSetup"
+  board-ready="$ctrl.state.boardReady"
+  on-ready="$ctrl.roomClient.joinLobby()"
+  on-random="$ctrl.setup.randomize()"
+  on-reset="$ctrl.setup.reset()"
+></setup-controls>

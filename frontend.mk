@@ -88,11 +88,11 @@ check:
 
 unit-test:
 	@echo "$(INFO) Running JS unit tests..."
-	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "tests/unit/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "app/**/*.test.js"
 
 unit-test-tap:
 	@echo "$(INFO) Running JS unit tests as TAP..."
-	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "tests/unit/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "app/**/*.test.js"
 
 # -----------------------------------------------------
 #  Testing
