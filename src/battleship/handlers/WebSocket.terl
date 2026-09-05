@@ -1,0 +1,40 @@
+/**
+ * WebSocket callbacks for `/ws`.
+ */
+module battleship.handlers.WebSocket.
+
+import battleship.model.server.{GameSession, RoomProtocol, RoomSession}.
+import std.core.Unit.
+
+pub waiting(): String ->
+    RoomProtocol.lobby_waiting_json().
+
+pub peer_left(): String ->
+    RoomProtocol.opponent_left_json().
+
+pub inbound(
+    state: String,
+    role: Int,
+    frame: String,
+    first_request: String,
+    second_request: String,
+): {String, String, String} ->
+    GameSession.transition(state, role, frame, first_request, second_request).
+
+pub cancelled(_reason: String): Unit ->
+    Unit.
+
+pub matched(room_id: String, role: Int, _first_request: String, _second_request: String): String ->
+    if {
+        role == 1 -> RoomSession.first_player_match_message(room_id);
+        true -> RoomSession.second_player_match_message(room_id)
+    }.
+
+pub restored(
+    room_id: String,
+    state: String,
+    role: Int,
+    first_request: String,
+    second_request: String,
+): String ->
+    GameSession.restored_json(room_id, state, role, first_request, second_request).

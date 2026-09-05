@@ -1,0 +1,71 @@
+module battleship.model.server.account_test.
+
+import battleship.model.server.Account.
+import std.core.Option.{None, Some}.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub form_value_finds_second_pair(): Bool ->
+    assert_equal(
+        Some("secret"),
+        Account.form_value("email=ada@example.com&password=secret", "password"),
+    ).
+
+@test
+pub login_form_requires_email_and_password(): Bool ->
+    assert_equal(false, Account.login_form_valid("email=ada@example.com")).
+
+@test
+pub login_form_accepts_credentials(): Bool ->
+    assert(Account.login_form_valid("email=ada@example.com&password=secret")).
+
+@test
+pub register_form_rejects_password_mismatch(): Bool ->
+    assert_equal(
+        false,
+        Account.register_form_valid(
+            "username=ada&email=ada@example.com&password=secret&repeatpassword=other",
+        ),
+    ).
+
+@test
+pub register_form_rejects_invalid_email(): Bool ->
+    assert_equal(
+        false,
+        Account.register_form_valid(
+            "username=ada&email=not-an-email&password=secret&repeatpassword=secret",
+        ),
+    ).
+
+@test
+pub register_form_rejects_email_with_second_at_sign(): Bool ->
+    assert_equal(
+        false,
+        Account.register_form_valid(
+            "username=ada&email=ada@example@com&password=secret&repeatpassword=secret",
+        ),
+    ).
+
+@test
+pub register_form_accepts_matching_passwords(): Bool ->
+    assert(
+        Account.register_form_valid(
+            "username=ada&email=ada@example.com&password=secret&repeatpassword=secret",
+        ),
+    ).
+
+@test
+pub credential_database_guard_requires_a_password(): Bool ->
+    assert_equal(false, Account.credentials_valid("email=missing@example.com")).
+
+@test
+pub existing_user_database_guard_requires_an_email(): Bool ->
+    assert_equal(false, Account.user_exists("username=missing")).
+
+@test
+pub create_user_database_guard_requires_an_email(): Bool ->
+    assert_equal(None, Account.create_user_id("username=missing")).
+
+@test
+pub create_user_database_guard_requires_a_password(): Bool ->
+    assert_equal(None, Account.create_user_id("username=missing&email=missing@example.com")).

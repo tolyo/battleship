@@ -1,0 +1,22 @@
+/**
+ * Room protocol handler for `GET /api/room/protocol`.
+ */
+module battleship.handlers.Room.
+
+import battleship.JsonText.{stringify}.
+import battleship.model.server.{RoomProtocol, RoomSession}.
+import std.data.Json.
+import std.http.Response.
+
+import type std.http.{Request, Response}.
+
+pub contract_json(): String ->
+    Json.object()
+    .put("protocol", Json.string(RoomProtocol.protocol()))
+    .put("route", Json.string(RoomProtocol.route()))
+    .put("firstPlayerId", Json.string(RoomSession.first_player_id()))
+    .put("secondPlayerId", Json.string(RoomSession.second_player_id()))
+    |> stringify().
+
+pub protocol(_request: Request): Response ->
+    Response.json_text(contract_json()).

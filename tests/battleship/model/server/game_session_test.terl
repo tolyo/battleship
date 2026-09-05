@@ -1,0 +1,105 @@
+module battleship.model.server.game_session_test.
+
+import battleship.model.game.{Board, Match}.
+import battleship.model.server.GameSession.
+import std.collections.List.
+import std.core.String.
+import std.test.Test.{assert, assert_equal}.
+
+import type battleship.model.game.{Cell, Player}.
+
+@test
+pub accepted_move_is_retained_in_opaque_history(): Bool ->
+    let {state, first, second} = GameSession.transition("", 1, "{\"type\":\"move\",\"row\":0,\"column\":0}", "/ws", "/ws");
+    assert_equal("1,0,0", state)
+        and assert(first.contains("\"type\":\"room_update\""))
+        and assert(second.contains("\"type\":\"room_update\""))
+        and assert(first.contains("\"opponent\""))
+        and assert(second.contains("\"own_player\""))
+        and assert(second.contains("\"+\"")).
+
+@test
+pub invalid_followup_preserves_prior_state_and_addresses_sender_only(): Bool ->
+    let {state, _first, _second} = GameSession.transition("", 1, "{\"type\":\"move\",\"row\":0,\"column\":0}", "/ws", "/ws");
+    let {next, first_error, second_error} = GameSession.transition(state, 2, "{\"type\":\"move\",\"row\":1,\"column\":1}", "/ws", "/ws");
+    assert_equal(state, next)
+        and assert_equal("", first_error)
+        and assert(second_error.contains("action_not_allowed")).
+
+@test
+pub malformed_frame_does_not_mutate_pair_state(): Bool ->
+    let {state, first_error, second_error} = GameSession.transition("", 1, "{}", "/ws", "/ws");
+    assert_equal("", state)
+        and assert(first_error.contains("invalid_payload"))
+        and assert_equal("", second_error).
+
+@test
+pub replay_restores_the_initial_turn(): Bool ->
+    GameSession.replay("")
+    |> Match.allowed_to_move("player-1")
+    |> assert().
+
+@test
+pub consecutive_peer_moves_replay_from_retained_pair_history(): Bool ->
+    let {first_state, _first_view, _second_view} = GameSession.transition("", 1, "{\"type\":\"move\",\"row\":5,\"column\":5}", "/ws", "/ws");
+    let {second_state, first_view, second_view} =
+        GameSession.transition(
+            first_state,
+            2,
+            "{\"type\":\"move\",\"row\":4,\"column\":4}",
+            "/ws",
+            "/ws",
+        );
+    assert_equal("1,5,5;2,4,4", second_state)
+        and assert(first_view.contains("room_update"))
+        and assert(second_view.contains("room_update")).
+
+@test
+pub request_board_is_used_to_initialize_each_player(): Bool ->
+    let empty = "[\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\"]";
+    let final = "[\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"_\",\"7\"]";
+    let board =
+        "["
+        |> List(
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    empty,
+    ",",
+    final,
+    "]",
+)
+        |> String.concat();
+    let request =
+        "/ws?board="
+        |> List(board)
+        |> String.concat();
+    let match = GameSession.replay_requests("", request, request);
+    let player = Match.get_player_by_id(match, "player-2");
+    assert_equal(7, last_board_cell(player).value).
+
+@test
+pub restored_view_replays_history_for_the_reclaimed_role(): Bool ->
+    let payload = GameSession.restored_json("room-7", "1,0,0", 2, "/ws", "/ws");
+    assert(payload.contains("\"type\":\"room_joined\""))
+        and assert(payload.contains("\"room_id\":\"room-7\""))
+        and assert(payload.contains("\"player_id\":\"player-2\""))
+        and assert(payload.contains("\"opponent_id\":\"player-1\""))
+        and assert(payload.contains("\"view\":{"))
+        and assert(payload.contains("\"+\"")).
+
+last_board_cell(player: Player): Cell ->
+    Board.get_cell_value(player.board, 10, 10).

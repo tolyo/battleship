@@ -22,10 +22,16 @@ module.exports = {
     'class-methods-use-this': 'off',
     'import/prefer-default-export': 'off',
     'no-param-reassign': 'off',
+    'no-underscore-dangle': [
+      'error',
+      {
+        allow: ['_checkListenersForAllKeys', '_flushScheduledTasks'],
+      },
+    ],
   },
   overrides: [
     {
-      files: ['app/**/*.test.js'],
+      files: ['assets/**/*.test.js'],
       env: {
         jasmine: true,
         browser: false,

@@ -1,0 +1,154 @@
+/**
+ * Battleship account contract.
+ *
+ * The old Erlang backend used Postgres functions for account creation and
+ * credential checks. This module restores that source-visible contract in
+ * Terlan: SQL text, form validation, and response payloads live in the app
+ * while runtime execution waits on the BEAM SafeNative Postgres bridge.
+ */
+module battleship.model.server.Account.
+
+import std.core.Option.{None, Option, Some}.
+import std.core.Result.{Err, Ok}.
+import std.core.String.
+
+pub struct UserIdRow {
+    id: String,
+}.
+
+pub credentials_valid(body: String): Bool ->
+    case form_value(body, "email") {
+        Some(email) -> credentials_valid_for_email(body, email);
+        None -> false
+    }.
+
+credentials_valid_for_email(body: String, email: String): Bool ->
+    case form_value(body, "password") {
+        Some(password) ->
+            case sql[UserIdRow] {
+                SELECT id::text AS id
+                FROM users
+                WHERE email = ${email}
+                    AND password_hash = crypt(${password}, password_hash)
+                LIMIT 1
+            } {
+                Ok(Some(_row)) -> true;
+                Ok(None) -> false;
+                Err(_error) -> false
+            };
+        None -> false
+    }.
+
+pub user_exists(body: String): Bool ->
+    case form_value(body, "username") {
+        Some(username) -> user_exists_for_username(body, username);
+        None -> false
+    }.
+
+user_exists_for_username(body: String, username: String): Bool ->
+    case form_value(body, "email") {
+        Some(email) ->
+            case sql[UserIdRow] {
+                SELECT id::text AS id
+                FROM users
+                WHERE username = ${username}
+                    OR email = ${email}
+                LIMIT 1
+            } {
+                Ok(Some(_row)) -> true;
+                Ok(None) -> false;
+                Err(_error) -> false
+            };
+        None -> false
+    }.
+
+pub create_user_id(body: String): Option[String] ->
+    case form_value(body, "username") {
+        Some(username) -> create_user_id_for_username(body, username);
+        None -> None
+    }.
+
+create_user_id_for_username(body: String, username: String): Option[String] ->
+    case form_value(body, "email") {
+        Some(email) -> create_user_id_for_email(body, username, email);
+        None -> None
+    }.
+
+create_user_id_for_email(body: String, username: String, email: String): Option[String] ->
+    case form_value(body, "password") {
+        Some(password) ->
+            case sql[UserIdRow] {
+                SELECT register_user(${username}, ${email}, ${password})::text AS id
+                LIMIT 1
+            } {
+                Ok(Some(row)) -> Some(row.id);
+                Ok(None) -> None;
+                Err(_error) -> None
+            };
+        None -> None
+    }.
+
+pub login_form_valid(body: String): Bool ->
+    has_non_empty_field(body, "email") and has_non_empty_field(body, "password").
+
+pub register_form_valid(body: String): Bool ->
+    has_non_empty_field(body, "username")
+        and has_non_empty_field(body, "email")
+        and has_valid_email(body)
+        and has_non_empty_field(body, "password")
+        and has_non_empty_field(body, "repeatpassword")
+        and passwords_match(body).
+
+pub passwords_match(body: String): Bool ->
+    case {form_value(body, "password"), form_value(body, "repeatpassword")} {
+        {Some(password), Some(repeat)} -> password == repeat;
+        _ -> false
+    }.
+
+pub has_non_empty_field(body: String, name: String): Bool ->
+    case form_value(body, name) {
+        Some(value) -> is_non_empty_text(value);
+        None -> false
+    }.
+
+pub has_valid_email(body: String): Bool ->
+    case form_value(body, "email") {
+        Some(value) -> email_value_valid(value);
+        None -> false
+    }.
+
+pub email_value_valid(value: String): Bool ->
+    case String.split_once(value, "@") {
+        Some({l, d}) ->
+            is_non_empty_text(l)
+                and is_non_empty_text(d)
+                and String.contains(d, ".")
+                and not String.contains(d, "@")
+                and not String.contains(value, " ");
+        None -> false
+    }.
+
+pub is_non_empty_text(value: String): Bool ->
+    String.byte_size(value) > 0.
+
+pub form_value(body: String, name: String): Option[String] ->
+    case String.split_once(body, "&") {
+        Some({part, rest}) ->
+            case form_pair_value(part, name) {
+                Some(value) -> Some(value);
+                None -> form_value(rest, name)
+            };
+        None -> form_pair_value(body, name)
+    }.
+
+pub form_pair_value(pair: String, name: String): Option[String] ->
+    let {
+        Some({key, value}) <- String.split_once(pair, "=");
+        true <- field_name_matches(key, name)
+    } else {
+        _ -> None
+    };
+    Some(value).
+
+pub field_name_matches(key: String, name: String): Bool ->
+    String.contains(key, name) and String.contains(name, key).

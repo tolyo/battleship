@@ -101,7 +101,7 @@ const config: PlaywrightTestConfig = {
   /* Run your local dev server before starting the tests */
   webServer: {
     command:
-      "make build && erl -pa _build/default/lib/*/ebin -noshell -eval 'application:ensure_all_started(battleship), receive _ -> ok end.'",
+      'make compile && TERLC="${TERLC:-/home/anatoly/Applications/terlan/terlan/target/release/terlc}" && "$TERLC" serve _build/terlan/web --host 127.0.0.1 --port 4000',
     port: 4000,
     reuseExistingServer: false,
   },

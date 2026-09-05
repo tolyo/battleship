@@ -1,0 +1,80 @@
+/**
+ * Battleship room WebSocket protocol payloads.
+ *
+ * The Terlan source owns the protocol strings used by the browser client and
+ * the `terlc serve` WebSocket runtime.
+ */
+module battleship.model.server.RoomProtocol.
+
+import battleship.JsonText.{stringify}.
+import std.data.Json.
+
+pub protocol(): String -> "battleship.room.v1".
+
+pub route(): String -> "/ws".
+
+pub lobby_waiting_json(): String ->
+    type_json("lobby_waiting").
+
+pub opponent_left_json(): String ->
+    type_json("opponent_left").
+
+pub room_not_found_json(): String ->
+    error_json("room_not_found").
+
+pub unknown_player_json(): String ->
+    error_json("unknown_player").
+
+pub invalid_payload_json(): String ->
+    error_json("invalid_payload").
+
+pub room_update_json(): String ->
+    let board = Json.array().push(Json.array().push(Json.string("+")));
+    let own = Json.object().put("id", Json.string("player-1")).put("board", board);
+    let opponent = Json.object().put("id", Json.string("player-2")).put("board", board);
+    let action =
+        Json.object()
+            .put("action", Json.string("move"))
+            .put("target", Json.string("opponent_board"));
+    let view =
+        Json.object()
+            .put("phase", Json.string("active"))
+            .put("own_player", own)
+            .put("opponent", opponent)
+            .put("allowed_actions", Json.array().push(action));
+    Json.object().put("type", Json.string("room_update")).put("view", view)
+    |> stringify().
+
+pub error_json(reason: String): String ->
+    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
+    |> stringify().
+
+pub move_json(row: Int, column: Int): String ->
+    Json.object()
+    .put("type", Json.string("move"))
+    .put("row", Json.int(row))
+    .put("column", Json.int(column))
+    |> stringify().
+
+pub room_joined_json(room_id: String, player_id: String): String ->
+    room_entry_json("room_joined", room_id, player_id, "").
+
+pub match_found_json(room_id: String, player_id: String, opponent_id: String): String ->
+    room_entry_json("match_found", room_id, player_id, opponent_id).
+
+pub room_entry_json(kind: String, room_id: String, player_id: String, opponent_id: String): String ->
+    let entry =
+        Json.object()
+            .put("type", Json.string(kind))
+            .put("room_id", Json.string(room_id))
+            .put("player_id", Json.string(player_id));
+    let completed =
+        if {
+            opponent_id == "" -> entry;
+            true -> entry.put("opponent_id", Json.string(opponent_id))
+        };
+    stringify(completed).
+
+type_json(kind: String): String ->
+    Json.object().put("type", Json.string(kind))
+    |> stringify().

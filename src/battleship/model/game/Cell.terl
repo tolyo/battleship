@@ -1,0 +1,48 @@
+/**
+ * Battleship board cell model.
+ *
+ * This is the Terlan-native representation of the board cell contract. It
+ * keeps the rule surface target-neutral for generated backends.
+ */
+module battleship.model.game.Cell.
+
+/**
+ * Cell represents one board square.
+ *
+ * Ship cells use ids `0..9`. Negative values represent non-ship states.
+ */
+pub struct Cell {
+    value: Int,
+}.
+
+/**
+ * Constructs a cell from its typed board value.
+ */
+pub constructor Cell {
+    (value: Int): Cell ->
+        Cell {value: value}
+}.
+
+pub blocked(): Cell ->
+    Cell(-2).
+
+pub hit(): Cell ->
+    Cell(-3).
+
+pub miss(): Cell ->
+    Cell(-4).
+
+/**
+ * Returns whether a cell contains one of the ten ship ids.
+ */
+pub is_ship(cell: Cell): Bool ->
+    cell.value >= 0 and cell.value <= 9.
+
+pub is_empty(cell: Cell): Bool ->
+    cell.value == -1.
+
+/**
+ * Returns whether a move may target this cell before strike resolution.
+ */
+pub is_targetable(cell: Cell): Bool ->
+    is_empty(cell) or is_ship(cell).

@@ -1,0 +1,15 @@
+module battleship.model.game.player_test.
+
+import battleship.model.game.{Board, Cell, Player}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.model.game.Cell.
+
+@test
+pub constructor_preserves_player_fields(): Bool ->
+    let player = Player("player-1", Board(Board.empty_rows()));
+    assert_equal("player-1", player.id)
+        and assert_equal(100, Board.count(player.board, constructed_empty())).
+
+constructed_empty(): Cell ->
+    Cell(-1).

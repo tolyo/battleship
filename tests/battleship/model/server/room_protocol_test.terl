@@ -1,0 +1,55 @@
+module battleship.model.server.room_protocol_test.
+
+import battleship.model.server.RoomProtocol.
+import std.test.Test.{assert_equal}.
+
+@test
+pub lobby_waiting_message_is_stable(): Bool ->
+    assert_equal("{\"type\":\"lobby_waiting\"}", RoomProtocol.lobby_waiting_json()).
+
+@test
+pub room_not_found_message_is_stable(): Bool ->
+    assert_equal(
+        "{\"reason\":\"room_not_found\",\"type\":\"error\"}",
+        RoomProtocol.room_not_found_json(),
+    ).
+
+@test
+pub unknown_player_message_is_stable(): Bool ->
+    assert_equal(
+        "{\"reason\":\"unknown_player\",\"type\":\"error\"}",
+        RoomProtocol.unknown_player_json(),
+    ).
+
+@test
+pub move_message_is_stable(): Bool ->
+    assert_equal("{\"column\":7,\"row\":4,\"type\":\"move\"}", RoomProtocol.move_json(4, 7)).
+
+@test
+pub room_joined_message_is_stable(): Bool ->
+    assert_equal(
+        "{\"player_id\":\"player-1\",\"room_id\":\"room-1\",\"type\":\"room_joined\"}",
+        RoomProtocol.room_joined_json("room-1", "player-1"),
+    ).
+
+@test
+pub match_found_message_is_stable(): Bool ->
+    assert_equal(
+        "{\"opponent_id\":\"player-2\",\"player_id\":\"player-1\",\"room_id\":\"room-1\",\"type\":\"match_found\"}",
+        RoomProtocol.match_found_json("room-1", "player-1", "player-2"),
+    ).
+
+@test
+pub room_update_message_is_stable(): Bool ->
+    assert_equal(
+        "{\"type\":\"room_update\",\"view\":{\"allowed_actions\":[{\"action\":\"move\",\"target\":\"opponent_board\"}],\"opponent\":{\"board\":[[\"+\"]],\"id\":\"player-2\"},\"own_player\":{\"board\":[[\"+\"]],\"id\":\"player-1\"},\"phase\":\"active\"}}",
+        RoomProtocol.room_update_json(),
+    ).
+
+@test
+pub peer_and_invalid_payload_messages_are_stable(): Bool ->
+    assert_equal("{\"type\":\"opponent_left\"}", RoomProtocol.opponent_left_json())
+        and assert_equal(
+    "{\"reason\":\"invalid_payload\",\"type\":\"error\"}",
+    RoomProtocol.invalid_payload_json(),
+).

@@ -1,0 +1,22 @@
+module battleship.model.game.cell_test.
+
+import battleship.model.game.Cell.
+import std.test.Test.{assert, assert_equal}.
+
+import type battleship.model.game.Cell.
+
+@test
+pub empty_cells_are_targetable(): Bool ->
+    let empty = constructed_empty();
+    assert(Cell.is_empty(empty)) and assert(Cell.is_targetable(empty)).
+
+constructed_empty(): Cell ->
+    Cell(-1).
+
+@test
+pub ship_ids_are_detected(): Bool ->
+    assert(Cell.is_ship(Cell(9))).
+
+@test
+pub blocked_cells_are_not_targetable(): Bool ->
+    assert_equal(false, Cell.is_targetable(Cell.blocked())).

@@ -1,0 +1,22 @@
+module battleship.handlers.game_test.
+
+import battleship.handlers.Game.
+import std.test.Test.{assert_equal}.
+
+@test
+pub config_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"boardSize\":10,\"fleetCellCount\":20,\"fleetSize\":10,\"name\":\"battleship\"}",
+        Game.config_json(),
+    ).
+
+@test
+pub fleet_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"count\":10,\"status\":\"migrated-to-terlan\",\"totalSize\":20}",
+        Game.fleet_json(),
+    ).
+
+@test
+pub board_payload_is_stable(): Bool ->
+    assert_equal("{\"cells\":100,\"columns\":10,\"emptyCell\":-1,\"rows\":10}", Game.board_json()).

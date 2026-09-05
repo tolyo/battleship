@@ -1,0 +1,11 @@
+/**
+ * Health handler for `GET /health`.
+ */
+module battleship.handlers.Health.
+
+import std.http.Response.
+
+import type std.http.{Request, Response}.
+
+pub get(_request: Request): Response ->
+    Response.text("ok").

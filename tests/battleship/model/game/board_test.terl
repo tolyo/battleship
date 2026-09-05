@@ -1,0 +1,92 @@
+module battleship.model.game.board_test.
+
+import battleship.model.game.{Board, Cell, Unit}.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub empty_board_has_ten_rows(): Bool ->
+    assert_equal(10, Board.row_count()).
+
+@test
+pub board_cell_count_is_stable(): Bool ->
+    assert_equal(100, Board.cell_count()).
+
+@test
+pub horizontal_fit_rejects_overflow(): Bool ->
+    assert_equal(false, Board.can_fit_horizontal(1, 8, 4)).
+
+@test
+pub vertical_fit_accepts_last_legal_start(): Bool ->
+    7
+    |> Board.can_fit_vertical(10, 4)
+    |> assert().
+
+@test
+pub empty_board_reads_empty_cells(): Bool ->
+    assert(Cell.is_empty(Board.get_cell_value(Board(Board.empty_rows()), 1, 1))).
+
+@test
+pub update_cell_replaces_one_coordinate(): Bool ->
+    let board = Board.update_cell_at(Board(Board.empty_rows()), 3, 4, Cell.miss());
+    assert_equal(Cell.miss(), Board.get_cell_value(board, 3, 4)).
+
+@test
+pub count_finds_replaced_cells(): Bool ->
+    let first = Board.update_cell_at(Board(Board.empty_rows()), 1, 1, Cell.hit());
+    let second = Board.update_cell_at(first, 2, 2, Cell.hit());
+    assert_equal(2, Board.count(second, Cell.hit())).
+
+@test
+pub attach_horizontal_unit_marks_occupied_cells(): Bool ->
+    let ship =
+        7
+        |> Unit.create(3)
+        |> Unit.place(2, 3, Unit.horizontal());
+    let board = Board.attach_unit(Board(Board.empty_rows()), ship);
+    assert_equal(Cell(7), Board.get_cell_value(board, 2, 5)).
+
+@test
+pub attach_vertical_unit_marks_start_cell(): Bool ->
+    let ship =
+        8
+        |> Unit.create(3)
+        |> Unit.place(3, 4, Unit.vertical());
+    let board = Board.attach_unit(Board(Board.empty_rows()), ship);
+    assert_equal(Cell(8), Board.get_cell_value(board, 3, 4)).
+
+@test
+pub attach_vertical_unit_marks_middle_cell(): Bool ->
+    let ship =
+        8
+        |> Unit.create(3)
+        |> Unit.place(3, 4, Unit.vertical());
+    let board = Board.attach_unit(Board(Board.empty_rows()), ship);
+    assert_equal(Cell(8), Board.get_cell_value(board, 4, 4)).
+
+@test
+pub attach_vertical_unit_marks_end_cell(): Bool ->
+    let ship =
+        8
+        |> Unit.create(3)
+        |> Unit.place(3, 4, Unit.vertical());
+    let board = Board.attach_unit(Board(Board.empty_rows()), ship);
+    assert_equal(Cell(8), Board.get_cell_value(board, 5, 4)).
+
+@test
+pub legal_unit_rejects_adjacent_ship(): Bool ->
+    let ship =
+        1
+        |> Unit.create(2)
+        |> Unit.place(2, 2, Unit.horizontal());
+    let board = Board.attach_unit(Board(Board.empty_rows()), ship);
+    let adjacent =
+        2
+        |> Unit.create(2)
+        |> Unit.place(3, 2, Unit.horizontal());
+    assert_equal(false, Board.is_legal(board, adjacent)).
+
+@test
+pub set_adjacents_blocked_marks_empty_neighbors_of_hit(): Bool ->
+    let board = Board.update_cell_at(Board(Board.empty_rows()), 5, 5, Cell.hit());
+    let blocked = Board.set_adjacents_blocked(board);
+    assert_equal(Cell.blocked(), Board.get_cell_value(blocked, 4, 4)).

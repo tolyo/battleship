@@ -1,0 +1,11 @@
+module battleship.handlers.room_test.
+
+import battleship.handlers.Room.
+import std.test.Test.{assert_equal}.
+
+@test
+pub contract_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"firstPlayerId\":\"player-1\",\"protocol\":\"battleship.room.v1\",\"route\":\"/ws\",\"secondPlayerId\":\"player-2\"}",
+        Room.contract_json(),
+    ).

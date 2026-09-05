@@ -1,0 +1,31 @@
+module battleship.model.game.unit_test.
+
+import battleship.model.game.Unit.
+import std.test.Test.{assert_equal}.
+
+@test
+pub catalog_has_ten_ships(): Bool ->
+    assert_equal(10, Unit.fleet_count()).
+
+@test
+pub fleet_total_size_matches_classic_battleship(): Bool ->
+    assert_equal(20, Unit.total_size()).
+
+@test
+pub create_preserves_id_and_size(): Bool ->
+    let ship = Unit.create(4, 2);
+    assert_equal(4, ship.id) and assert_equal(2, ship.size).
+
+@test
+pub catalog_and_vertical_orientation_are_constructible(): Bool ->
+    let ship = Unit.create(9, 1);
+    let placed = Unit.place(ship, 4, 5, Unit.vertical());
+    assert_equal(Unit.vertical(), placed.orientation) and assert_equal(10, Unit.all().length()).
+
+@test
+pub vertical_placement_preserves_ship_fields(): Bool ->
+    let ship = Unit.place(Unit.create(8, 3), 3, 4, Unit.vertical());
+    assert_equal(8, ship.id)
+        and assert_equal(3, ship.size)
+        and assert_equal(3, ship.row)
+        and assert_equal(4, ship.column).

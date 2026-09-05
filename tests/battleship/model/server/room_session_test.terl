@@ -1,0 +1,59 @@
+module battleship.model.server.room_session_test.
+
+import battleship.model.server.RoomSession.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub room_id_is_deterministic(): Bool ->
+    assert_equal("room-7", RoomSession.room_id(7)).
+
+@test
+pub player_slots_are_stable(): Bool ->
+    assert_equal("player-1", RoomSession.player_id(1)).
+
+@test
+pub unknown_player_slot_is_empty(): Bool ->
+    assert_equal("", RoomSession.player_id(3)).
+
+@test
+pub restore_accepts_known_player_and_room(): Bool ->
+    "room-1"
+    |> RoomSession.can_restore("player-1")
+    |> assert().
+
+@test
+pub restore_rejects_unknown_player(): Bool ->
+    assert_equal(false, RoomSession.can_restore("room-1", "player-3")).
+
+@test
+pub restore_rejects_missing_room(): Bool ->
+    assert_equal(false, RoomSession.can_restore("", "player-1")).
+
+@test
+pub restore_message_returns_room_joined(): Bool ->
+    assert_equal(
+        "{\"player_id\":\"player-1\",\"room_id\":\"room-1\",\"type\":\"room_joined\"}",
+        RoomSession.restore_message("room-1", "player-1"),
+    ).
+
+@test
+pub invalid_restore_message_returns_unknown_player(): Bool ->
+    assert_equal(
+        "{\"reason\":\"unknown_player\",\"type\":\"error\"}",
+        RoomSession.restore_message("room-1", "player-3"),
+    ).
+
+@test
+pub match_messages_are_directional(): Bool ->
+    assert_equal(
+        "{\"opponent_id\":\"player-1\",\"player_id\":\"player-2\",\"room_id\":\"room-1\",\"type\":\"match_found\"}",
+        RoomSession.second_player_match_message("room-1"),
+    ).
+
+@test
+pub waiting_and_first_match_messages_are_stable(): Bool ->
+    assert_equal("{\"type\":\"lobby_waiting\"}", RoomSession.waiting_message())
+        and assert_equal(
+    "{\"opponent_id\":\"player-2\",\"player_id\":\"player-1\",\"room_id\":\"room-1\",\"type\":\"match_found\"}",
+    RoomSession.first_player_match_message("room-1"),
+).

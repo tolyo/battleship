@@ -1,0 +1,24 @@
+/**
+ * Battleship player model.
+ *
+ * A player owns a stable identifier and a nominal board value.
+ */
+module battleship.model.game.Player.
+
+import type battleship.model.game.Board.
+
+/**
+ * Immutable player state.
+ */
+pub struct Player {
+    id: String,
+    board: Board,
+}.
+
+/**
+ * Constructs a player from its identifier and board.
+ */
+pub constructor Player {
+    (id: String, board: Board): Player ->
+        Player {id: id, board: board}
+}.

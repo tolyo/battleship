@@ -1,0 +1,18 @@
+/**
+ * Typed JSON serialization boundary for Battleship wire payloads.
+ */
+module battleship.JsonText.
+
+import std.core.Result.{Err, Ok}.
+import std.data.Json.
+
+import type std.data.Json.
+
+/**
+ * Serializes a JSON value constructed through the typed standard API.
+ */
+pub stringify(value: Json): String ->
+    case Json.stringify(value) {
+        Ok(text) -> text;
+        Err(_error) -> ""
+    }.

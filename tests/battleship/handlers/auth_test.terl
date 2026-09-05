@@ -1,0 +1,94 @@
+module battleship.handlers.auth_test.
+
+import battleship.handlers.Auth.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub session_cookie_name_is_stable(): Bool ->
+    assert_equal("battleship_session", Auth.session_cookie_name()).
+
+@test
+pub empty_body_is_invalid(): Bool ->
+    assert_equal(false, Auth.valid_body("")).
+
+@test
+pub whitespace_body_is_non_empty(): Bool ->
+    assert(Auth.valid_body("   ")).
+
+@test
+pub form_body_is_valid(): Bool ->
+    assert(Auth.valid_body("username=ada&password=secret")).
+
+@test
+pub login_request_requires_password(): Bool ->
+    assert_equal(false, Auth.login_request_valid("email=ada@example.com")).
+
+@test
+pub login_request_accepts_email_and_password(): Bool ->
+    assert(Auth.login_request_valid("email=ada@example.com&password=secret")).
+
+@test
+pub register_request_requires_matching_passwords(): Bool ->
+    assert_equal(
+        false,
+        Auth.register_request_valid(
+            "username=ada&email=ada@example.com&password=secret&repeatpassword=other",
+        ),
+    ).
+
+@test
+pub register_request_requires_valid_email(): Bool ->
+    assert_equal(
+        false,
+        Auth.register_request_valid(
+            "username=ada&email=not-an-email&password=secret&repeatpassword=secret",
+        ),
+    ).
+
+@test
+pub register_request_accepts_complete_form(): Bool ->
+    assert(
+        Auth.register_request_valid(
+            "username=ada&email=ada@example.com&password=secret&repeatpassword=secret",
+        ),
+    ).
+
+@test
+pub login_payload_is_stable(): Bool ->
+    assert_equal("{\"status\":\"ok\"}", Auth.login_json()).
+
+@test
+pub register_payload_is_stable(): Bool ->
+    assert_equal("{\"status\":\"ok\",\"user_id\":\"terlan-local\"}", Auth.register_json()).
+
+@test
+pub register_success_payload_uses_user_id(): Bool ->
+    assert_equal("{\"status\":\"ok\",\"user_id\":\"user-1\"}", Auth.register_success_json("user-1")).
+
+@test
+pub register_success_payload_escapes_user_id(): Bool ->
+    assert_equal(
+        "{\"status\":\"ok\",\"user_id\":\"user-\\\"1\"}",
+        Auth.register_success_json("user-\"1"),
+    ).
+
+@test
+pub invalid_request_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"reason\":\"invalid_request\",\"status\":\"error\"}",
+        Auth.invalid_request_json(),
+    ).
+
+@test
+pub invalid_credentials_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"reason\":\"invalid_credentials\",\"status\":\"error\"}",
+        Auth.invalid_credentials_json(),
+    ).
+
+@test
+pub duplicate_user_payload_is_stable(): Bool ->
+    assert_equal(
+        "{\"reason\":\"user_already_registered\",\"status\":\"error\"}",
+        Auth.duplicate_user_json(),
+    ).

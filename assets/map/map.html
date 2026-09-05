@@ -1,0 +1,31 @@
+<status-panel
+  player-label="$ctrl.state.playerLabel"
+  status="$ctrl.state.status"
+></status-panel>
+
+<section id="map">
+  <board
+    rows="$ctrl.state.ownRows"
+    disabled="$ctrl.state.unitsLocked"
+    active="$ctrl.state.isPlaying"
+    units="$ctrl.state.units"
+    unit-placements="$ctrl.state.unitPlacements"
+    setup-active="$ctrl.state.isSetup"
+  ></board>
+  <board-grid
+    board-id="target-board"
+    tile-class="target-board-tile"
+    rows="$ctrl.state.targetRows"
+    visible="$ctrl.state.data.targetVisible"
+    disabled="$ctrl.state.data.targetDisabled"
+    on-tile-click="$ctrl.roomClient.submitMove(tile)"
+  ></board-grid>
+</section>
+
+<setup-controls
+  setup-active="$ctrl.state.isSetup"
+  board-ready="$ctrl.state.boardReady"
+  on-ready="$ctrl.roomClient.joinLobby()"
+  on-random="$ctrl.setup.randomize()"
+  on-reset="$ctrl.setup.reset()"
+></setup-controls>

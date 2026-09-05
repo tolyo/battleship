@@ -1,0 +1,42 @@
+/**
+ * Terlan HTTP surface for the Battleship application.
+ *
+ * The browser client remains under `assets/` and is served as static assets by
+ * the Terlan web profile.
+ */
+module battleship.Web.
+
+import battleship.handlers.Auth.{login as login_handler, register as register_handler}.
+import battleship.handlers.Game.{board, config, fleet}.
+import battleship.handlers.Health.{get as health}.
+import battleship.handlers.Pages.{dashboard, index, login as login_page, map as map_page, register as register_page, room as room_page}.
+import battleship.handlers.Room.{protocol as room_protocol}.
+import std.http.Router.
+
+import type std.http.Router.
+
+/**
+ * Builds the Battleship HTTP router.
+ */
+pub router(): Router ->
+    Router.new()
+        .get("/", index)
+        .get("/login", index)
+        .get("/register", index)
+        .get("/dashboard", index)
+        .get("/room", index)
+        .get("/room/*", index)
+        .get("/_login", login_page)
+        .get("/_register", register_page)
+        .get("/_dashboard", dashboard)
+        .get("/_room", room_page)
+        .get("/_map", map_page)
+        .get("/static/map/map.html", map_page)
+        .get("/health", health)
+        .get("/api/game/config", config)
+        .get("/api/game/fleet", fleet)
+        .get("/api/game/board", board)
+        .get("/api/room/protocol", room_protocol)
+        .post("/_login", login_handler)
+        .post("/_register", register_handler)
+        .fallback(index).

@@ -1,0 +1,31 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Battleship</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <header ng-controller="HeaderController as $ctrl">
+    <a ng-sref="home">
+      <strong>Battleship</strong>
+    </a>
+    <nav ng-if="!authenticated">
+      <a ng-sref="room">Play anonymously</a>
+      <a ng-sref="login">Login</a>
+      <a ng-sref="register">Register</a>
+    </nav>
+
+    <nav ng-if="authenticated">
+      <a ng-sref="room">Play</a>
+      <a ng-click="$ctrl.logout()">Logout</a>
+    </nav>
+  </header>
+
+  <main ng-view></main>
+
+  <footer></footer>
+</body>

@@ -1,0 +1,26 @@
+/**
+ * Page handlers for `/`, named application pages, and HTML partial URLs.
+ */
+module battleship.handlers.Pages.
+
+import std.http.Response.
+
+import type std.http.{Request, Response}.
+
+pub index(_request: Request): Response ->
+    Response.file("index.html", content_type = "text/html; charset=utf-8").
+
+pub login(_request: Request): Response ->
+    Response.file("login/login.html", content_type = "text/html; charset=utf-8").
+
+pub register(_request: Request): Response ->
+    Response.file("register/register.html", content_type = "text/html; charset=utf-8").
+
+pub dashboard(_request: Request): Response ->
+    Response.file("dashboard/dashboard.html", content_type = "text/html; charset=utf-8").
+
+pub room(_request: Request): Response ->
+    Response.file("room-page/room.html", content_type = "text/html; charset=utf-8").
+
+pub map(_request: Request): Response ->
+    Response.file("map/map.html", content_type = "text/html; charset=utf-8").

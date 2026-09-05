@@ -1,0 +1,23 @@
+{
+  "schema": "terlan-vm-observability-v1",
+  "configFingerprint": "sha256:9de72c460276392c40089060f7c9ac8bd7c0ca968d7df079541feee9dd12ee43",
+  "capacity": 4096,
+  "recordedEvents": 8,
+  "droppedEvents": 0,
+  "repeatedSignals": 0,
+  "forcedShutdowns": 0,
+  "domainEvents": {
+    "process": 5,
+    "socket": 0,
+    "request": 0,
+    "scheduler": 2,
+    "capability": 0,
+    "tls": 0,
+    "cleanup": 1
+  },
+  "statusEvents": {
+    "completed": 4,
+    "ready": 1,
+    "started": 3
+  }
+}

@@ -1,0 +1,295 @@
+/**
+ * Stateful Battleship WebSocket transitions.
+ *
+ * The runtime retains only an opaque move history. Each callback reconstructs
+ * the immutable rules model, applies the next validated move, and emits a
+ * player-specific public view for both peers.
+ */
+module battleship.model.server.GameSession.
+
+import battleship.JsonText.{stringify}.
+import battleship.model.game.Board.{Row}.
+import battleship.model.game.Match.{Active, Finished, Hit, MatchFinished, Miss, NotYourTurn, UnknownPlayer}.
+import battleship.model.game.{Board, Cell, Match, Player}.
+import std.collections.List.
+import std.core.Int.{from_string, to_string}.
+import std.core.Option.{None, Option, Some}.
+import std.core.Result.{Ok}.
+import std.core.String.
+import std.data.Json.
+
+import type battleship.model.game.Board.{Board, Row}.
+import type battleship.model.game.Match.{Match, MoveResult}.
+import type battleship.model.game.{Cell, Player}.
+import type std.data.Json.
+
+pub transition(
+    history: String,
+    role: Int,
+    frame: String,
+    first_request: String,
+    second_request: String,
+): {String, String, String} ->
+    case parse_move(frame) {
+        Some({row, column}) ->
+            apply_move(history, role, row, column, first_request, second_request);
+        None -> addressed_error(history, role, "invalid_payload")
+    }.
+
+pub replay(history: String): Match ->
+    replay_events(String.split(history, ";"), Match.active_match()).
+
+pub replay_requests(history: String, first_request: String, second_request: String): Match ->
+    let initial =
+        Match(
+            Player("player-1", request_board(first_request, Match.active_board())),
+            Player("player-2", request_board(second_request, Match.active_board())),
+            "player-1",
+            "",
+            List(),
+            Active,
+        );
+    replay_events(String.split(history, ";"), initial).
+
+pub view_json(match: Match, role: Int): String ->
+    Json.object().put("type", Json.string("room_update")).put("view", public_view(match, role))
+    |> stringify().
+
+pub restored_json(
+    room_id: String,
+    history: String,
+    role: Int,
+    first_request: String,
+    second_request: String,
+): String ->
+    let match = replay_requests(history, first_request, second_request);
+    Json.object()
+    .put("type", Json.string("room_joined"))
+    .put("room_id", Json.string(room_id))
+    .put("player_id", Json.string(player_id(role)))
+    .put("opponent_id", Json.string(player_id(opposite_role(role))))
+    .put("view", public_view(match, role))
+    |> stringify().
+
+public_view(match: Match, role: Int): Json ->
+    let viewer_id = player_id(role);
+    let own = Match.get_player_by_id(match, viewer_id);
+    let opponent = Match.get_opposite_player(match, own);
+    let actions =
+        if {
+            match.phase == Active and match.current_turn == viewer_id -> Json.array()
+                .push(
+                    Json.object()
+                        .put("action", Json.string("move"))
+                        .put("target", Json.string("opponent_board")),
+                );
+            true -> Json.array()
+        };
+    Json.object()
+        .put("phase", Json.string(phase_name(match)))
+        .put("own_player", player_json(own, false))
+        .put("opponent", player_json(opponent, true))
+        .put("allowed_actions", actions).
+
+apply_move(
+    history: String,
+    role: Int,
+    row: Int,
+    column: Int,
+    first_request: String,
+    second_request: String,
+): {String, String, String} ->
+    let match = replay_requests(history, first_request, second_request);
+    let id = player_id(role);
+    let result = Match.can_move(match, id, row, column);
+    if {
+        result == Hit or result == Miss -> let next = Match.handle_move(match, id, row, column);
+        {append_history(history, role, row, column), view_json(next, 1), view_json(next, 2)};
+        true -> addressed_error(history, role, move_error(result))
+    }.
+
+addressed_error(history: String, role: Int, reason: String): {String, String, String} ->
+    let payload = error_json(reason);
+    if {
+        role == 1 -> {history, payload, ""};
+        true -> {history, "", payload}
+    }.
+
+parse_move(frame: String): Option[{Int, Int}] ->
+    let {
+        Ok(value) <- Json.parse(frame);
+        Ok(kind_value) <- value.get("type");
+        Ok("move") <- kind_value.as_string();
+        Ok(row_value) <- value.get("row");
+        Ok(row) <- row_value.as_int();
+        Ok(column_value) <- value.get("column");
+        Ok(column) <- column_value.as_int()
+    } else {
+        _ -> None
+    };
+    Some({row, column}).
+
+request_board(request: String, fallback: Board): Board ->
+    case String.split(request, "board=") {
+        [_prefix, encoded] -> decoded_board(encoded, fallback);
+        _ -> fallback
+    }.
+
+decoded_board(encoded: String, fallback: Board): Board ->
+    let brackets = String.replace(String.replace(encoded, "%5B", "["), "%5D", "]");
+    let punctuation = String.replace(String.replace(brackets, "%22", "\""), "%2C", ",");
+    let rows_text = String.replace(String.replace(punctuation, "[[", ""), "]]", "");
+    parse_board_rows(String.split(rows_text, "],["), fallback).
+
+parse_board_rows(rows: List[String], fallback: Board): Board ->
+    case rows {
+        [a, b, c, d, e, f, g, h, i, j] ->
+            Board(
+                List(
+                    parse_board_row(a),
+                    parse_board_row(b),
+                    parse_board_row(c),
+                    parse_board_row(d),
+                    parse_board_row(e),
+                    parse_board_row(f),
+                    parse_board_row(g),
+                    parse_board_row(h),
+                    parse_board_row(i),
+                    parse_board_row(j),
+                ),
+            );
+        _ -> fallback
+    }.
+
+parse_board_row(row: String): Row ->
+    Row(parse_board_cells(String.split(String.replace(row, "\"", ""), ","))).
+
+parse_board_cells(cells: List[String]): List[Cell] ->
+    case cells {
+        [a, b, c, d, e, f, g, h, i, j] ->
+            List(
+                parse_cell(a),
+                parse_cell(b),
+                parse_cell(c),
+                parse_cell(d),
+                parse_cell(e),
+                parse_cell(f),
+                parse_cell(g),
+                parse_cell(h),
+                parse_cell(i),
+                parse_cell(j),
+            );
+        _ -> Board.empty_cells()
+    }.
+
+parse_cell(value: String): Cell ->
+    if {
+        value == "_" -> Cell(-1);
+        value == "o" -> Cell.blocked();
+        value == "+" -> Cell.hit();
+        value == "m" or value == "x" -> Cell.miss();
+        true -> parse_ship_cell(from_string(value))
+    }.
+
+parse_ship_cell(value: Option[Int]): Cell ->
+    case value {
+        Some(id) ->
+            let cell = Cell(id);
+            if {
+                Cell.is_ship(cell) -> cell;
+                true -> Cell(-1)
+            };
+        None -> Cell(-1)
+    }.
+
+replay_events(events: List[String], match: Match): Match ->
+    case events {
+        [] -> match;
+        ["" | rest] -> replay_events(rest, match);
+        [event | rest] -> replay_events(rest, replay_event(event, match))
+    }.
+
+replay_event(event: String, match: Match): Match ->
+    let {
+        [role_text, row_text, column_text] <- String.split(event, ",");
+        Some(role) <- from_string(role_text);
+        Some(row) <- from_string(row_text);
+        Some(column) <- from_string(column_text)
+    } else {
+        _ -> match
+    };
+    Match.handle_move(match, player_id(role), row, column).
+
+append_history(history: String, role: Int, row: Int, column: Int): String ->
+    let event =
+        List(to_string(role), ",", to_string(row), ",", to_string(column))
+        |> String.concat();
+    if {
+        history == "" -> event;
+        true -> List(history, ";", event)
+        |> String.concat()
+    }.
+
+player_id(role: Int): String ->
+    if {
+        role == 1 -> "player-1";
+        true -> "player-2"
+    }.
+
+opposite_role(role: Int): Int ->
+    if {
+        role == 1 -> 2;
+        true -> 1
+    }.
+
+phase_name(match: Match): String ->
+    if {
+        match.phase == Finished -> "finished";
+        true -> "active"
+    }.
+
+player_json(player: Player, hide_ships: Bool): Json ->
+    Json.object()
+        .put("id", Json.string(player.id))
+        .put("board", board_json(player.board, hide_ships)).
+
+board_json(board: Board, hide_ships: Bool): Json ->
+    board_rows_json(board.rows, hide_ships, Json.array()).
+
+board_rows_json(rows: List[Row], hide_ships: Bool, output: Json): Json ->
+    case rows {
+        [] -> output;
+        [row | rest] -> board_rows_json(rest, hide_ships, output.push(row_json(row, hide_ships)))
+    }.
+
+row_json(row: Row, hide_ships: Bool): Json ->
+    row_cells_json(row.cells, hide_ships, Json.array()).
+
+row_cells_json(cells: List[Cell], hide_ships: Bool, output: Json): Json ->
+    case cells {
+        [] -> output;
+        [cell | rest] ->
+            row_cells_json(rest, hide_ships, output.push(Json.string(cell_text(cell, hide_ships))))
+    }.
+
+cell_text(cell: Cell, hide_ships: Bool): String ->
+    if {
+        Cell.is_empty(cell) -> "_";
+        cell == Cell.blocked() -> "o";
+        cell == Cell.hit() -> "+";
+        cell == Cell.miss() -> "m";
+        hide_ships -> "_";
+        true -> to_string(cell.value)
+    }.
+
+move_error(result: MoveResult): String ->
+    if {
+        result == NotYourTurn -> "action_not_allowed";
+        result == MatchFinished -> "room_finished";
+        result == UnknownPlayer -> "unknown_player";
+        true -> "invalid_move"
+    }.
+
+error_json(reason: String): String ->
+    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
+    |> stringify().

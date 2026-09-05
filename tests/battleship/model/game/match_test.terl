@@ -1,0 +1,88 @@
+module battleship.model.game.match_test.
+
+import battleship.model.game.Match.{Active, Finished, InvalidMove, NotYourTurn, UnknownPlayer}.
+import battleship.model.game.{Board, Cell, Match, Player, Unit}.
+import std.collections.List.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub constructor_starts_with_first_player_turn(): Bool ->
+    let match = Match.active_match();
+    assert_equal("player-1", match.current_turn).
+
+@test
+pub first_player_can_move_at_start(): Bool ->
+    let match = Match.active_match();
+    match
+    |> Match.allowed_to_move("player-1")
+    |> assert().
+
+@test
+pub second_player_cannot_move_at_start(): Bool ->
+    let match = Match.active_match();
+    assert_equal(NotYourTurn, Match.can_move(match, "player-2", 0, 0)).
+
+@test
+pub unknown_player_is_rejected(): Bool ->
+    let match = Match.active_match();
+    assert_equal(UnknownPlayer, Match.can_move(match, "missing", 0, 0)).
+
+@test
+pub miss_passes_turn_to_opponent(): Bool ->
+    let one = Player("player-1", Board(Board.empty_rows()));
+    let two = Player("player-2", Board(Board.empty_rows()));
+    let match = Match(one, two, one.id, "", List(), Active);
+    let next = Match.handle_move(match, "player-1", 4, 4);
+    assert_equal("player-2", next.current_turn).
+
+@test
+pub hit_keeps_turn_with_current_player(): Bool ->
+    let ship =
+        0
+        |> Unit.create(1)
+        |> Unit.place(1, 1, Unit.horizontal());
+    let one = Player("player-1", Board(Board.empty_rows()));
+    let two = Player("player-2", Board.attach_unit(Board(Board.empty_rows()), ship));
+    let match = Match(one, two, one.id, "", List(), Active);
+    let next = Match.handle_move(match, "player-1", 0, 0);
+    assert_equal("player-1", next.current_turn).
+
+@test
+pub resolved_cell_rejects_followup_move(): Bool ->
+    let board = Board.update_cell_at(Board(Board.empty_rows()), 1, 1, Cell.miss());
+    let one = Player("player-1", Board(Board.empty_rows()));
+    let two = Player("player-2", board);
+    let match = Match(one, two, one.id, "", List(), Active);
+    assert_equal(InvalidMove, Match.can_move(match, "player-1", 0, 0)).
+
+@test
+pub final_hit_finishes_match_and_records_winner(): Bool ->
+    let ship =
+        0
+        |> Unit.create(1)
+        |> Unit.place(10, 10, Unit.horizontal());
+    let board0 = Board.attach_unit(Board(Board.empty_rows()), ship);
+    let board1 = Board.update_cell_at(board0, 1, 1, Cell.hit());
+    let board2 = Board.update_cell_at(board1, 1, 2, Cell.hit());
+    let board3 = Board.update_cell_at(board2, 1, 3, Cell.hit());
+    let board4 = Board.update_cell_at(board3, 1, 4, Cell.hit());
+    let board5 = Board.update_cell_at(board4, 1, 5, Cell.hit());
+    let board6 = Board.update_cell_at(board5, 1, 6, Cell.hit());
+    let board7 = Board.update_cell_at(board6, 1, 7, Cell.hit());
+    let board8 = Board.update_cell_at(board7, 1, 8, Cell.hit());
+    let board9 = Board.update_cell_at(board8, 1, 9, Cell.hit());
+    let board10 = Board.update_cell_at(board9, 1, 10, Cell.hit());
+    let board11 = Board.update_cell_at(board10, 2, 1, Cell.hit());
+    let board12 = Board.update_cell_at(board11, 2, 2, Cell.hit());
+    let board13 = Board.update_cell_at(board12, 2, 3, Cell.hit());
+    let board14 = Board.update_cell_at(board13, 2, 4, Cell.hit());
+    let board15 = Board.update_cell_at(board14, 2, 5, Cell.hit());
+    let board16 = Board.update_cell_at(board15, 2, 6, Cell.hit());
+    let board17 = Board.update_cell_at(board16, 2, 7, Cell.hit());
+    let board18 = Board.update_cell_at(board17, 2, 8, Cell.hit());
+    let board19 = Board.update_cell_at(board18, 2, 9, Cell.hit());
+    let one = Player("player-1", Board(Board.empty_rows()));
+    let two = Player("player-2", board19);
+    let match = Match(one, two, one.id, "", List(), Active);
+    let next = Match.handle_move(match, "player-1", 9, 9);
+    assert_equal(Finished, next.phase) and assert_equal("player-1", next.winner).

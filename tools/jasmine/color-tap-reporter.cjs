@@ -53,7 +53,9 @@ class ColorTapReporter {
       return;
     }
 
-    this.log(`${COLOR.green}ok ${this.executed}${COLOR.reset} - ${spec.fullName}`);
+    this.log(
+      `${COLOR.green}ok ${this.executed}${COLOR.reset} - ${spec.fullName}`
+    );
   }
 
   jasmineDone() {
@@ -71,7 +73,9 @@ class ColorTapReporter {
   logFailures(failures) {
     failures.forEach((failure) => {
       if (failure.message) {
-        this.log(`${COLOR.red}  # Failure: ${comment(failure.message)}${COLOR.reset}`);
+        this.log(
+          `${COLOR.red}  # Failure: ${comment(failure.message)}${COLOR.reset}`
+        );
       }
 
       if (failure.stack && failure.stack !== failure.message) {

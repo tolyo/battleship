@@ -1,0 +1,17 @@
+[package]
+name = "battleship"
+version = "0.0.1"
+
+[build]
+source_roots = ["src"]
+artifact = "terlan-vm"
+
+[web.assets]
+directory = "assets"
+
+[integration.default]
+traits = ["compose-db", "migrations", "web-build", "web-server", "http-checks", "websocket-checks"]
+compose_service = "postgres"
+migrations = "sql"
+http_checks = ["GET:/:200", "GET:/login:200", "GET:/_login:200", "GET:/_register:200", "GET:/_dashboard:200", "GET:/_room:200", "GET:/_map:200", "GET:/static/map/map.html:200", "GET:/health:200:ok", "GET:/api/game/config:200:battleship", "GET:/api/game/fleet:200:migrated-to-terlan", "GET:/api/game/board:200:rows", "GET:/api/room/protocol:200:battleship.room.v1", "POST:/_login:400:invalid_request", "POST:/_login:400:invalid_credentials:email=missing@example.com&password=secret", "POST:/_register:400:invalid_request", "POST:/_register:400:invalid_request:username=ada&email=not-an-email&password=secret&repeatpassword=secret", "POST:/_register:201:user_id:username=ada&email=ada@example.com&password=secret&repeatpassword=secret", "POST:/_register:400:user_already_registered:username=ada&email=ada@example.com&password=secret&repeatpassword=secret", "POST:/_login:200:battleship_session:email=ada@example.com&password=secret"]
+websocket_checks = ["PAIR_RESTORE:/ws?player=Ada&board=%5B%5B%220%22%5D%5D:lobby_waiting:/ws?player=Grace&board=%5B%5B%220%22%2C%221%22%5D%5D:match_found:match_found:0:0:opponent_board:+:/ws?room_id=room-1&player_id=player-2:room_joined:+", "PAIR:/ws?player=Ada&board=%5B%5B%22X%22%5D%5D:lobby_waiting:/ws?player=Grace&board=%5B%5B%22X%22%5D%5D:match_found:match_found"]

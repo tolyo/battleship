@@ -1,13 +1,14 @@
-.PHONY: clean clean_build setup start build format lint check unit-test unit-test-tap test
+.PHONY: clean clean_build setup start build format lint check unit-test unit-test-tap coverage test
 
 # -----------------------------------------------------
 #  Configuration
 # -----------------------------------------------------
 INFO      := [INFO]
-BUILD_DIR := priv/static
+TERLAN_COMPILER_ROOT ?= /home/anatoly/Applications/terlan/terlan
+TERLC ?= $(shell debug="$(TERLAN_COMPILER_ROOT)/target/debug/terlc"; release="$(TERLAN_COMPILER_ROOT)/target/release/terlc"; if [ -x "$$release" ] && { [ ! -x "$$debug" ] || [ "$$release" -nt "$$debug" ]; }; then printf "%s" "$$release"; else printf "%s" "$$debug"; fi)
+BUILD_DIR := _build/terlan
 DEPS_DIR  := node_modules
 LIVE_RELOAD_PORT ?= 35729
-LIVE_RELOAD_WATCH_PATHS ?= priv/static
 
 # -----------------------------------------------------
 #  Utility Targets
@@ -44,26 +45,12 @@ setup: clean
 
 ## Start local dev server
 start:
-	@echo "$(INFO) Starting frontend watcher..."
-	@bash -c 'set -e; \
-		LIVE_RELOAD_ENABLED=1 LIVE_RELOAD_PORT=$(LIVE_RELOAD_PORT) npx rollup -c rollup.server.mjs --watch & \
-		rollup_pid=$$!; \
-		node dev_reload.mjs --port $(LIVE_RELOAD_PORT) $(LIVE_RELOAD_WATCH_PATHS) & \
-		reload_pid=$$!; \
-		cleanup() { \
-			kill $$rollup_pid $$reload_pid 2>/dev/null || true; \
-			wait $$rollup_pid $$reload_pid 2>/dev/null || true; \
-		}; \
-		trap cleanup INT TERM EXIT; \
-		wait -n $$rollup_pid $$reload_pid; \
-		status=$$?; \
-		cleanup; \
-		exit $$status'
+	@echo "$(INFO) Frontend build is owned by terlc serve."
 	
 ## Build prod
 build: clean_build
-	@echo "$(INFO) Starting Rollup..."
-	@npx rollup -c rollup.server.mjs
+	@echo "$(INFO) Building frontend through terlc web profile..."
+	@$(TERLC) build --target js.browser --out-dir $(BUILD_DIR)
 
 # -----------------------------------------------------
 #  Code Quality Targets
@@ -78,7 +65,7 @@ lint:
 	@echo "$(INFO) Formatting code with Prettier..."
 	@npx prettier --write --cache --log-level=silent .
 	@echo "$(INFO) Linting code with ESLint..."
-	@npx eslint ./app --fix
+	@npx eslint ./assets --fix
 
 ## Typecheck code with TypeScript
 check:
@@ -88,11 +75,15 @@ check:
 
 unit-test:
 	@echo "$(INFO) Running JS unit tests..."
-	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "app/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "assets/**/*.test.js"
 
 unit-test-tap:
 	@echo "$(INFO) Running JS unit tests as TAP..."
-	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "app/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "assets/**/*.test.js"
+
+coverage:
+	@echo "$(INFO) Measuring frontend application coverage at 100%..."
+	@npm run --silent test:coverage
 
 # -----------------------------------------------------
 #  Testing

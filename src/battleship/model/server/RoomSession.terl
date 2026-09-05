@@ -1,0 +1,49 @@
+/**
+ * Battleship room session contract.
+ *
+ * This module owns the deterministic room/player identity and websocket
+ * payload rules shared by the browser client and Terlan runtime checks.
+ */
+module battleship.model.server.RoomSession.
+
+import battleship.model.server.RoomProtocol.
+import std.collections.List.
+import std.core.String.
+
+pub first_player_id(): String -> "player-1".
+
+pub second_player_id(): String -> "player-2".
+
+pub room_id(sequence: Int): String ->
+    "room-"
+    |> List(std.core.Int.to_string(sequence))
+    |> String.concat().
+
+pub player_id(slot: Int): String ->
+    if {
+        slot == 1 -> first_player_id();
+        slot == 2 -> second_player_id();
+        true -> ""
+    }.
+
+pub is_known_player(player_id: String): Bool ->
+    player_id == first_player_id() or player_id == second_player_id().
+
+pub can_restore(room_id: String, player_id: String): Bool ->
+    String.byte_size(room_id) > 0 and is_known_player(player_id).
+
+pub waiting_message(): String ->
+    RoomProtocol.lobby_waiting_json().
+
+pub restore_message(room_id: String, player_id: String): String ->
+    let accepted = can_restore(room_id, player_id);
+    if {
+        accepted -> RoomProtocol.room_joined_json(room_id, player_id);
+        true -> RoomProtocol.unknown_player_json()
+    }.
+
+pub first_player_match_message(room_id: String): String ->
+    RoomProtocol.match_found_json(room_id, first_player_id(), second_player_id()).
+
+pub second_player_match_message(room_id: String): String ->
+    RoomProtocol.match_found_json(room_id, second_player_id(), first_player_id()).

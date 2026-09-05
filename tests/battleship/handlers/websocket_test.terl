@@ -1,0 +1,27 @@
+module battleship.handlers.websocket_test.
+
+import battleship.WebSocket.{protocol, route}.
+import battleship.handlers.WebSocket.
+import std.core.Unit.
+import std.test.Test.{assert_equal}.
+
+@test
+pub websocket_route_is_stable(): Bool ->
+    assert_equal("/ws", route()).
+
+@test
+pub websocket_protocol_is_stable(): Bool ->
+    assert_equal("battleship.room.v1", protocol()).
+
+@test
+pub websocket_callbacks_execute(): Bool ->
+    let waiting = WebSocket.waiting();
+    let peer_left = WebSocket.peer_left();
+    let inbound = WebSocket.inbound("", 1, "not-a-move", "", "");
+    let cancelled = WebSocket.cancelled("closed");
+    let restored = WebSocket.restored("room-1", "", 1, "", "");
+    assert_equal("{\"type\":\"lobby_waiting\"}", waiting)
+        and assert_equal("{\"type\":\"opponent_left\"}", peer_left)
+        and assert_equal({"", "{\"reason\":\"invalid_payload\",\"type\":\"error\"}", ""}, inbound)
+        and assert_equal(Unit, cancelled)
+        and assert_equal(true, restored.contains("room-1")).

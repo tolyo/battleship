@@ -1,0 +1,42 @@
+/**
+ * Battleship WebSocket route metadata.
+ *
+ * The route and subprotocol are declared in Terlan source and consumed by the
+ * web package manifest that drives `terlc serve`.
+ */
+module battleship.WebSocket.
+
+import battleship.handlers.WebSocket.{cancelled, inbound, matched, peer_left, restored, waiting}.
+import battleship.model.server.RoomProtocol.
+import std.http.Router.
+import std.http.WebSocket.{endpoint}.
+
+import type std.http.Router.
+
+pub route(): String ->
+    RoomProtocol.route().
+
+pub protocol(): String ->
+    RoomProtocol.protocol().
+
+pub router(): Router ->
+    Router.new()
+        .websocket(
+            "/ws",
+            endpoint(128, 65536)
+                .restorable_stateful_paired_callbacks(
+                    waiting,
+                    peer_left,
+                    "room_id",
+                    "player_id",
+                    "room-",
+                    "player-1",
+                    "player-2",
+                    300000,
+                    1024,
+                    matched,
+                    restored,
+                    inbound,
+                    cancelled,
+                ),
+        ).

@@ -1,0 +1,82 @@
+/**
+ * Battleship authentication response contract.
+ *
+ * This module owns HTTP-facing authentication payloads and delegates account
+ * request validation to the Terlan account contract.
+ */
+module battleship.handlers.Auth.
+
+import battleship.JsonText.{stringify}.
+import battleship.model.server.Account.
+import std.core.Option.{None, Some}.
+import std.core.String.
+import std.data.Json.
+import std.http.Response.
+
+import type std.http.{Request, Response}.
+
+pub session_cookie_name(): String -> "battleship_session".
+
+pub local_session_id(): String -> "terlan-local".
+
+pub valid_body(body: String): Bool ->
+    String.byte_size(body) > 0.
+
+pub login_request_valid(body: String): Bool ->
+    Account.login_form_valid(body).
+
+pub register_request_valid(body: String): Bool ->
+    Account.register_form_valid(body).
+
+pub login_json(): String ->
+    Json.object().put("status", Json.string("ok"))
+    |> stringify().
+
+pub register_json(): String ->
+    register_success_json(local_session_id()).
+
+pub invalid_request_json(): String ->
+    error_json("invalid_request").
+
+pub invalid_credentials_json(): String ->
+    error_json("invalid_credentials").
+
+pub duplicate_user_json(): String ->
+    error_json("user_already_registered").
+
+pub register_success_json(user_id: String): String ->
+    Json.object().put("status", Json.string("ok")).put("user_id", Json.string(user_id))
+    |> stringify().
+
+error_json(reason: String): String ->
+    Json.object().put("status", Json.string("error")).put("reason", Json.string(reason))
+    |> stringify().
+
+pub login(request: Request): Response ->
+    let body = request.body_text();
+    let valid = Account.login_form_valid(body);
+    if {
+        valid -> case Account.credentials_valid(body) {
+            true ->
+                Response.json_text(login_json())
+                    .with_header("Set-Cookie", "battleship_session=terlan-local; Path=/; HttpOnly");
+            false -> Response.json_text(invalid_credentials_json(), status = 400)
+        };
+        true -> Response.json_text(invalid_request_json(), status = 400)
+    }.
+
+pub register(request: Request): Response ->
+    let body = request.body_text();
+    let valid = Account.register_form_valid(body);
+    if {
+        valid -> case Account.user_exists(body) {
+            true -> Response.json_text(duplicate_user_json(), status = 400);
+            false ->
+                case Account.create_user_id(body) {
+                    Some(user_id) ->
+                        Response.json_text(register_success_json(user_id), status = 201);
+                    None -> Response.json_text(invalid_request_json(), status = 400)
+                }
+        };
+        true -> Response.json_text(invalid_request_json(), status = 400)
+    }.

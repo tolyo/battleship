@@ -12,3 +12,5 @@ _build
 _priv
 priv
 *.crashdump
+**/.terlan/
+coverage/

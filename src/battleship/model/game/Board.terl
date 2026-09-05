@@ -1,0 +1,308 @@
+/**
+ * Battleship board helpers.
+ *
+ * The game board is a nominal 10x10 collection of cells. This module owns its
+ * construction, immutable updates, and placement bounds checks.
+ */
+module battleship.model.game.Board.
+
+import battleship.model.game.{Cell, Unit}.
+import std.collections.List.
+
+import type battleship.model.game.Cell.
+import type battleship.model.game.Unit.{Ship}.
+import type std.collections.List.
+
+/**
+ * Board row and aggregate model types.
+ */
+pub struct Row {
+    cells: List[Cell],
+}.
+
+pub struct Board {
+    rows: List[Row],
+}.
+
+/**
+ * Constructs a row from validated cells.
+ */
+pub constructor Row {
+    (cells: List[Cell]): Row ->
+        Row {cells: cells}
+}.
+
+/**
+ * Constructs a board from validated rows.
+ */
+pub constructor Board {
+    (rows: List[Row]): Board ->
+        Board {rows: rows}
+}.
+
+pub const BOARD_SIZE: Int = 10.
+
+pub empty_cells(): List[Cell] ->
+    build_empty_cells_in_range(1, BOARD_SIZE).
+
+pub empty_rows(): List[Row] ->
+    build_empty_rows_in_range(1, BOARD_SIZE).
+
+build_empty_cells_in_range(current: Int, stop: Int): List[Cell] ->
+    case current > stop {
+        true -> [];
+        false -> [Cell(-1) | build_empty_cells_in_range(current + 1, stop)]
+    }.
+
+build_empty_rows_in_range(current: Int, stop: Int): List[Row] ->
+    case current > stop {
+        true -> [];
+        false -> [Row(empty_cells()) | build_empty_rows_in_range(current + 1, stop)]
+    }.
+
+pub in_bounds(row: Int, column: Int): Bool ->
+    row >= 1 and row <= BOARD_SIZE and column >= 1 and column <= BOARD_SIZE.
+
+pub can_fit_horizontal(row: Int, column: Int, size: Int): Bool ->
+    in_bounds(row, column) and size > 0 and column + size - 1 <= BOARD_SIZE.
+
+pub can_fit_vertical(row: Int, column: Int, size: Int): Bool ->
+    in_bounds(row, column) and size > 0 and row + size - 1 <= BOARD_SIZE.
+
+pub get_cell_value(board: Board, row: Int, column: Int): Cell ->
+    get_cell_from_row(get_board_row(board.rows, row).cells, column).
+
+pub is_cell_empty(board: Board, row: Int, column: Int): Bool ->
+    Cell.is_empty(get_cell_value(board, row, column)).
+
+pub update_cell_at(board: Board, row: Int, column: Int, value: Cell): Board ->
+    Board(
+        update_board_row(
+            board.rows,
+            row,
+            Row(update_row_cells(get_board_row(board.rows, row).cells, column, value)),
+        ),
+    ).
+
+pub attach_unit(board: Board, ship: Ship): Board ->
+    let id = ship.id;
+    let row = ship.row;
+    let column = ship.column;
+    let size = ship.size;
+    let orientation = ship.orientation;
+    case orientation == Unit.horizontal() {
+        true -> attach_unit_in_direction(board, Cell(id), row, column, size, 0, 1);
+        false -> attach_unit_in_direction(board, Cell(id), row, column, size, 1, 0)
+    }.
+
+pub is_legal(board: Board, ship: Ship): Bool ->
+    let row = ship.row;
+    let column = ship.column;
+    let size = ship.size;
+    let orientation = ship.orientation;
+    case orientation == Unit.horizontal() {
+        true ->
+            can_fit_horizontal(row, column, size)
+                and is_legal_in_direction(board, row, column, size, 0, 1);
+        false ->
+            can_fit_vertical(row, column, size)
+                and is_legal_in_direction(board, row, column, size, 1, 0)
+    }.
+
+pub set_adjacents_blocked(board: Board): Board ->
+    set_adjacents_blocked_rows(board, 1).
+
+pub count(board: Board, value: Cell): Int ->
+    count_rows(board.rows, value, 0).
+
+count_rows(rows: List[Row], value: Cell, total: Int): Int ->
+    case rows {
+        [row | rows] -> count_rows(rows, value, count_row(row, value, total));
+        [] -> total
+    }.
+
+pub cell_count(): Int ->
+    BOARD_SIZE * BOARD_SIZE.
+
+pub row_count(): Int ->
+    BOARD_SIZE.
+
+get_board_row(rows: List[Row], row: Int): Row ->
+    case rows {
+        [current | rest] ->
+            case row {
+                1 -> current;
+                _ -> get_board_row(rest, row - 1)
+            };
+        [] -> Row(empty_cells())
+    }.
+
+get_cell_from_row(cells: List[Cell], column: Int): Cell ->
+    case cells {
+        [cell | rest] ->
+            case column {
+                1 -> cell;
+                _ -> get_cell_from_row(rest, column - 1)
+            };
+        [] -> Cell.blocked()
+    }.
+
+update_board_row(rows: List[Row], row: Int, value: Row): List[Row] ->
+    case rows {
+        [current | rest] ->
+            case row {
+                1 -> [value | rest];
+                _ -> [current | update_board_row(rest, row - 1, value)]
+            };
+        [] -> []
+    }.
+
+update_row_cells(cells: List[Cell], column: Int, value: Cell): List[Cell] ->
+    case cells {
+        [current | rest] ->
+            case column {
+                1 -> [value | rest];
+                _ -> [current | update_row_cells(rest, column - 1, value)]
+            };
+        [] -> []
+    }.
+
+attach_unit_in_direction(
+    board: Board,
+    value: Cell,
+    row: Int,
+    column: Int,
+    size: Int,
+    row_increment: Int,
+    column_increment: Int,
+): Board ->
+    case size {
+        0 -> board;
+        _ ->
+            attach_unit_in_direction(
+                update_cell_at(board, row, column, value),
+                value,
+                row + row_increment,
+                column + column_increment,
+                size - 1,
+                row_increment,
+                column_increment,
+            )
+    }.
+
+is_legal_in_direction(
+    board: Board,
+    row: Int,
+    column: Int,
+    size: Int,
+    row_increment: Int,
+    column_increment: Int,
+): Bool ->
+    case size {
+        0 -> true;
+        _ ->
+            case is_cell_empty(board, row, column) and is_adjacent_cells_empty(board, row, column) {
+                true ->
+                    is_legal_in_direction(
+                        board,
+                        row + row_increment,
+                        column + column_increment,
+                        size - 1,
+                        row_increment,
+                        column_increment,
+                    );
+                false -> false
+            }
+    }.
+
+is_adjacent_cells_empty(board: Board, row: Int, column: Int): Bool ->
+    is_empty_or_out_of_bounds(board, row - 1, column - 1)
+        and is_empty_or_out_of_bounds(board, row - 1, column)
+        and is_empty_or_out_of_bounds(board, row - 1, column + 1)
+        and is_empty_or_out_of_bounds(board, row, column - 1)
+        and is_empty_or_out_of_bounds(board, row, column + 1)
+        and is_empty_or_out_of_bounds(board, row + 1, column - 1)
+        and is_empty_or_out_of_bounds(board, row + 1, column)
+        and is_empty_or_out_of_bounds(board, row + 1, column + 1).
+
+is_empty_or_out_of_bounds(board: Board, row: Int, column: Int): Bool ->
+    case in_bounds(row, column) {
+        true -> is_cell_empty(board, row, column);
+        false -> true
+    }.
+
+set_adjacents_blocked_rows(board: Board, row: Int): Board ->
+    case row > BOARD_SIZE {
+        true -> board;
+        false -> set_adjacents_blocked_rows(set_adjacents_blocked_columns(board, row, 1), row + 1)
+    }.
+
+set_adjacents_blocked_columns(board: Board, row: Int, column: Int): Board ->
+    case column > BOARD_SIZE {
+        true -> board;
+        false ->
+            set_adjacents_blocked_columns(
+                set_adjacents_blocked_at(board, row, column),
+                row,
+                column + 1,
+            )
+    }.
+
+set_adjacents_blocked_at(board: Board, row: Int, column: Int): Board ->
+    case get_cell_value(board, row, column) == Cell.hit() {
+        true -> block_adjacent_cells(board, row, column);
+        false -> board
+    }.
+
+block_adjacent_cells(board: Board, row: Int, column: Int): Board ->
+    block_empty_cell(
+        block_empty_cell(
+            block_empty_cell(
+                block_empty_cell(
+                    block_empty_cell(
+                        block_empty_cell(
+                            block_empty_cell(
+                                block_empty_cell(board, row - 1, column - 1),
+                                row - 1,
+                                column,
+                            ),
+                            row - 1,
+                            column + 1,
+                        ),
+                        row,
+                        column - 1,
+                    ),
+                    row,
+                    column + 1,
+                ),
+                row + 1,
+                column - 1,
+            ),
+            row + 1,
+            column,
+        ),
+        row + 1,
+        column + 1,
+    ).
+
+block_empty_cell(board: Board, row: Int, column: Int): Board ->
+    let {
+        true <- in_bounds(row, column);
+        true <- Cell.is_empty(get_cell_value(board, row, column))
+    } else {
+        _ -> board
+    };
+    update_cell_at(board, row, column, Cell.blocked()).
+
+count_row(row: Row, value: Cell, total: Int): Int ->
+    count_cells(row.cells, value, total).
+
+count_cells(cells: List[Cell], value: Cell, total: Int): Int ->
+    case cells {
+        [cell | cells] ->
+            case cell == value {
+                true -> count_cells(cells, value, total + 1);
+                false -> count_cells(cells, value, total)
+            };
+        [] -> total
+    }.

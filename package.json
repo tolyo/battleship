@@ -1,7 +1,11 @@
 {
   "private": true,
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "format:sql": "node tools/sql-format.mjs",
+    "lint:sql": "node tools/sql-format.mjs --check",
+    "test:coverage": "c8 --all --include 'assets/**/*.js' --exclude 'assets/**/*.test.js' --exclude 'assets/index.js' --exclude 'assets/live_reload.js' --reporter=text --check-coverage --lines 100 --functions 100 --branches 100 --statements 100 jasmine --reporter=./tools/jasmine/tap-reporter.cjs 'assets/**/*.test.js'"
+  },
   "dependencies": {
     "@angular-wave/angular.ts": "0.30.0",
     "modern-normalize": "latest",
@@ -9,12 +13,12 @@
   },
   "devDependencies": {
     "@playwright/test": "latest",
-    "@rollup/plugin-commonjs": "latest",
-    "@rollup/plugin-node-resolve": "latest",
-    "@rollup/plugin-terser": "latest",
+    "@rsbuild/core": "^2.0.15",
     "@types/node": "latest",
     "@typescript-eslint/eslint-plugin": "latest",
     "@typescript-eslint/parser": "latest",
+    "autoprefixer": "^10.5.0",
+    "c8": "^12.0.0",
     "chokidar": "latest",
     "eslint": "latest",
     "eslint-config-airbnb-base": "latest",
@@ -22,10 +26,9 @@
     "eslint-plugin-import": "latest",
     "jasmine": "^6.2.0",
     "jasmine-reporters": "^2.5.2",
-    "lightningcss": "latest",
     "playwright": "latest",
     "prettier": "latest",
-    "rollup": "latest",
+    "sql-formatter": "15.8.2",
     "typescript": "latest"
   }
 }

@@ -1,0 +1,273 @@
+/**
+ * Battleship match rules.
+ *
+ * This module ports the core Erlang rules model into Terlan-owned source:
+ * turn selection, move validation, strike resolution, and match completion.
+ */
+module battleship.model.game.Match.
+
+import battleship.model.game.{Board, Cell, Player, Unit}.
+import std.collections.List.
+
+import type battleship.model.game.{Board, Cell, Player}.
+
+/**
+ * Match lifecycle types.
+ */
+pub type Active.
+
+pub type Finished.
+
+pub type Phase = Active | Finished.
+
+/**
+ * Move outcome types, ordered from concrete markers to narrowed unions.
+ */
+pub type Hit.
+
+pub type Miss.
+
+pub type InvalidMove.
+
+pub type NotYourTurn.
+
+pub type MatchFinished.
+
+pub type UnknownPlayer.
+
+pub type MoveResult = Hit | Miss | InvalidMove | NotYourTurn | MatchFinished | UnknownPlayer.
+
+pub type TargetResult = Hit | Miss | InvalidMove.
+
+pub type ActiveMoveResult = Hit | Miss | InvalidMove | NotYourTurn.
+
+pub type KnownMoveResult = Hit | Miss | InvalidMove | NotYourTurn | MatchFinished.
+
+/**
+ * Immutable match-domain record types.
+ */
+pub struct Strike {
+    player_id: String,
+    row: Int,
+    column: Int,
+    result: MoveResult,
+}.
+
+pub struct Match {
+    player_one: Player,
+    player_two: Player,
+    current_turn: String,
+    winner: String,
+    strikes: List[Strike],
+    phase: Phase,
+}.
+
+/**
+ * Constructs a fresh match between two players.
+ */
+pub constructor Match {
+    (player_one: Player, player_two: Player, current_turn: String, winner: String, strikes: List[Strike], phase: Phase): Match ->
+        Match {
+            player_one: player_one,
+            player_two: player_two,
+            current_turn: current_turn,
+            winner: winner,
+            strikes: strikes,
+            phase: phase,
+        }
+}.
+
+pub has_player(match: Match, id: String): Bool ->
+    match.player_one.id == id or match.player_two.id == id.
+
+pub get_player_by_id(match: Match, id: String): Player ->
+    case match.player_one.id == id {
+        true -> match.player_one;
+        false -> match.player_two
+    }.
+
+pub get_opposite_player(match: Match, player: Player): Player ->
+    case match.player_one.id == player.id {
+        true -> match.player_two;
+        false -> match.player_one
+    }.
+
+pub can_move(match: Match, player_id: String, row: Int, column: Int): MoveResult ->
+    case has_player(match, player_id) {
+        false -> UnknownPlayer;
+        true -> can_known_player_move(match, player_id, row, column)
+    }.
+
+pub allowed_to_move(match: Match, player_id: String): Bool ->
+    let result = can_move(match, player_id, 0, 0);
+    result == Hit or result == Miss.
+
+pub handle_move(match: Match, player_id: String, row: Int, column: Int): Match ->
+    let result = can_move(match, player_id, row, column);
+    if {
+        result == Hit -> next_move(match, row + 1, column + 1);
+        result == Miss -> next_move(match, row + 1, column + 1);
+        true -> match
+    }.
+
+pub next_move(match: Match, row: Int, column: Int): Match ->
+    let current = get_player_by_id(match, match.current_turn);
+    let opponent = get_opposite_player(match, current);
+    let board = opponent.board;
+    case Board.get_cell_value(board, row, column) {
+        value -> apply_target_value(match, current, opponent, board, value, row, column)
+    }.
+
+pub active_match(): Match ->
+    let one = Player("player-1", active_board());
+    let two = Player("player-2", active_board());
+    Match(one, two, one.id, "", List(), Active).
+
+pub active_board(): Board ->
+    Board.attach_unit(
+        Board(Board.empty_rows()),
+        Unit.place(Unit.create(0, 1), 1, 1, Unit.horizontal()),
+    ).
+
+can_known_player_move(match: Match, player_id: String, row: Int, column: Int): KnownMoveResult ->
+    case match.phase == Finished {
+        true -> MatchFinished;
+        false -> can_active_player_move(match, player_id, row, column)
+    }.
+
+can_active_player_move(match: Match, player_id: String, row: Int, column: Int): ActiveMoveResult ->
+    case match.current_turn == player_id {
+        false -> NotYourTurn;
+        true -> target_result(match, player_id, row + 1, column + 1)
+    }.
+
+target_result(match: Match, player_id: String, row: Int, column: Int): TargetResult ->
+    let current = get_player_by_id(match, player_id);
+    let opponent = get_opposite_player(match, current);
+    case Board.get_cell_value(opponent.board, row, column) {
+        value -> target_value_result(value)
+    }.
+
+apply_target_value(
+    match: Match,
+    current: Player,
+    opponent: Player,
+    board: Board,
+    value: Cell,
+    row: Int,
+    column: Int,
+): Match ->
+    case Cell.is_empty(value) {
+        true ->
+            let updated_board = Board.update_cell_at(board, row, column, Cell.miss());
+            record_move(match, current, opponent, updated_board, Miss, row, column);
+        false -> apply_non_empty_target_value(match, current, opponent, board, value, row, column)
+    }.
+
+apply_non_empty_target_value(
+    match: Match,
+    current: Player,
+    opponent: Player,
+    board: Board,
+    value: Cell,
+    row: Int,
+    column: Int,
+): Match ->
+    case Cell.is_ship(value) {
+        true ->
+            let updated_board = Board.update_cell_at(board, row, column, Cell.hit());
+            record_hit(match, current, opponent, updated_board, row, column);
+        false -> match
+    }.
+
+target_value_result(value: Cell): TargetResult ->
+    case Cell.is_empty(value) {
+        true -> Miss;
+        false -> target_non_empty_value_result(value)
+    }.
+
+target_non_empty_value_result(value: Cell): Hit | InvalidMove ->
+    case Cell.is_ship(value) {
+        true -> Hit;
+        false -> InvalidMove
+    }.
+
+record_hit(
+    match: Match,
+    current: Player,
+    opponent: Player,
+    board: Board,
+    row: Int,
+    column: Int,
+): Match ->
+    case Board.count(board, Cell.hit()) == Unit.total_size() {
+        true -> record_finished_move(match, current, opponent, board, Hit, row, column);
+        false -> record_move(match, current, opponent, board, Hit, row, column)
+    }.
+
+record_finished_move(
+    match: Match,
+    current: Player,
+    opponent: Player,
+    board: Board,
+    result: MoveResult,
+    row: Int,
+    column: Int,
+): Match ->
+    let updated = record_move(match, current, opponent, board, result, row, column);
+    set_finished(updated, current.id).
+
+record_move(
+    match: Match,
+    current: Player,
+    opponent: Player,
+    board: Board,
+    result: MoveResult,
+    row: Int,
+    column: Int,
+): Match ->
+    case result == Hit {
+        true -> replace_opponent_board(match, opponent, board, current.id, result, row, column);
+        false -> replace_opponent_board(match, opponent, board, opponent.id, result, row, column)
+    }.
+
+replace_opponent_board(
+    match: Match,
+    opponent: Player,
+    board: Board,
+    next_turn: String,
+    result: MoveResult,
+    row: Int,
+    column: Int,
+): Match ->
+    let strike = Strike {player_id: match.current_turn, row: row, column: column, result: result};
+    case match.player_one.id == opponent.id {
+        true ->
+            Match {
+                player_one: Player(opponent.id, board),
+                player_two: match.player_two,
+                current_turn: next_turn,
+                winner: match.winner,
+                strikes: [strike | match.strikes],
+                phase: match.phase,
+            };
+        false ->
+            Match {
+                player_one: match.player_one,
+                player_two: Player(opponent.id, board),
+                current_turn: next_turn,
+                winner: match.winner,
+                strikes: [strike | match.strikes],
+                phase: match.phase,
+            }
+    }.
+
+set_finished(match: Match, winner_id: String): Match ->
+    Match {
+        player_one: match.player_one,
+        player_two: match.player_two,
+        current_turn: match.current_turn,
+        winner: winner_id,
+        strikes: match.strikes,
+        phase: Finished,
+    }.
