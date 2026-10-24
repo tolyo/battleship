@@ -23,6 +23,25 @@ make start
 The frontend and backend are served at `http://127.0.0.1:8080`. `make start`
 also starts PostgreSQL and keeps the browser package and Terlan server together.
 
+Board dimensions, tile sizing, setup controls, disabled-state styles, spacing, and
+unit-state borders live in `src/battleship/Styles.terl`.
+The module composes specification-generated CSS
+property structs with `includes` and constructs typed CSS values. Compound margins
+use `Margin.pair` and `Margin.quad` with typed components, including `auto`.
+Unit borders use `Border.compose` with distinct width and style parts and a
+validated RGB color. Their normal, killed, dragged, and error rules preserve
+the original cascade order. The module's pure `stylesheet/0` function is evaluated
+during the web build. `[web.assets].styles`
+lists the handwritten CSS entry followed by this module; Terlan bundles them
+with its managed Lightning CSS toolchain. `StylesTest.terl` checks the shared
+defaults and invalid dimensions. Other styles remain in `assets`.
+After a web build, `npm run test:styles` checks the emitted CSS in Chromium
+without starting PostgreSQL or the application server.
+`npm run test:styles:build` builds the real stylesheets in a temporary CSS-only
+project and runs the same browser checks. This also verifies the styles while
+backend work is in progress. Set `TERLC` to select a compiler executable and
+`CHROMIUM_EXECUTABLE_PATH` to use an installed Chromium browser.
+
 ## Verification
 
 ```sh

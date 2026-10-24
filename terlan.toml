@@ -8,6 +8,7 @@ artifact = "terlan-vm"
 
 [web.assets]
 directory = "assets"
+styles = ["assets/styles.css", "src/battleship/Styles.terl"]
 
 [integration.default]
 traits = ["compose-db", "migrations", "web-build", "web-server", "http-checks", "websocket-checks"]

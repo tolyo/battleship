@@ -1,8 +1,6 @@
 /* Main tag functions as a container for the content of our page */
 main {
   width: 100%;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 @media screen and (max-width: 767px) {

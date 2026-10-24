@@ -1,6 +1,6 @@
 menu {
   align-items: baseline;
-  /* If a menu has a form, it is always a primary action button */
+  /* Align form buttons with adjacent menu links. */
   & form {
     padding: 0;
     & button {

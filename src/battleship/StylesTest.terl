@@ -1,0 +1,23 @@
+module battleship.StylesTest.
+
+import battleship.Styles.
+import std.core.Result.{Err, Ok}.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub stylesheet_uses_the_shared_board_dimensions(): Bool ->
+    assert_equal(Styles.rules(30.0, 300.0, 0.5), Styles.stylesheet()).
+
+@test
+pub invalid_dimensions_fail_instead_of_emitting_invalid_css(): Bool ->
+    case Styles.rules(-1.0, 300.0, 0.5) {
+        Err(_) -> assert(true);
+        Ok(_) -> assert(false)
+    }.
+
+@test
+pub negative_control_gap_is_rejected(): Bool ->
+    case Styles.rules(30.0, 300.0, -0.5) {
+        Err(_) -> assert(true);
+        Ok(_) -> assert(false)
+    }.

@@ -14,20 +14,12 @@
       border: 1.5px solid gray;
       height: 30px;
       float: inline-start;
-      margin-bottom: 1.5rem;
-      margin-left: 1rem;
-      margin-top: 1rem;
     }
   }
 
   & #state {
     width: 300px;
   }
-}
-
-#setup-controls {
-  display: flex;
-  gap: 0.5rem;
 }
 
 #setup-controls[hidden],
@@ -39,14 +31,6 @@
 #target-board {
   outline: 1px solid #2d6ca0;
   min-width: 300px;
-  width: 300px;
-  height: 300px;
-}
-
-#own-board.disabled,
-#target-board.disabled {
-  opacity: 0.8;
-  cursor: not-allowed;
 }
 
 #target-board:not(.disabled) .target-board-tile:not(.hit):not(.miss) {
@@ -80,10 +64,7 @@
   background-color: #4ba9ff;
   float: left;
   position: relative;
-  width: 30px;
-  height: 30px;
   border: 1px solid #2d6ca0;
-  box-sizing: border-box;
 }
 
 .own-board-tile.droppable-target {
@@ -216,10 +197,10 @@
 
 .clear-button {
   margin-top: 10px;
-  -webkit-user-select: none; /* Provent button highlighinng Chrome all / Safari all */
-  -moz-user-select: none; /* Firefox all */
-  -ms-user-select: none; /* IE 10+ */
-  user-select: none; /* Likely future */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .clearfix {

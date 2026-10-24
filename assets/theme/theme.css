@@ -10,12 +10,7 @@
 @import './styles/menu.css';
 @import './styles/table.css';
 
-/**
-
-    This theme generated via https://uicolors.app/.
-    Modify as necessary
-
-**/
+/* Color palette generated with https://uicolors.app/. */
 
 :root {
   font-family: 'Inter', sans-serif;
@@ -30,8 +25,6 @@
   --theme-800: #1b4871;
   --theme-900: #1c3e5e;
   --theme-950: #13283e;
-
-  /* End Swap this out */
 
   --primary: var(--theme-500) !important;
   --primary-hover: var(--theme-600) !important;
