@@ -21,7 +21,7 @@ export interface MatchSnapshotState<View, Model> {
 }
 
 export interface SnapshotProjection<View, Model> {
-  project(view: View): Model | undefined;
+  project(view?: View): Model | undefined;
 }
 
 export interface ClientSignal {
@@ -41,4 +41,17 @@ export interface TimerHost {
 
 export interface TimerState<Handle> {
   timerId?: Handle;
+}
+
+export interface RestoreStore<Entry> {
+  currentRoomId(): string | null | undefined;
+  restoreEntry(roomId: string): Entry | null | undefined;
+}
+
+export interface RoomEventEnvelope<Entry, View> {
+  readonly type: string;
+  readonly entry?: Entry;
+  readonly updateUrl?: boolean;
+  readonly view?: View;
+  readonly reason?: string | null;
 }

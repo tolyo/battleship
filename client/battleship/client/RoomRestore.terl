@@ -1,0 +1,118 @@
+module battleship.client.RoomRestore.
+
+import battleship.browser.SessionConfig.
+import battleship.host.RestoreStore.
+import std.core.Option.{None, Some}.
+import std.js.String.
+
+import type battleship.browser.ConnectionContext.{Context, Entry}.
+import type battleship.host.RestoreStore.{RestoreStore}.
+
+pub type Completion = Unit.
+
+pub struct Options {
+    timeoutMs: Int,
+}.
+
+pub struct MatchPort {
+    isRestoring: Bool,
+    startRestore: (String, String) -> Bool,
+    roomUnavailable: () -> Bool,
+}.
+
+pub struct RecoveryPort {
+    restoreFailed: (String, String) -> Bool,
+}.
+
+pub struct TimerPort {
+    start: (() -> Completion, Int) -> Completion,
+    clear: () -> Completion,
+}.
+
+pub struct Restoration {
+    restoreCurrentRequest: ((Entry) -> Bool) -> Bool,
+    startRestore: (Entry) -> Bool,
+    startRestoreWithOptions: (Entry, Options) -> Bool,
+    clearRestoreTimeout: () -> Completion,
+    handleConnectionDisconnect: (Context) -> Bool,
+    disconnect: (Context, String, Bool) -> Bool,
+    failRestore: (String, String) -> Completion,
+}.
+
+pub defaults(): Options ->
+    Options {timeoutMs: SessionConfig.restore_timeout_ms()}.
+
+pub create(
+    store: RestoreStore[Entry],
+    state: MatchPort,
+    recovery: RecoveryPort,
+    timer: TimerPort,
+): Restoration ->
+    Restoration {
+        restoreCurrentRequest: ((restore) -> current(store, state, restore)),
+        startRestore: ((entry) -> start(state, recovery, timer, entry, defaults())),
+        startRestoreWithOptions: ((entry, options) -> start(state, recovery, timer, entry, options)),
+        clearRestoreTimeout: (() -> timer#TimerPort.clear()),
+        handleConnectionDisconnect: ((context) -> disconnect(state, recovery, timer, context, unavailable(), true)),
+        disconnect: ((context, reason, active) -> disconnect(state, recovery, timer, context, reason, active)),
+        failRestore: ((room_id, reason) -> fail(recovery, timer, room_id, reason)),
+    }.
+
+unavailable(): String ->
+    let statuses = SessionConfig.statuses();
+    statuses.roomUnavailable.
+
+current(store: RestoreStore[Entry], state: MatchPort, restore: (Entry) -> Bool): Bool ->
+    case RestoreStore.current_room_id(store) {
+        Some(room_id) ->
+            if {
+                String.to_core(room_id) == "" -> false;
+                true -> case RestoreStore.restore_entry(store, room_id) {
+                    Some(entry) -> restore(entry);
+                    None ->
+                        let ignored = state#MatchPort.roomUnavailable();
+                        false
+                }
+            };
+        None -> false
+    }.
+
+start(
+    state: MatchPort,
+    recovery: RecoveryPort,
+    timer: TimerPort,
+    entry: Entry,
+    options: Options,
+): Bool ->
+    if {
+        state#MatchPort.startRestore(entry.roomId, entry.playerId) -> let ignored = timer#TimerPort.start(() -> notify(recovery, entry), options.timeoutMs);
+        true;
+        true -> false
+    }.
+
+notify(recovery: RecoveryPort, entry: Entry): Unit ->
+    let ignored = recovery#RecoveryPort.restoreFailed(entry.roomId, unavailable());
+    Unit.
+
+fail(recovery: RecoveryPort, timer: TimerPort, room_id: String, reason: String): Unit ->
+    let cleared = timer#TimerPort.clear();
+    let recovered = recovery#RecoveryPort.restoreFailed(room_id, reason);
+    Unit.
+
+disconnect(
+    state: MatchPort,
+    recovery: RecoveryPort,
+    timer: TimerPort,
+    context: Context,
+    reason: String,
+    active: Bool,
+): Bool ->
+    case context {
+        Some(entry) ->
+            if {
+                active and not state.isRestoring -> false;
+                true -> let ignored = fail(recovery, timer, entry.roomId, reason);
+                true
+            };
+        _ -> false
+    }.

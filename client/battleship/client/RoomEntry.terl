@@ -29,6 +29,9 @@ pub struct EntryService[V] {
     enter: (RoomIdentity[V], Options) -> Bool,
 }.
 
+pub options(update_url: Bool): Options ->
+    Options {updateUrl: update_url}.
+
 pub create[V](store: StorePort, state: StatePort[V], view: ViewPort[V]): EntryService[V] ->
     EntryService {
         enter: ((entry, options) ->

@@ -1,5 +1,9 @@
 import { create as createConnectionLifecycle } from '../../../_build/browser/js/modules/battleship/browser/ConnectionLifecycle.js';
-import { CONNECTION_MODE } from '../../../assets/game/services/connection-context.js';
+import {
+  lobby,
+  restore,
+  is_restore as isRestoreContext,
+} from '../../../_build/browser/js/modules/battleship/browser/ConnectionContext.js';
 
 describe('RoomConnectionLifecycleService', () => {
   it('maps restore-mode close events to restore flow and close callback', () => {
@@ -9,19 +13,13 @@ describe('RoomConnectionLifecycleService', () => {
     const onRestoreClose = jasmine.createSpy('onRestoreClose');
 
     service.onClose(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
+      restore({ roomId: 'room-1', playerId: 'player-1' }),
       onRestoreClose
     );
 
-    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith({
-      mode: CONNECTION_MODE.RESTORE,
-      roomId: 'room-1',
-      playerId: 'player-1',
-    });
+    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith(
+      restore({ roomId: 'room-1', playerId: 'player-1' })
+    );
     expect(onRestoreClose).toHaveBeenCalledOnceWith();
     expect(matchState.connectionClosed).not.toHaveBeenCalled();
   });
@@ -29,10 +27,7 @@ describe('RoomConnectionLifecycleService', () => {
   it('maps lobby close events to connection closed state', () => {
     const { service, matchState } = roomConnectionLifecycle();
 
-    service.onClose(
-      { mode: CONNECTION_MODE.LOBBY },
-      jasmine.createSpy('onRestoreClose')
-    );
+    service.onClose(lobby(), jasmine.createSpy('onRestoreClose'));
 
     expect(matchState.connectionClosed).toHaveBeenCalledOnceWith();
   });
@@ -44,29 +39,20 @@ describe('RoomConnectionLifecycleService', () => {
     const onRestoreClose = jasmine.createSpy('onRestoreClose');
 
     service.onError(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
+      restore({ roomId: 'room-1', playerId: 'player-1' }),
       onRestoreClose
     );
 
-    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith({
-      mode: CONNECTION_MODE.RESTORE,
-      roomId: 'room-1',
-      playerId: 'player-1',
-    });
+    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith(
+      restore({ roomId: 'room-1', playerId: 'player-1' })
+    );
     expect(onRestoreClose).toHaveBeenCalledOnceWith();
   });
 
   it('maps lobby error events to connection error state', () => {
     const { service, matchState } = roomConnectionLifecycle();
 
-    service.onError(
-      { mode: CONNECTION_MODE.LOBBY },
-      jasmine.createSpy('onRestoreClose')
-    );
+    service.onError(lobby(), jasmine.createSpy('onRestoreClose'));
 
     expect(matchState.connectionError).toHaveBeenCalledOnceWith();
   });
@@ -78,19 +64,13 @@ describe('RoomConnectionLifecycleService', () => {
     const onRestoreClose = jasmine.createSpy('onRestoreClose');
 
     service.onError(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
+      restore({ roomId: 'room-1', playerId: 'player-1' }),
       onRestoreClose
     );
 
-    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith({
-      mode: CONNECTION_MODE.RESTORE,
-      roomId: 'room-1',
-      playerId: 'player-1',
-    });
+    expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith(
+      restore({ roomId: 'room-1', playerId: 'player-1' })
+    );
     expect(onRestoreClose).not.toHaveBeenCalled();
     expect(matchState.connectionError).toHaveBeenCalledOnceWith();
   });
@@ -109,8 +89,7 @@ function roomConnectionLifecycle({ matchStateOverrides = {} } = {}) {
     handleConnectionDisconnect: jasmine
       .createSpy('handleConnectionDisconnect')
       .and.callFake(
-        (context) =>
-          context.mode === CONNECTION_MODE.RESTORE && matchState.isRestoring
+        (context) => isRestoreContext(context) && matchState.isRestoring
       ),
     failRestore: jasmine.createSpy('failRestore'),
   };

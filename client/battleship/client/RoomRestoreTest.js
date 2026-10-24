@@ -1,10 +1,13 @@
 import {
   DEFAULT_RESTORE_TIMEOUT_MS,
   ROOM_UNAVAILABLE_STATUS,
-} from '../domain/room-state.js';
-import { RoomRestoreService } from './room-restore-service.js';
-import { CONNECTION_MODE } from './connection-context.js';
-import { RESTORE_REQUEST } from '../../room-store/room-store-service.js';
+} from '../../../assets/game/domain/room-state.js';
+import { create } from '../../../_build/browser/js/modules/battleship/client/RoomRestore.js';
+import { create as createTimeout } from '../../../_build/browser/js/modules/battleship/client/OperationTimeout.js';
+import {
+  lobby,
+  restore,
+} from '../../../_build/browser/js/modules/battleship/browser/ConnectionContext.js';
 
 describe('RoomRestoreService', () => {
   let originalWindow;
@@ -27,14 +30,16 @@ describe('RoomRestoreService', () => {
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const entry = { roomId: 'room-1', playerId: 'player-1' };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    expect(service.startRestore(entry, { timeoutMs: 750 })).toBe(true);
+    expect(service.startRestoreWithOptions(entry, { timeoutMs: 750 })).toBe(
+      true
+    );
 
     expect(matchState.startRestore).toHaveBeenCalledOnceWith(
       'room-1',
@@ -52,7 +57,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -77,7 +82,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -99,7 +104,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -124,7 +129,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -150,16 +155,17 @@ describe('RoomRestoreService', () => {
       restoreFailed: jasmine.createSpy('restoreFailed'),
     };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    const handled = service.handleConnectionDisconnect(
-      { mode: CONNECTION_MODE.RESTORE, roomId: 'room-1', playerId: 'p1' },
-      ROOM_UNAVAILABLE_STATUS
+    const handled = service.disconnect(
+      restore({ roomId: 'room-1', playerId: 'p1' }),
+      ROOM_UNAVAILABLE_STATUS,
+      true
     );
 
     expect(handled).toBeTrue();
@@ -178,17 +184,17 @@ describe('RoomRestoreService', () => {
       restoreFailed: jasmine.createSpy('restoreFailed'),
     };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    const handled = service.handleConnectionDisconnect(
-      { mode: CONNECTION_MODE.RESTORE, roomId: 'room-1', playerId: 'p1' },
+    const handled = service.disconnect(
+      restore({ roomId: 'room-1', playerId: 'p1' }),
       ROOM_UNAVAILABLE_STATUS,
-      { requiresActiveRestore: false }
+      false
     );
 
     expect(handled).toBeTrue();
@@ -207,17 +213,14 @@ describe('RoomRestoreService', () => {
       restoreFailed: jasmine.createSpy('restoreFailed'),
     };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    const handled = service.handleConnectionDisconnect(
-      { mode: CONNECTION_MODE.LOBBY, roomId: 'room-1', playerId: 'p1' },
-      ROOM_UNAVAILABLE_STATUS
-    );
+    const handled = service.disconnect(lobby(), ROOM_UNAVAILABLE_STATUS, true);
 
     expect(handled).toBeFalse();
     expect(roomRecovery.restoreFailed).not.toHaveBeenCalled();
@@ -232,16 +235,17 @@ describe('RoomRestoreService', () => {
       restoreFailed: jasmine.createSpy('restoreFailed'),
     };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    const handled = service.handleConnectionDisconnect(
-      { mode: CONNECTION_MODE.RESTORE, roomId: 'room-1', playerId: 'p1' },
-      ROOM_UNAVAILABLE_STATUS
+    const handled = service.disconnect(
+      restore({ roomId: 'room-1', playerId: 'p1' }),
+      ROOM_UNAVAILABLE_STATUS,
+      true
     );
 
     expect(handled).toBeFalse();
@@ -257,18 +261,16 @@ describe('RoomRestoreService', () => {
       restoreFailed: jasmine.createSpy('restoreFailed'),
     };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
       globalThis.window
     );
 
-    const handled = service.handleConnectionDisconnect({
-      mode: CONNECTION_MODE.RESTORE,
-      roomId: 'room-1',
-      playerId: 'p1',
-    });
+    const handled = service.handleConnectionDisconnect(
+      restore({ roomId: 'room-1', playerId: 'p1' })
+    );
 
     expect(handled).toBeTrue();
     expect(roomRecovery.restoreFailed).toHaveBeenCalledOnceWith(
@@ -286,7 +288,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -308,15 +310,10 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake({
-      currentRestoreRequest: jasmine
-        .createSpy('currentRestoreRequest')
-        .and.returnValue({
-          type: RESTORE_REQUEST.RESTORE,
-          roomId: 'room-1',
-          playerId: 'player-1',
-        }),
+      currentRoomId: () => 'room-1',
+      restoreEntry: () => ({ roomId: 'room-1', playerId: 'player-1' }),
     });
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -328,7 +325,6 @@ describe('RoomRestoreService', () => {
       .and.callFake((entry) => service.startRestore(entry));
     expect(service.restoreCurrentRequest(restore)).toBe(true);
     expect(restore).toHaveBeenCalledOnceWith({
-      type: RESTORE_REQUEST.RESTORE,
       roomId: 'room-1',
       playerId: 'player-1',
     });
@@ -346,14 +342,9 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake({
-      currentRestoreRequest: jasmine
-        .createSpy('currentRestoreRequest')
-        .and.returnValue({
-          type: RESTORE_REQUEST.MISSING_PLAYER,
-          roomId: 'room-1',
-        }),
+      currentRoomId: () => 'room-1',
     });
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -375,7 +366,7 @@ describe('RoomRestoreService', () => {
     };
     const roomRecovery = { restoreFailed: jasmine.createSpy('restoreFailed') };
     const roomStore = roomStoreFake();
-    const service = new RoomRestoreService(
+    const service = restoreService(
       roomStore,
       matchState,
       roomRecovery,
@@ -394,9 +385,10 @@ describe('RoomRestoreService', () => {
 
 function roomStoreFake(overrides = {}) {
   return {
-    currentRestoreRequest: jasmine
-      .createSpy('currentRestoreRequest')
-      .and.returnValue({ type: RESTORE_REQUEST.NONE }),
+    currentRoomId: jasmine
+      .createSpy('currentRoomId')
+      .and.returnValue(undefined),
+    restoreEntry: jasmine.createSpy('restoreEntry').and.returnValue(undefined),
     ...overrides,
   };
 }
@@ -428,4 +420,13 @@ function timerWindowFake() {
       return queue.map((entry) => entry.id);
     },
   };
+}
+
+function restoreService(store, state, recovery, host) {
+  return Reflect.construct(create, [
+    store,
+    state,
+    recovery,
+    createTimeout(host),
+  ]);
 }

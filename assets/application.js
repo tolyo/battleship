@@ -16,7 +16,14 @@ import appConfig from './configuration.js';
 import { create as createDashboard } from '../_build/browser/js/modules/battleship/client/Dashboard.js';
 import { HeaderController } from './layout/header-ctrl.js';
 import { MatchStateService } from './game/services/match-state-service.js';
-import { RoomClientService } from './game/services/room-client-service.js';
+import { create as createRoomClient } from '../_build/browser/js/modules/battleship/client/RoomClient.js';
+import {
+  decodeRoomEvent,
+  lobbyUrl,
+  restoreUrl,
+  moveMessage,
+} from './game/protocol/room-protocol.js';
+import { sync as syncMessage } from '../_build/browser/js/modules/battleship/client/ClientProtocol.js';
 import { create as createConnectionLifecycle } from '../_build/browser/js/modules/battleship/browser/ConnectionLifecycle.js';
 import { SetupService } from './game/services/setup-service.js';
 import { create as createTarget } from '../_build/browser/js/modules/battleship/browser/Target.js';
@@ -24,8 +31,9 @@ import { create as createMatchSnapshots } from '../_build/browser/js/modules/bat
 import { matchViewModelFromView } from './game/domain/match-view-model.js';
 import { create as createRoomEntry } from '../_build/browser/js/modules/battleship/client/RoomEntry.js';
 import { create as createRoomRecovery } from '../_build/browser/js/modules/battleship/browser/RoomRecovery.js';
-import { RoomRestoreService } from './game/services/room-restore-service.js';
-import { RoomEventDispatcherService } from './game/services/room-event-dispatcher-service.js';
+import { create as createRoomRestore } from '../_build/browser/js/modules/battleship/client/RoomRestore.js';
+import { create as createTimeout } from '../_build/browser/js/modules/battleship/client/OperationTimeout.js';
+import { create as createRoomEvents } from '../_build/browser/js/modules/battleship/client/RoomEvents.js';
 import unitComponent from './game/components/unit.js';
 import { ConnectionService } from './transport/connection-service.js';
 import { RoomStoreService } from './room-store/room-store-service.js';
@@ -56,14 +64,43 @@ export function configureBattleship(angular) {
       createRoomEntry,
     ])
     .service('roomRecovery', ['roomStore', 'matchState', createRoomRecovery])
-    .service('roomRestore', RoomRestoreService)
-    .service('roomEventDispatcher', RoomEventDispatcherService)
+    .service('restoreTimer', ['$window', createTimeout])
+    .service('roomRestore', [
+      'roomStore',
+      'matchState',
+      'roomRecovery',
+      'restoreTimer',
+      createRoomRestore,
+    ])
+    .service('roomEventDispatcher', [
+      'matchState',
+      'matchView',
+      'roomEntry',
+      'roomRestore',
+      createRoomEvents,
+    ])
     .service('roomConnectionLifecycle', [
       'roomRestore',
       'matchState',
       createConnectionLifecycle,
     ])
-    .service('roomClient', RoomClientService)
+    .value('roomProtocol', {
+      decodeRoomEvent,
+      lobbyUrl,
+      restoreUrl,
+      moveMessage,
+      syncMessage,
+    })
+    .service('roomClient', [
+      'connection',
+      'matchState',
+      'target',
+      'roomRestore',
+      'roomEventDispatcher',
+      'roomConnectionLifecycle',
+      'roomProtocol',
+      createRoomClient,
+    ])
     .controller('HeaderController', HeaderController)
     .component('targetBoard', target_board())
     .component('boardGrid', board_grid())

@@ -1,4 +1,4 @@
-import { RoomStoreService, RESTORE_REQUEST } from './room-store-service.js';
+import { RoomStoreService } from './room-store-service.js';
 
 describe('RoomStoreService', () => {
   let originalWindow;
@@ -43,7 +43,7 @@ describe('RoomStoreService', () => {
     expect(new RoomStoreService().currentRoomId()).toBe('alpha beta');
   });
 
-  it('returns the current restore request with its remembered player', () => {
+  it('looks up the remembered player for the current room', () => {
     const storage = storageFake({
       'battleship.roomPlayer.room-1': 'player-1',
     });
@@ -52,22 +52,26 @@ describe('RoomStoreService', () => {
       storage,
     });
 
-    expect(new RoomStoreService().currentRestoreRequest()).toEqual({
-      type: RESTORE_REQUEST.RESTORE,
+    expect(
+      new RoomStoreService().restoreEntry(
+        new RoomStoreService().currentRoomId()
+      )
+    ).toEqual({
       roomId: 'room-1',
       playerId: 'player-1',
     });
   });
 
-  it('returns a missing player restore request for room urls without a remembered player', () => {
+  it('returns no entry when the current room has no remembered player', () => {
     globalThis.window = windowFake({
       pathname: '/room/room-1',
     });
 
-    expect(new RoomStoreService().currentRestoreRequest()).toEqual({
-      type: RESTORE_REQUEST.MISSING_PLAYER,
-      roomId: 'room-1',
-    });
+    expect(
+      new RoomStoreService().restoreEntry(
+        new RoomStoreService().currentRoomId()
+      )
+    ).toBeUndefined();
   });
 
   it('returns undefined outside room paths', () => {
@@ -76,9 +80,6 @@ describe('RoomStoreService', () => {
     });
 
     expect(new RoomStoreService().currentRoomId()).toBeUndefined();
-    expect(new RoomStoreService().currentRestoreRequest()).toEqual({
-      type: RESTORE_REQUEST.NONE,
-    });
   });
 
   it('remembers and forgets room players', () => {

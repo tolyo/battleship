@@ -88,8 +88,11 @@ its native tests check status forwarding, and JavaScript interop tests check met
 receivers and cleanup order. The unused legacy `GameState` JavaScript model has
 been removed; `RoomState.terl` owns the live session transitions.
 
-`ConnectionLifecycle.terl` handles connection close and error callbacks through
-typed service ports. Browser host controllers live under `client/battleship/client`;
+`ConnectionContext.terl` distinguishes lobby connections from restored seats.
+`RoomClient.terl`, `RoomRestore.terl`, and `RoomEvents.terl` own connection setup,
+restore deadlines, and incoming room event dispatch. `ConnectionLifecycle.terl`
+handles connection close and error callbacks through typed service ports. Browser
+host controllers live under `client/battleship/client`;
 `SetupPage.terl` restores the current room on initialization and closes it on teardown.
 Make generates Angular bindings from its pinned TypeScript declarations under
 `_build/bindings/angular`. Generated `OnInit.with_members` and

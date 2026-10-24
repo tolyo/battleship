@@ -1,7 +1,7 @@
 module battleship.client.MatchSnapshots.
 
 import battleship.host.{MatchSnapshotState, PendingSnapshot, SnapshotProjection}.
-import std.core.Option.{None, Some}.
+import std.core.Option.{None, Option, Some}.
 import std.js.String.
 
 import type battleship.host.MatchSnapshotState.{MatchSnapshotState}.
@@ -9,18 +9,22 @@ import type battleship.host.SnapshotProjection.{SnapshotProjection}.
 
 pub struct Snapshots[V] {
     receiveSnapshot: (V) -> Bool,
+    receiveOptionalSnapshot: (Option[V]) -> Bool,
 }.
 
 pub create[V, M](
     state: MatchSnapshotState[V, M],
     projection: SnapshotProjection[V, M],
 ): Snapshots[V] ->
-    Snapshots {receiveSnapshot: ((view) -> receive(state, projection, view))}.
+    Snapshots {
+        receiveSnapshot: ((view) -> receive(state, projection, Some(view))),
+        receiveOptionalSnapshot: ((view) -> receive(state, projection, view)),
+    }.
 
 receive[V, M](
     state: MatchSnapshotState[V, M],
     projection: SnapshotProjection[V, M],
-    view: V,
+    view: Option[V],
 ): Bool ->
     case MatchSnapshotState.player_id(state) {
         Some(player_id) ->
@@ -31,14 +35,14 @@ receive[V, M](
         None -> pending(state, view)
     }.
 
-pending[V, M](state: MatchSnapshotState[V, M], view: V): Bool ->
-    let ignored = PendingSnapshot.set_pending_view(MatchSnapshotState.data(state), Some(view));
+pending[V, M](state: MatchSnapshotState[V, M], view: Option[V]): Bool ->
+    let ignored = PendingSnapshot.set_pending_view(MatchSnapshotState.data(state), view);
     false.
 
 project[V, M](
     state: MatchSnapshotState[V, M],
     projection: SnapshotProjection[V, M],
-    view: V,
+    view: Option[V],
 ): Bool ->
     case SnapshotProjection.project(projection, view) {
         Some(model) -> MatchSnapshotState.apply_view_model(state, model);

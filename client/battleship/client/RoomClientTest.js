@@ -1,11 +1,23 @@
-import { RoomClientService } from './room-client-service.js';
+import { create } from '../../../_build/browser/js/modules/battleship/client/RoomClient.js';
+import {
+  decodeRoomEvent,
+  lobbyUrl,
+  restoreUrl,
+  moveMessage,
+} from '../../../assets/game/protocol/room-protocol.js';
+import { sync as syncMessage } from '../../../_build/browser/js/modules/battleship/client/ClientProtocol.js';
+import { defaults } from '../../../_build/browser/js/modules/battleship/client/RoomRestore.js';
 import {
   ROOM_EVENT,
   CLIENT_MESSAGE,
   ROOM_SERVER_MESSAGE,
-} from '../protocol/room-protocol.js';
-import { ROOM_UNAVAILABLE_STATUS } from '../domain/room-state.js';
-import { CONNECTION_MODE } from './connection-context.js';
+} from '../../../assets/game/protocol/room-protocol.js';
+import { ROOM_UNAVAILABLE_STATUS } from '../../../assets/game/domain/room-state.js';
+import {
+  lobby,
+  restore,
+  is_restore as isRestoreContext,
+} from '../../../_build/browser/js/modules/battleship/browser/ConnectionContext.js';
 
 describe('RoomClientService', () => {
   it('joins the lobby when the connection is inactive and setup can enter waiting', () => {
@@ -53,13 +65,13 @@ describe('RoomClientService', () => {
     const { client, connection, roomRestore } = roomClient();
 
     expect(
-      client.restoreRoom(
+      client.restoreRoomWithOptions(
         { roomId: 'room-1', playerId: 'player-1' },
         { timeoutMs: 123 }
       )
     ).toBe(true);
 
-    expect(roomRestore.startRestore).toHaveBeenCalledOnceWith(
+    expect(roomRestore.startRestoreWithOptions).toHaveBeenCalledOnceWith(
       {
         roomId: 'room-1',
         playerId: 'player-1',
@@ -79,7 +91,9 @@ describe('RoomClientService', () => {
   it('does not connect when match state rejects restore', () => {
     const { client, connection, roomRestore } = roomClient({
       roomRestoreOverrides: {
-        startRestore: jasmine.createSpy('startRestore').and.returnValue(false),
+        startRestoreWithOptions: jasmine
+          .createSpy('startRestoreWithOptions')
+          .and.returnValue(false),
       },
     });
 
@@ -88,9 +102,9 @@ describe('RoomClientService', () => {
     );
 
     expect(connection.connect).not.toHaveBeenCalled();
-    expect(roomRestore.startRestore).toHaveBeenCalledOnceWith(
+    expect(roomRestore.startRestoreWithOptions).toHaveBeenCalledOnceWith(
       { roomId: 'room-1', playerId: 'player-1' },
-      {}
+      defaults()
     );
   });
 
@@ -193,27 +207,19 @@ describe('RoomClientService', () => {
 
     expect(roomEventDispatcher.dispatch).toHaveBeenCalledOnceWith(
       { type: ROOM_EVENT.WAITING },
-      { mode: CONNECTION_MODE.LOBBY }
+      lobby()
     );
   });
 
   it('delegates close lifecycle events to room lifecycle service', () => {
     const { client, roomConnectionLifecycle, connection } = roomClient();
 
-    client.connect({
-      mode: CONNECTION_MODE.RESTORE,
-      roomId: 'room-1',
-      playerId: 'player-1',
-    });
+    client.connect(restore({ roomId: 'room-1', playerId: 'player-1' }));
 
     connection.lastHandlers.onClose();
 
     expect(roomConnectionLifecycle.onClose).toHaveBeenCalledOnceWith(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
+      restore({ roomId: 'room-1', playerId: 'player-1' }),
       jasmine.any(Function)
     );
   });
@@ -221,12 +227,12 @@ describe('RoomClientService', () => {
   it('delegates error lifecycle events to room lifecycle service', () => {
     const { client, roomConnectionLifecycle, connection } = roomClient();
 
-    client.connect({ mode: CONNECTION_MODE.LOBBY });
+    client.connect(lobby());
 
     connection.lastHandlers.onError();
 
     expect(roomConnectionLifecycle.onError).toHaveBeenCalledOnceWith(
-      { mode: CONNECTION_MODE.LOBBY },
+      lobby(),
       jasmine.any(Function)
     );
   });
@@ -234,7 +240,7 @@ describe('RoomClientService', () => {
   it('closes transport through lifecycle completion callbacks', () => {
     const { client, roomConnectionLifecycle, connection } = roomClient();
 
-    client.connect({ mode: CONNECTION_MODE.LOBBY });
+    client.connect(lobby());
     connection.lastHandlers.onClose();
     roomConnectionLifecycle.onClose.calls.mostRecent().args[1]();
     connection.lastHandlers.onError();
@@ -307,8 +313,8 @@ function roomClient({
       .and.callFake((restore) =>
         restore({ roomId: 'room-1', playerId: 'player-1' })
       ),
-    startRestore: jasmine
-      .createSpy('startRestore')
+    startRestoreWithOptions: jasmine
+      .createSpy('startRestoreWithOptions')
       .and.callFake((_entry, options) =>
         matchState.startRestore(_entry.roomId, _entry.playerId, options)
       ),
@@ -316,14 +322,11 @@ function roomClient({
     handleConnectionDisconnect: jasmine
       .createSpy('handleConnectionDisconnect')
       .and.callFake((context, reason = ROOM_UNAVAILABLE_STATUS) => {
-        if (
-          context.mode !== CONNECTION_MODE.RESTORE ||
-          !matchState.isRestoring
-        ) {
+        if (!isRestoreContext(context) || !matchState.isRestoring) {
           return false;
         }
 
-        roomRestore.failRestore(context.roomId, reason);
+        roomRestore.failRestore(context[1].roomId, reason);
         return true;
       }),
     clearRestoreTimeout: jasmine.createSpy('clearRestoreTimeout'),
@@ -338,13 +341,14 @@ function roomClient({
     onError: jasmine.createSpy('onError'),
     ...roomConnectionLifecycleOverrides,
   };
-  const client = new RoomClientService(
+  const client = create(
     connection,
     matchState,
     target,
     roomRestore,
     roomEventDispatcher,
-    roomConnectionLifecycle
+    roomConnectionLifecycle,
+    { decodeRoomEvent, lobbyUrl, restoreUrl, moveMessage, syncMessage }
   );
 
   return {

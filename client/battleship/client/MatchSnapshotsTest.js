@@ -30,6 +30,16 @@ describe('MatchViewService', () => {
     }
   });
 
+  it('passes missing optional snapshots to the projection as undefined', () => {
+    const state = matchStateFake({ playerId: 'p1' });
+    const projection = { project: jasmine.createSpy('project') };
+    const service = create(state, projection);
+
+    expect(service.receiveOptionalSnapshot('none')).toBeFalse();
+    expect(projection.project).toHaveBeenCalledOnceWith(undefined);
+    expect(state.applyViewModel).not.toHaveBeenCalled();
+  });
+
   it('projects match view snapshots into match state view models', () => {
     const matchState = matchStateFake({ playerId: 'p1' });
 

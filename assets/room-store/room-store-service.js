@@ -1,12 +1,6 @@
 const ANONYMOUS_PLAYER_KEY = 'battleship.anonymousPlayerName';
 const ROOM_PLAYER_PREFIX = 'battleship.roomPlayer.';
 
-export const RESTORE_REQUEST = Object.freeze({
-  NONE: 'none',
-  MISSING_PLAYER: 'missing_player',
-  RESTORE: 'restore',
-});
-
 export class RoomStoreService {
   /**
    * @returns {string}
@@ -38,26 +32,6 @@ export class RoomStoreService {
     }
 
     return decodeURIComponent(match[1]);
-  }
-
-  /**
-   * @returns {CurrentRestoreRequest}
-   */
-  currentRestoreRequest() {
-    const roomId = this.currentRoomId();
-    if (!roomId) {
-      return { type: RESTORE_REQUEST.NONE };
-    }
-
-    const entry = this.restoreEntry(roomId);
-    if (!entry) {
-      return { type: RESTORE_REQUEST.MISSING_PLAYER, roomId };
-    }
-
-    return {
-      type: RESTORE_REQUEST.RESTORE,
-      ...entry,
-    };
   }
 
   /**
@@ -171,15 +145,4 @@ function roomPlayerKey(roomId) {
  *   roomId: string,
  *   playerId: string
  * }} StoredRoomEntry
- */
-
-/**
- * @typedef {{
- *   type: 'none'
- * } | {
- *   type: 'missing_player',
- *   roomId: string
- * } | ({
- *   type: 'restore'
- * } & StoredRoomEntry)} CurrentRestoreRequest
  */

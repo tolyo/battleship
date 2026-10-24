@@ -1,16 +1,17 @@
-import { ROOM_UNAVAILABLE_STATUS } from '../domain/room-state.js';
-import { RoomEventDispatcherService } from './room-event-dispatcher-service.js';
-import { ROOM_EVENT } from '../protocol/room-protocol.js';
-import { CONNECTION_MODE } from './connection-context.js';
+import { ROOM_UNAVAILABLE_STATUS } from '../../../assets/game/domain/room-state.js';
+import { create } from '../../../_build/browser/js/modules/battleship/client/RoomEvents.js';
+import { ROOM_EVENT } from '../../../assets/game/protocol/room-protocol.js';
+import {
+  lobby,
+  restore,
+  is_restore as isRestoreContext,
+} from '../../../_build/browser/js/modules/battleship/browser/ConnectionContext.js';
 
 describe('RoomEventDispatcherService', () => {
   it('opens lobby socket on waiting event', () => {
     const { dispatcher, matchState } = roomEventDispatcher();
 
-    dispatcher.dispatch(
-      { type: ROOM_EVENT.WAITING },
-      { mode: CONNECTION_MODE.LOBBY }
-    );
+    dispatcher.dispatch({ type: ROOM_EVENT.WAITING }, lobby());
 
     expect(matchState.socketOpened).toHaveBeenCalledOnceWith();
   });
@@ -29,7 +30,7 @@ describe('RoomEventDispatcherService', () => {
         entry,
         updateUrl: true,
       },
-      { mode: CONNECTION_MODE.LOBBY }
+      lobby()
     );
 
     expect(roomEntry.enter).toHaveBeenCalledOnceWith(entry, {
@@ -42,19 +43,41 @@ describe('RoomEventDispatcherService', () => {
 
     dispatcher.dispatch(
       { type: ROOM_EVENT.STATE_RECEIVED, view: { id: 1 } },
-      { mode: CONNECTION_MODE.LOBBY }
+      lobby()
     );
 
     expect(matchView.receiveSnapshot).toHaveBeenCalledOnceWith({ id: 1 });
   });
 
+  it('preserves missing and null snapshot payloads', () => {
+    const { dispatcher, matchView } = roomEventDispatcher();
+    dispatcher.dispatch({ type: ROOM_EVENT.STATE_RECEIVED }, lobby());
+    dispatcher.dispatch(
+      { type: ROOM_EVENT.STATE_RECEIVED, view: null },
+      lobby()
+    );
+    expect(matchView.receiveSnapshot.calls.allArgs()).toEqual([
+      [undefined],
+      [null],
+    ]);
+  });
+
+  it('ignores room entry events without identity and defaults error reasons', () => {
+    const { dispatcher, roomEntry, matchState } = roomEventDispatcher();
+    dispatcher.dispatch({ type: ROOM_EVENT.ROOM_ENTERED }, lobby());
+    dispatcher.dispatch({ type: ROOM_EVENT.SERVER_ERROR }, lobby());
+    dispatcher.dispatch({ type: ROOM_EVENT.SERVER_ERROR, reason: '' }, lobby());
+    expect(roomEntry.enter).not.toHaveBeenCalled();
+    expect(matchState.serverError.calls.allArgs()).toEqual([
+      ['server_error'],
+      [''],
+    ]);
+  });
+
   it('marks opponent left in match state', () => {
     const { dispatcher, matchState } = roomEventDispatcher();
 
-    dispatcher.dispatch(
-      { type: ROOM_EVENT.OPPONENT_LEFT },
-      { mode: CONNECTION_MODE.LOBBY }
-    );
+    dispatcher.dispatch({ type: ROOM_EVENT.OPPONENT_LEFT }, lobby());
 
     expect(matchState.opponentDisconnected).toHaveBeenCalledOnceWith();
   });
@@ -64,7 +87,7 @@ describe('RoomEventDispatcherService', () => {
 
     dispatcher.dispatch(
       { type: ROOM_EVENT.SERVER_ERROR, reason: 'something' },
-      { mode: CONNECTION_MODE.LOBBY }
+      lobby()
     );
 
     expect(matchState.serverError).toHaveBeenCalledOnceWith('something');
@@ -77,20 +100,11 @@ describe('RoomEventDispatcherService', () => {
 
     dispatcher.dispatch(
       { type: ROOM_EVENT.ROOM_UNAVAILABLE },
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      }
+      restore({ roomId: 'room-1', playerId: 'player-1' })
     );
 
     expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
-      ROOM_UNAVAILABLE_STATUS
+      restore({ roomId: 'room-1', playerId: 'player-1' })
     );
   });
 
@@ -101,20 +115,11 @@ describe('RoomEventDispatcherService', () => {
 
     dispatcher.dispatch(
       { type: ROOM_EVENT.ROOM_UNAVAILABLE },
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      }
+      restore({ roomId: 'room-1', playerId: 'player-1' })
     );
 
     expect(roomRestore.handleConnectionDisconnect).toHaveBeenCalledOnceWith(
-      {
-        mode: CONNECTION_MODE.RESTORE,
-        roomId: 'room-1',
-        playerId: 'player-1',
-      },
-      ROOM_UNAVAILABLE_STATUS
+      restore({ roomId: 'room-1', playerId: 'player-1' })
     );
     expect(matchState.roomUnavailable).toHaveBeenCalledOnceWith();
   });
@@ -138,10 +143,7 @@ function roomEventDispatcher({
     handleConnectionDisconnect: jasmine
       .createSpy('handleConnectionDisconnect')
       .and.callFake((context) => {
-        if (
-          context.mode !== CONNECTION_MODE.RESTORE ||
-          !matchState.isRestoring
-        ) {
+        if (!isRestoreContext(context) || !matchState.isRestoring) {
           return false;
         }
 
@@ -153,16 +155,13 @@ function roomEventDispatcher({
     receiveSnapshot: jasmine.createSpy('receiveSnapshot'),
     ...matchViewOverrides,
   };
+  matchView.receiveOptionalSnapshot = (value) =>
+    matchView.receiveSnapshot(value === 'none' ? undefined : value[1]);
   const roomEntry = {
     enter: jasmine.createSpy('enter').and.returnValue(true),
     ...roomEntryOverrides,
   };
-  const dispatcher = new RoomEventDispatcherService(
-    matchState,
-    matchView,
-    roomEntry,
-    roomRestore
-  );
+  const dispatcher = create(matchState, matchView, roomEntry, roomRestore);
 
   return {
     dispatcher,

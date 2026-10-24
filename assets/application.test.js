@@ -13,10 +13,11 @@ describe('configureBattleship', () => {
     expect(
       module.router.calls.argsFor(0)[0].map((state) => state.name)
     ).toEqual(['dashboard', 'room', 'activeRoom', 'register', 'login', 'home']);
-    expect(module.service).toHaveBeenCalledTimes(12);
-    expect(module.value).toHaveBeenCalledOnceWith('snapshotProjection', {
+    expect(module.service).toHaveBeenCalledTimes(13);
+    expect(module.value).toHaveBeenCalledWith('snapshotProjection', {
       project: jasmine.any(Function),
     });
+    expect(module.value).toHaveBeenCalledTimes(2);
     expect(module.controller).toHaveBeenCalledWith(
       'HeaderController',
       jasmine.any(Function)

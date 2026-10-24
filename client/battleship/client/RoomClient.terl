@@ -1,0 +1,205 @@
+module battleship.client.RoomClient.
+
+import battleship.browser.ConnectionContext.
+import battleship.client.RoomRestore.{defaults}.
+import std.core.Option.{None, Option, Some}.
+
+import type battleship.browser.ConnectionContext.{Context, Entry}.
+import type battleship.browser.Target.{MoveDecision, Tile}.
+import type battleship.client.RoomRestore.{Options, Restoration}.
+
+pub type Completion = Unit.
+
+pub struct Handlers[D] {
+    onOpen: () -> Completion,
+    onMessage: (D) -> Completion,
+    onClose: () -> Completion,
+    onError: () -> Completion,
+}.
+
+pub struct Connection[D, P] {
+    isActive: () -> Bool,
+    isOpen: () -> Bool,
+    connect: (String, Handlers[D]) -> Completion,
+    send: (P) -> Completion,
+    close: () -> Completion,
+}.
+
+pub struct ClientState[L] {
+    lobbyEntry: L,
+    tryEnterWaiting: () -> Bool,
+    socketOpened: () -> Bool,
+    moveSubmitted: () -> Bool,
+}.
+
+pub struct TargetPort {
+    moveForTile: (Tile) -> MoveDecision,
+}.
+
+pub struct RoomEventPort[E] {
+    dispatch: (E, Context) -> Completion,
+}.
+
+pub struct Lifecycle {
+    onClose: (Context, () -> Completion) -> Completion,
+    onError: (Context, () -> Completion) -> Completion,
+}.
+
+pub struct Protocol[D, E, L, P] {
+    decodeRoomEvent: (D) -> E,
+    lobbyUrl: (L) -> String,
+    restoreUrl: (Entry) -> String,
+    moveMessage: (MoveDecision) -> P,
+    syncMessage: () -> P,
+}.
+
+pub struct Client {
+    joinLobby: () -> Completion,
+    restoreRoomFromCurrentUrl: () -> Bool,
+    restoreRoom: (Entry) -> Bool,
+    restoreRoomWithOptions: (Entry, Options) -> Bool,
+    submitMove: (Tile) -> Completion,
+    close: () -> Completion,
+    connect: (Context) -> Completion,
+    urlForContext: (Context) -> String,
+}.
+
+pub create[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    target: TargetPort,
+    restore: Restoration,
+    events: RoomEventPort[E],
+    lifecycle: Lifecycle,
+    protocol: Protocol[D, E, L, P],
+): Client ->
+    Client {
+        joinLobby: (() -> join(connection, state, restore, events, lifecycle, protocol)),
+        restoreRoomFromCurrentUrl: (() ->
+            restore#Restoration.restoreCurrentRequest(
+                (entry) ->
+                    restored(
+                        connection,
+                        state,
+                        restore,
+                        events,
+                        lifecycle,
+                        protocol,
+                        entry,
+                        defaults(),
+                    ),
+            )),
+        restoreRoom: ((entry) -> restored(connection, state, restore, events, lifecycle, protocol, entry, defaults())),
+        restoreRoomWithOptions: ((entry, options) -> restored(connection, state, restore, events, lifecycle, protocol, entry, options)),
+        submitMove: ((tile) -> submit(connection, state, target, protocol, tile)),
+        close: (() -> close(connection, restore)),
+        connect: ((context) -> connect(connection, state, restore, events, lifecycle, protocol, context)),
+        urlForContext: ((context) -> url(state, protocol, context)),
+    }.
+
+join[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    restore: Restoration,
+    events: RoomEventPort[E],
+    lifecycle: Lifecycle,
+    protocol: Protocol[D, E, L, P],
+): Unit ->
+    if {
+        connection#Connection.isActive() -> Unit;
+        state#ClientState.tryEnterWaiting() -> connect(connection, state, restore, events, lifecycle, protocol, ConnectionContext.lobby());
+        true -> Unit
+    }.
+
+restored[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    restore: Restoration,
+    events: RoomEventPort[E],
+    lifecycle: Lifecycle,
+    protocol: Protocol[D, E, L, P],
+    entry: Entry,
+    options: Options,
+): Bool ->
+    if {
+        restore#Restoration.startRestoreWithOptions(entry, options) -> let ignored =
+            connect(
+                connection,
+                state,
+                restore,
+                events,
+                lifecycle,
+                protocol,
+                ConnectionContext.restore(entry),
+            );
+        true;
+        true -> false
+    }.
+
+submit[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    target: TargetPort,
+    protocol: Protocol[D, E, L, P],
+    tile: Tile,
+): Unit ->
+    if {
+        connection#Connection.isOpen() -> let move = target#TargetPort.moveForTile(tile);
+        if {
+            move.allowed and state#ClientState.moveSubmitted() -> connection#Connection.send(protocol#Protocol.moveMessage(move));
+            true -> Unit
+        };
+        true -> Unit
+    }.
+
+close[D, P](connection: Connection[D, P], restore: Restoration): Unit ->
+    let cleared = restore#Restoration.clearRestoreTimeout();
+    connection#Connection.close().
+
+connect[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    restore: Restoration,
+    events: RoomEventPort[E],
+    lifecycle: Lifecycle,
+    protocol: Protocol[D, E, L, P],
+    context: Context,
+): Unit ->
+    connection#Connection.connect(
+        url(state, protocol, context),
+        Handlers {
+            onOpen: (() -> opened(connection, state, protocol, context)),
+            onMessage: ((data) -> received(restore, events, protocol, data, context)),
+            onClose: (() -> lifecycle#Lifecycle.onClose(context, () -> close(connection, restore))),
+            onError: (() -> lifecycle#Lifecycle.onError(context, () -> close(connection, restore))),
+        },
+    ).
+
+opened[D, E, L, P](
+    connection: Connection[D, P],
+    state: ClientState[L],
+    protocol: Protocol[D, E, L, P],
+    context: Context,
+): Unit ->
+    case context {
+        Some(_) -> connection#Connection.send(protocol#Protocol.syncMessage());
+        _ ->
+            let ignored = state#ClientState.socketOpened();
+            Unit
+    }.
+
+received[D, E, L, P](
+    restore: Restoration,
+    events: RoomEventPort[E],
+    protocol: Protocol[D, E, L, P],
+    data: D,
+    context: Context,
+): Unit ->
+    let cleared = restore#Restoration.clearRestoreTimeout();
+    events#RoomEventPort.dispatch(protocol#Protocol.decodeRoomEvent(data), context).
+
+url[D, E, L, P](state: ClientState[L], protocol: Protocol[D, E, L, P], context: Context): String ->
+    case context {
+        Some(entry) -> protocol#Protocol.restoreUrl(entry);
+        _ -> protocol#Protocol.lobbyUrl(state.lobbyEntry)
+    }.
