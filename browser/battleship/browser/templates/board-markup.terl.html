@@ -1,0 +1,21 @@
+<board-grid data-custom-element
+  board-id="own-board"
+  tile-class="own-board-tile"
+  rows="$ctrl.rows"
+  disabled="$ctrl.disabled"
+></board-grid>
+<div id="units" ng-class="${active_classes}">
+  <div
+    class="place-holder"
+    ng-repeat="unitView in $ctrl.unitViews"
+    ng-attr-id="${placeholder_id}"
+    ng-style="unitView.placeholderStyle"
+  >
+    <unit
+      unit="unitView"
+      coordinates="unitView.coordinates"
+      locked="$ctrl.disabled"
+      setup-active="$ctrl.setupActive"
+    ></unit>
+  </div>
+</div>

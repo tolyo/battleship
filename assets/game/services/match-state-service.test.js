@@ -155,6 +155,23 @@ describe('MatchStateService', () => {
     expect(state.status).toBe(SessionStatus.ROOM_UNAVAILABLE);
   });
 
+  it('locks moves until the server publishes the next view', () => {
+    const state = matchState();
+    expect(state.moveSubmitted()).toBe(false);
+
+    state.enterRoom({ roomId: 'room-1', playerId: 'p1' });
+    state.applyViewModel(matchViewModelFixture());
+    expect(state.moveSubmitted()).toBe(true);
+    expect(state.canSubmitMove).toBe(false);
+    expect(state.targetDisabled).toBe(true);
+    expect(state.status).toBe(SessionStatus.AWAITING_MOVE_RESULT);
+    expect(state.moveSubmitted()).toBe(false);
+
+    state.applyViewModel(matchViewModelFixture());
+    expect(state.canSubmitMove).toBe(true);
+    expect(state.targetDisabled).toBe(false);
+  });
+
   it('starts restoration with room identity', () => {
     const state = matchState();
 
@@ -206,36 +223,33 @@ function roomStoreFake(player = 'Anonymous PLAYER') {
  */
 function machineServiceFake(config) {
   return {
-    current: config.initial,
+    state: config.initial,
     data: config.data,
     send(type, payload) {
-      const transition = config.transitions[this.current]?.[type];
+      const transition = config.states[this.state]?.on?.[type];
 
       if (!transition) {
-        return false;
+        return { ok: false, status: 'missing-transition' };
       }
 
-      const nextMode = transition(this.data, payload, this);
-      if (typeof nextMode === 'string' && nextMode) {
-        this.current = nextMode;
-      }
-
-      return true;
+      transition.update?.({ data: this.data, payload, machine: this });
+      this.state = transition.to ?? this.state;
+      return { ok: true, status: 'transitioned' };
     },
     can(type) {
-      return !!config.transitions[this.current]?.[type];
+      return !!config.states[this.state]?.on?.[type];
     },
     matches(mode) {
-      return this.current === mode;
+      return this.state === mode;
     },
     snapshot() {
       return structuredClone({
-        current: this.current,
+        state: this.state,
         data: this.data,
       });
     },
     restore(snapshot) {
-      this.current = snapshot.current;
+      this.state = snapshot.state;
       this.data = structuredClone(snapshot.data);
     },
   };

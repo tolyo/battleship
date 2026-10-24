@@ -1,0 +1,195 @@
+/**
+ * Typed board styles, composed from specification-generated CSS properties.
+ */
+module battleship.Styles.
+
+import std.core.Option.{None, Some}.
+import std.core.Result.{Err, Ok}.
+import std.css.Stylesheet.{rule}.
+import std.css.Values.{px, rgb, root_em}.
+import std.css.properties.BoxSizing.{border_box}.
+import std.css.properties.Cursor.{not_allowed}.
+import std.css.properties.Display.{flex}.
+import std.css.properties.Gap.{length as gap_length}.
+import std.css.properties.Height.{length as height_length}.
+import std.css.properties.Opacity.{number as opacity}.
+import std.css.properties.Width.{length as width_length}.
+import std.css.properties.{Border, Margin}.
+
+import type std.core.{Option, Result}.
+import type std.css.Stylesheet.{Rule}.
+import type std.css.properties.Border.{OptionalProperty as BorderProperty}.
+import type std.css.properties.BoxSizing.{OptionalProperty as BoxSizingProperty}.
+import type std.css.properties.Cursor.{OptionalProperty as CursorProperty}.
+import type std.css.properties.Display.{OptionalProperty as DisplayProperty}.
+import type std.css.properties.Gap.{OptionalProperty as GapProperty}.
+import type std.css.properties.Height.{OptionalProperty as HeightProperty}.
+import type std.css.properties.Margin.{OptionalProperty as MarginProperty}.
+import type std.css.properties.Opacity.{OptionalProperty as OpacityProperty}.
+import type std.css.properties.Width.{OptionalProperty as WidthProperty}.
+
+/**
+ * Shares the width and height properties between board and tile styles.
+ */
+pub struct Dimensions includes WidthProperty, HeightProperty {
+}.
+
+/**
+ * Combines sizing and layout properties for partial style blocks.
+ */
+pub struct LayoutStyle includes BoxSizingProperty, DisplayProperty, GapProperty {
+}.
+
+/**
+ * Combines appearance and interaction properties for partial style blocks.
+ */
+pub struct InteractionStyle includes OpacityProperty, CursorProperty {
+}.
+
+/**
+ * Shares specification-checked compound spacing declarations.
+ */
+pub struct SpacingStyle includes MarginProperty {
+}.
+
+/**
+ * Shares typed border declarations for the unit interaction states.
+ */
+pub struct DecorationStyle includes BorderProperty {
+}.
+
+/**
+ * One composable partial declaration block shared by all stylesheet rules.
+ */
+pub struct Style includes Dimensions, LayoutStyle, InteractionStyle, SpacingStyle, DecorationStyle {
+}.
+
+pub type StyleRule = std.css.Stylesheet.Rule[Style].
+
+empty_style(): Style ->
+    Style {
+        width: None,
+        height: None,
+        box_sizing: None,
+        display: None,
+        gap: None,
+        opacity: None,
+        cursor: None,
+        margin: None,
+        border: None,
+    }.
+
+/**
+ * Builds the stylesheet, reporting invalid dimensions instead of omitting them.
+ */
+pub rules(tile_size: Float, board_size: Float, control_gap: Float): Result[List[StyleRule], String] ->
+    case {
+        width_length(px(tile_size)),
+        height_length(px(tile_size)),
+        width_length(px(board_size)),
+        height_length(px(board_size)),
+        gap_length(root_em(control_gap)),
+        Border.line_width_length(px(2.0)),
+        rgb(127, 136, 26),
+        rgb(141, 33, 36),
+        rgb(2, 255, 0),
+        rgb(244, 54, 63),
+    } {
+        {Some(tile_width), Some(tile_height), Some(board_width), Some(board_height), Some(gap), Some(border_width), Some(unit_color), Some(killed_color), Some(dragged_color), Some(error_color)} ->
+            let base = empty_style();
+            Ok(
+                [
+                    rule(
+                        "#own-board, #target-board",
+                        base#Style{width: Some(board_width), height: Some(board_height)},
+                    ),
+                    rule(
+                        ".own-board-tile, .target-board-tile",
+                        base#Style{
+                            width: Some(tile_width),
+                            height: Some(tile_height),
+                            box_sizing: Some(border_box()),
+                        },
+                    ),
+                    rule("#setup-controls", base#Style{display: Some(flex()), gap: Some(gap)}),
+                    rule(
+                        "#own-board.disabled, #target-board.disabled",
+                        base#Style{opacity: Some(opacity(0.8)), cursor: Some(not_allowed())},
+                    ),
+                    rule(
+                        "#map #units .place-holder",
+                        base#Style{
+                            margin: Some(
+                                Margin.quad(
+                                    Margin.component_length(root_em(1.0)),
+                                    Margin.component_length(px(0.0)),
+                                    Margin.component_length(root_em(1.5)),
+                                    Margin.component_length(root_em(1.0)),
+                                ),
+                            ),
+                        },
+                    ),
+                    rule(
+                        "main",
+                        base#Style{
+                            margin: Some(
+                                Margin.pair(
+                                    Margin.component_length(px(0.0)),
+                                    Margin.component_auto(),
+                                ),
+                            ),
+                        },
+                    ),
+                    rule(
+                        ".unit",
+                        base#Style{
+                            border: Some(
+                                Border.compose(border_width, Border.line_style_solid(), unit_color),
+                            ),
+                        },
+                    ),
+                    rule(
+                        ".unit.killed",
+                        base#Style{
+                            border: Some(
+                                Border.compose(
+                                    border_width,
+                                    Border.line_style_solid(),
+                                    killed_color,
+                                ),
+                            ),
+                        },
+                    ),
+                    rule(
+                        ".unit.dragged",
+                        base#Style{
+                            border: Some(
+                                Border.compose(
+                                    border_width,
+                                    Border.line_style_solid(),
+                                    dragged_color,
+                                ),
+                            ),
+                        },
+                    ),
+                    rule(
+                        ".unit.error",
+                        base#Style{
+                            border: Some(
+                                Border.compose(border_width, Border.line_style_solid(), error_color),
+                            ),
+                        },
+                    ),
+                ],
+            );
+        _ ->
+            Err(
+                "Battleship dimensions and gaps must be non-negative and border colors must be valid",
+            )
+    }.
+
+/**
+ * Web builds evaluate this pure function and bundle its rules with assets/styles.css.
+ */
+pub stylesheet(): Result[List[StyleRule], String] ->
+    rules(30.0, 300.0, 0.5).

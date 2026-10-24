@@ -1,0 +1,54 @@
+module battleship.handlers.WebSocketTest.
+
+import battleship.handlers.WebSocket.
+import battleship.model.server.RoomProtocol.{protocol, route}.
+import std.core.Result.{Ok}.
+import std.core.Unit.
+import std.data.Json.
+import std.test.Test.{assert_equal}.
+
+@test
+pub websocket_route_is_stable(): Bool ->
+    assert_equal("/ws", route()).
+
+@test
+pub websocket_protocol_is_stable(): Bool ->
+    assert_equal("battleship.room.v1", protocol()).
+
+@test
+pub matched_callback_sends_first_player_view_and_turn(): Bool ->
+    matched_view_for_role(1, "player-1", 1).
+
+@test
+pub matched_callback_sends_second_player_view_without_turn(): Bool ->
+    matched_view_for_role(2, "player-2", 0).
+
+matched_view_for_role(role: Int, player_id: String, action_count: Int): Bool ->
+    let {
+        Ok(payload) <- Json.parse(WebSocket.matched("room-1", role, "/ws", "/ws"));
+        Ok(kind) <- payload.get("type");
+        Ok(entry_id) <- payload.get("player_id");
+        Ok(view) <- payload.get("view");
+        Ok(own) <- view.get("own_player");
+        Ok(own_id) <- own.get("id");
+        Ok(actions) <- view.get("allowed_actions")
+    } else {
+        _ -> false
+    };
+    assert_equal(Ok("match_found"), kind.as_string())
+        and assert_equal(Ok(player_id), entry_id.as_string())
+        and assert_equal(Ok(player_id), own_id.as_string())
+        and assert_equal(Ok(action_count), actions.length()).
+
+@test
+pub websocket_callbacks_execute(): Bool ->
+    let waiting = WebSocket.waiting();
+    let peer_left = WebSocket.peer_left();
+    let inbound = WebSocket.inbound("", 1, "not-a-move", "", "");
+    let cancelled = WebSocket.cancelled("closed");
+    let restored = WebSocket.restored("room-1", "", 1, "", "");
+    assert_equal("{\"type\":\"lobby_waiting\"}", waiting)
+        and assert_equal("{\"type\":\"opponent_left\"}", peer_left)
+        and assert_equal({"", "{\"reason\":\"invalid_payload\",\"type\":\"error\"}", ""}, inbound)
+        and assert_equal(Unit, cancelled)
+        and assert_equal(true, restored.contains("room-1")).

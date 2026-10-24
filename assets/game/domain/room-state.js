@@ -1,3 +1,16 @@
+import { project as projectUnitViews } from '../../../_build/browser/js/modules/battleship/browser/BoardUnits.js';
+import { checkedPlacements } from './unit-placement.js';
+import {
+  advance,
+  initial,
+  rules,
+  can_target as canTarget,
+} from '../../../_build/browser/js/modules/battleship/browser/RoomState.js';
+import {
+  phases_names as phaseNames,
+  events_names as eventNames,
+  restore_timeout_ms as restoreTimeoutMs,
+} from '../../../_build/browser/js/modules/battleship/browser/SessionConfig.js';
 import { SessionStatus } from './constants.js';
 import {
   emptyTileRows,
@@ -6,52 +19,29 @@ import {
 } from './board-rows.js';
 
 export const ROOM_UNAVAILABLE_STATUS = SessionStatus.ROOM_UNAVAILABLE;
-export const DEFAULT_RESTORE_TIMEOUT_MS = 5000;
-
-export const SessionPhase = Object.freeze({
-  SETUP: 'setup',
-  CONNECTING: 'connecting',
-  WAITING: 'waiting',
-  RESTORING: 'restoring',
-  PLAYING: 'playing',
-});
-
-export const RoomStateEvent = Object.freeze({
-  SETUP_INCOMPLETE: 'setup_incomplete',
-  JOIN_REQUESTED: 'join_requested',
-  SOCKET_OPENED: 'socket_opened',
-  CONNECTION_CLOSED: 'connection_closed',
-  RETURN_TO_SETUP: 'return_to_setup',
-  ROOM_ENTERED: 'room_entered',
-  RESTORE_STARTED: 'restore_started',
-  STATE_RECEIVED: 'state_received',
-  ROOM_UNAVAILABLE: 'room_unavailable',
-  OPPONENT_DISCONNECTED: 'opponent_disconnected',
-  CONNECTION_ERROR: 'connection_error',
-  SERVER_ERROR: 'server_error',
-});
+export const DEFAULT_RESTORE_TIMEOUT_MS = restoreTimeoutMs();
+export const SessionPhase = Object.freeze(
+  Object.fromEntries(phaseNames().map(({ name, value }) => [name, value]))
+);
+export const RoomStateEvent = Object.freeze(
+  Object.fromEntries(eventNames().map(({ name, value }) => [name, value]))
+);
 
 /**
  * @typedef {typeof SessionPhase[keyof typeof SessionPhase]} SessionPhaseValue
  */
 
 /**
- * @typedef {{
- *   status: string,
- *   boardReady: boolean,
+ * @typedef {import('../../../_build/browser/js/modules/battleship/browser/RoomState.js').Session & {
  *   roomId: string | undefined,
  *   playerId: string | undefined,
  *   opponentId: string | undefined,
- *   isMyTurn: boolean,
- *   canSubmitMove: boolean,
  *   pendingView: unknown,
  *   setupPreviewCoordinates: import('./match-view-model.js').Coordinate[],
+ *   unitViews: import('../../../_build/browser/js/modules/battleship/browser/BoardUnits.js').UnitView[],
  *   unitPlacements: Record<string, import('./match-view-model.js').Coordinate[]>,
  *   ownRows: import('./board-rows.js').BoardGridRow[],
- *   targetRows: import('./board-rows.js').BoardGridRow[],
- *   unitsLocked: boolean,
- *   targetVisible: boolean,
- *   targetDisabled: boolean
+ *   targetRows: import('./board-rows.js').BoardGridRow[]
  * }} RoomSessionData
  */
 
@@ -77,155 +67,97 @@ export const RoomStateEvent = Object.freeze({
  * }} ViewSnapshotPayload
  */
 
-/**
- * @returns {RoomSessionData}
- */
+/** @returns {RoomSessionData} */
 export function initialRoomSessionData() {
   return {
-    status: SessionStatus.PLACE_FLEET,
-    boardReady: false,
+    ...initial(),
     roomId: undefined,
     playerId: undefined,
     opponentId: undefined,
-    isMyTurn: false,
-    canSubmitMove: false,
     pendingView: undefined,
     setupPreviewCoordinates: [],
     unitPlacements: {},
+    unitViews: projectUnitViews([]),
     ownRows: emptyTileRows('own-board'),
     targetRows: emptyTileRows('target-board'),
-    unitsLocked: false,
-    targetVisible: false,
-    targetDisabled: true,
   };
 }
 
+/** @type {Record<string, (payload: unknown) => { text: string, myTurn: boolean }>} */
+const inputs = {
+  none: () => ({ text: '', myTurn: false }),
+  text: (payload) => ({ text: String(payload), myTurn: false }),
+  view(payload) {
+    const { viewModel } = /** @type {ViewSnapshotPayload} */ (payload);
+    return { text: viewModel.status, myTurn: viewModel.isMyTurn };
+  },
+};
+
+/** @type {Record<string, (data: RoomSessionData, payload: unknown) => void>} */
+const effects = {
+  enter(data, payload) {
+    const entry = /** @type {RoomEnteredPayload} */ (payload);
+    data.roomId = entry.roomId;
+    data.playerId = entry.playerId;
+    data.opponentId = entry.opponentId;
+  },
+  restore(data, payload) {
+    const entry = /** @type {RestoreStartedPayload} */ (payload);
+    data.roomId = entry.roomId;
+    data.playerId = entry.playerId;
+  },
+  reset(data) {
+    data.roomId = undefined;
+    data.playerId = undefined;
+    data.opponentId = undefined;
+    data.pendingView = undefined;
+    data.setupPreviewCoordinates = [];
+  },
+  view(data, payload) {
+    const { viewModel } = /** @type {ViewSnapshotPayload} */ (payload);
+    data.ownRows = rowsWithSunkState(
+      rowsFromTiles('own-board', viewModel.ownTiles),
+      viewModel.sunkClusters
+    );
+    data.targetRows = rowsFromTiles('target-board', viewModel.targetTiles);
+    data.unitPlacements = viewModel.unitCoordinatesById;
+    data.unitViews = projectUnitViews(
+      checkedPlacements(viewModel.unitCoordinatesById)
+    );
+  },
+};
+
 /**
- * @returns {ng.MachineConfig<RoomSessionData, ng.MachineEventMap>}
+ * @typedef {{ data: RoomSessionData, events: Record<string, unknown>, state: string }} RoomSessionContract
+ * @returns {ng.MachineConfig<RoomSessionContract>}
  */
 export function roomSessionConfig() {
+  /** @type {Record<string, { on: NonNullable<ng.MachineConfig<RoomSessionContract>['states'][string]['on']> }>} */
+  const states = {};
+  rules().forEach((rule) => {
+    const state = states[rule.phase] ?? { on: {} };
+    states[rule.phase] = state;
+    const on = state.on;
+    on[rule.event] = {
+      to: rule.nextPhase || rule.phase,
+      update({ data, payload }) {
+        const input = inputs[rule.payload](payload);
+        const result = advance(
+          data,
+          rule.phase,
+          rule.event,
+          input.text,
+          input.myTurn
+        );
+        Object.assign(data, result.session);
+        effects[result.effect]?.(data, payload);
+      },
+    };
+  });
   return {
     initial: SessionPhase.SETUP,
     data: initialRoomSessionData(),
-    transitions: {
-      [SessionPhase.SETUP]: {
-        [RoomStateEvent.SETUP_INCOMPLETE](data) {
-          data.status = SessionStatus.PLACE_FLEET_FIRST;
-        },
-        [RoomStateEvent.JOIN_REQUESTED](data) {
-          data.unitsLocked = true;
-          data.status = SessionStatus.CONNECTING;
-          return SessionPhase.CONNECTING;
-        },
-        [RoomStateEvent.ROOM_ENTERED](data, payload) {
-          enterRoom(data, /** @type {RoomEnteredPayload} */ (payload));
-          return SessionPhase.PLAYING;
-        },
-        [RoomStateEvent.RESTORE_STARTED](data, payload) {
-          startRestore(data, /** @type {RestoreStartedPayload} */ (payload));
-          return SessionPhase.RESTORING;
-        },
-        [RoomStateEvent.ROOM_UNAVAILABLE](data) {
-          data.status = ROOM_UNAVAILABLE_STATUS;
-        },
-      },
-      [SessionPhase.CONNECTING]: {
-        [RoomStateEvent.SOCKET_OPENED](data) {
-          data.status = SessionStatus.WAITING_FOR_OPPONENT;
-          return SessionPhase.WAITING;
-        },
-        [RoomStateEvent.CONNECTION_CLOSED](data) {
-          data.status = SessionStatus.DISCONNECTED;
-          data.unitsLocked = false;
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.ROOM_ENTERED](data, payload) {
-          enterRoom(data, /** @type {RoomEnteredPayload} */ (payload));
-          return SessionPhase.PLAYING;
-        },
-        [RoomStateEvent.CONNECTION_ERROR](data) {
-          data.status = SessionStatus.CONNECTION_ERROR;
-        },
-        [RoomStateEvent.RETURN_TO_SETUP](data, status) {
-          returnToSetup(data, String(status));
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.SERVER_ERROR](data, reason) {
-          data.status = String(reason);
-        },
-      },
-      [SessionPhase.WAITING]: {
-        [RoomStateEvent.SOCKET_OPENED](data) {
-          data.status = SessionStatus.WAITING_FOR_OPPONENT;
-        },
-        [RoomStateEvent.CONNECTION_CLOSED](data) {
-          data.status = SessionStatus.DISCONNECTED;
-          data.unitsLocked = false;
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.ROOM_ENTERED](data, payload) {
-          enterRoom(data, /** @type {RoomEnteredPayload} */ (payload));
-          return SessionPhase.PLAYING;
-        },
-        [RoomStateEvent.ROOM_UNAVAILABLE](data) {
-          data.status = ROOM_UNAVAILABLE_STATUS;
-        },
-        [RoomStateEvent.RETURN_TO_SETUP](data, status) {
-          returnToSetup(data, String(status));
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.SERVER_ERROR](data, reason) {
-          data.status = String(reason);
-        },
-      },
-      [SessionPhase.RESTORING]: {
-        [RoomStateEvent.ROOM_ENTERED](data, payload) {
-          enterRoom(data, /** @type {RoomEnteredPayload} */ (payload));
-          return SessionPhase.PLAYING;
-        },
-        [RoomStateEvent.STATE_RECEIVED](data, payload) {
-          applyViewSnapshot(data, /** @type {ViewSnapshotPayload} */ (payload));
-          return SessionPhase.PLAYING;
-        },
-        [RoomStateEvent.RETURN_TO_SETUP](data, status) {
-          returnToSetup(data, String(status));
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.CONNECTION_ERROR](data) {
-          data.status = SessionStatus.CONNECTION_ERROR;
-        },
-        [RoomStateEvent.ROOM_UNAVAILABLE](data) {
-          data.status = ROOM_UNAVAILABLE_STATUS;
-        },
-        [RoomStateEvent.SERVER_ERROR](data, reason) {
-          data.status = String(reason);
-        },
-      },
-      [SessionPhase.PLAYING]: {
-        [RoomStateEvent.STATE_RECEIVED](data, payload) {
-          applyViewSnapshot(data, /** @type {ViewSnapshotPayload} */ (payload));
-        },
-        [RoomStateEvent.RETURN_TO_SETUP](data, status) {
-          returnToSetup(data, String(status));
-          return SessionPhase.SETUP;
-        },
-        [RoomStateEvent.OPPONENT_DISCONNECTED](data) {
-          data.status = SessionStatus.OPPONENT_DISCONNECTED;
-        },
-        [RoomStateEvent.CONNECTION_CLOSED](data) {
-          data.status = SessionStatus.DISCONNECTED;
-        },
-        [RoomStateEvent.CONNECTION_ERROR](data) {
-          data.status = SessionStatus.CONNECTION_ERROR;
-        },
-        [RoomStateEvent.ROOM_UNAVAILABLE](data) {
-          data.status = ROOM_UNAVAILABLE_STATUS;
-        },
-        [RoomStateEvent.SERVER_ERROR](data, reason) {
-          data.status = String(reason);
-        },
-      },
-    },
+    states,
   };
 }
 
@@ -236,79 +168,7 @@ export function roomSessionConfig() {
  * @returns {{ row: number, column: number } | undefined}
  */
 export function moveForTarget(phase, canSubmitMove, tile) {
-  if (
-    phase !== SessionPhase.PLAYING ||
-    !canSubmitMove ||
-    tile.state === 'hit' ||
-    tile.state === 'miss'
-  ) {
-    return undefined;
-  }
-
-  return {
-    row: tile.row,
-    column: tile.column,
-  };
-}
-
-/**
- * @param {RoomSessionData} data
- * @param {RoomEnteredPayload} payload
- */
-function enterRoom(data, payload) {
-  data.unitsLocked = true;
-  data.roomId = payload.roomId;
-  data.playerId = payload.playerId;
-  data.opponentId = payload.opponentId;
-  data.status = SessionStatus.IN_ROOM;
-  data.targetVisible = true;
-}
-
-/**
- * @param {RoomSessionData} data
- * @param {RestoreStartedPayload} payload
- */
-function startRestore(data, payload) {
-  data.unitsLocked = true;
-  data.roomId = payload.roomId;
-  data.playerId = payload.playerId;
-  data.status = SessionStatus.RECONNECTING;
-}
-
-/**
- * @param {RoomSessionData} data
- * @param {string} status
- */
-function returnToSetup(data, status) {
-  data.roomId = undefined;
-  data.playerId = undefined;
-  data.opponentId = undefined;
-  data.isMyTurn = false;
-  data.canSubmitMove = false;
-  data.pendingView = undefined;
-  data.setupPreviewCoordinates = [];
-  data.unitsLocked = false;
-  data.targetVisible = false;
-  data.targetDisabled = true;
-  data.status = status;
-}
-
-/**
- * @param {RoomSessionData} data
- * @param {ViewSnapshotPayload} payload
- */
-function applyViewSnapshot(data, payload) {
-  const { viewModel } = payload;
-
-  data.isMyTurn = viewModel.isMyTurn;
-  data.canSubmitMove = viewModel.isMyTurn;
-  data.targetVisible = true;
-  data.targetDisabled = !viewModel.isMyTurn;
-  data.status = viewModel.status;
-  data.ownRows = rowsWithSunkState(
-    rowsFromTiles('own-board', viewModel.ownTiles),
-    viewModel.sunkClusters
-  );
-  data.targetRows = rowsFromTiles('target-board', viewModel.targetTiles);
-  data.unitPlacements = viewModel.unitCoordinatesById;
+  return canTarget(phase, canSubmitMove, tile.state)
+    ? { row: tile.row, column: tile.column }
+    : undefined;
 }

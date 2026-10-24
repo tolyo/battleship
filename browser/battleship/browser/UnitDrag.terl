@@ -1,0 +1,52 @@
+module battleship.browser.UnitDrag.
+
+import std.core.Float.{floor}.
+
+pub struct Point {
+    left: Float,
+    top: Float,
+}.
+
+pub struct Pointer {
+    pointerId: Int,
+    pageX: Float,
+    pageY: Float,
+}.
+
+pub struct State {
+    active: Bool,
+    pointerId: Int,
+    firstMove: Bool,
+    shiftX: Float,
+    shiftY: Float,
+}.
+
+pub point(left: Float, top: Float): Point ->
+    Point {left: left, top: top}.
+
+pub pointer(pointer_id: Int, page_x: Float, page_y: Float): Pointer ->
+    Pointer {pointerId: pointer_id, pageX: page_x, pageY: page_y}.
+
+pub initial(): State ->
+    State {active: false, pointerId: -1, firstMove: false, shiftX: 0.0, shiftY: 0.0}.
+
+pub started(pointer: Pointer, origin: Point): State ->
+    State {
+        active: true,
+        pointerId: pointer.pointerId,
+        firstMove: true,
+        shiftX: pointer.pageX - origin.left,
+        shiftY: pointer.pageY - origin.top,
+    }.
+
+pub owns(state: State, pointer: Pointer): Bool ->
+    state.active and state.pointerId == pointer.pointerId.
+
+pub position(state: State, pointer: Pointer): Point ->
+    Point {left: floor(pointer.pageX - state.shiftX), top: floor(pointer.pageY - state.shiftY)}.
+
+pub moved(state: State): State ->
+    state#State{firstMove: false}.
+
+pub stopped(state: State): State ->
+    state#State{active: false, pointerId: -1, firstMove: false}.

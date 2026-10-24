@@ -1,16 +1,15 @@
 /**
  * Stateful Battleship WebSocket transitions.
  *
- * The runtime retains only an opaque move history. Each callback reconstructs
- * the immutable rules model, applies the next validated move, and emits a
- * player-specific public view for both peers.
+ * Rebuilds the immutable match from submitted boards and retained move history.
+ * Match entry, moves, and restoration expose a player-specific public view.
  */
 module battleship.model.server.GameSession.
 
-import battleship.JsonText.{stringify}.
 import battleship.model.game.Board.{Row}.
 import battleship.model.game.Match.{Active, Finished, Hit, MatchFinished, Miss, NotYourTurn, UnknownPlayer}.
 import battleship.model.game.{Board, Cell, Match, Player}.
+import battleship.shared.ClientMessages.
 import std.collections.List.
 import std.core.Int.{from_string, to_string}.
 import std.core.Option.{None, Option, Some}.
@@ -23,6 +22,12 @@ import type battleship.model.game.Match.{Match, MoveResult}.
 import type battleship.model.game.{Cell, Player}.
 import type std.data.Json.
 
+struct ClientFrame {
+    kind: String,
+    row: Int,
+    column: Int,
+}.
+
 pub transition(
     history: String,
     role: Int,
@@ -30,9 +35,20 @@ pub transition(
     first_request: String,
     second_request: String,
 ): {String, String, String} ->
-    case parse_move(frame) {
-        Some({row, column}) ->
-            apply_move(history, role, row, column, first_request, second_request);
+    case parse_frame(frame) {
+        Some(request) ->
+            if {
+                request.kind == ClientMessages.sync_kind() -> let match = replay_requests(history, first_request, second_request);
+                {history, view_json(match, 1), view_json(match, 2)};
+                true -> apply_move(
+                    history,
+                    role,
+                    request.row,
+                    request.column,
+                    first_request,
+                    second_request,
+                )
+            };
         None -> addressed_error(history, role, "invalid_payload")
     }.
 
@@ -53,7 +69,10 @@ pub replay_requests(history: String, first_request: String, second_request: Stri
 
 pub view_json(match: Match, role: Int): String ->
     Json.object().put("type", Json.string("room_update")).put("view", public_view(match, role))
-    |> stringify().
+    |> Json.to_string().
+
+pub matched_json(room_id: String, role: Int, first_request: String, second_request: String): String ->
+    room_view_json("match_found", room_id, "", role, first_request, second_request).
 
 pub restored_json(
     room_id: String,
@@ -62,14 +81,24 @@ pub restored_json(
     first_request: String,
     second_request: String,
 ): String ->
+    room_view_json("room_joined", room_id, history, role, first_request, second_request).
+
+room_view_json(
+    kind: String,
+    room_id: String,
+    history: String,
+    role: Int,
+    first_request: String,
+    second_request: String,
+): String ->
     let match = replay_requests(history, first_request, second_request);
     Json.object()
-    .put("type", Json.string("room_joined"))
+    .put("type", Json.string(kind))
     .put("room_id", Json.string(room_id))
     .put("player_id", Json.string(player_id(role)))
     .put("opponent_id", Json.string(player_id(opposite_role(role))))
     .put("view", public_view(match, role))
-    |> stringify().
+    |> Json.to_string().
 
 public_view(match: Match, role: Int): Json ->
     let viewer_id = player_id(role);
@@ -115,11 +144,22 @@ addressed_error(history: String, role: Int, reason: String): {String, String, St
         true -> {history, "", payload}
     }.
 
-parse_move(frame: String): Option[{Int, Int}] ->
+parse_frame(frame: String): Option[ClientFrame] ->
     let {
         Ok(value) <- Json.parse(frame);
         Ok(kind_value) <- value.get("type");
-        Ok("move") <- kind_value.as_string();
+        Ok(kind) <- kind_value.as_string()
+    } else {
+        _ -> None
+    };
+    if {
+        kind == ClientMessages.sync_kind() -> Some(ClientFrame {kind: kind, row: 0, column: 0});
+        kind == ClientMessages.move_kind() -> parse_move(value);
+        true -> None
+    }.
+
+parse_move(value: Json): Option[ClientFrame] ->
+    let {
         Ok(row_value) <- value.get("row");
         Ok(row) <- row_value.as_int();
         Ok(column_value) <- value.get("column");
@@ -127,7 +167,7 @@ parse_move(frame: String): Option[{Int, Int}] ->
     } else {
         _ -> None
     };
-    Some({row, column}).
+    Some(ClientFrame {kind: ClientMessages.move_kind(), row: row, column: column}).
 
 request_board(request: String, fallback: Board): Board ->
     case String.split(request, "board=") {
@@ -292,4 +332,4 @@ move_error(result: MoveResult): String ->
 
 error_json(reason: String): String ->
     Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
-    |> stringify().
+    |> Json.to_string().

@@ -1,0 +1,29 @@
+<form ng-post="/_login" data-state-success="dashboard">
+  <h2>Login form</h2>
+
+  <label ng-class="${email_classes}">
+    Email
+    <input
+      name="email"
+      type="text"
+      aria-invalid="${email_invalid}"
+      ng-keyup="errors.email = undefined"
+    />
+    <span ng-bind="errors.email"></span>
+  </label>
+
+  <label ng-class="${password_classes}">
+    Password
+    <input
+      name="password"
+      type="password"
+      aria-invalid="${password_invalid}"
+      ng-keyup="errors.password = undefined"
+    />
+    <span ng-bind="errors.password"></span>
+  </label>
+
+  <button type="submit">Sign in</button>
+</form>
+
+<span ng-bind="error.errors"></span>

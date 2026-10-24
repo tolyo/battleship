@@ -1,0 +1,9 @@
+module battleship.shared.ClientMessagesTest.
+
+import battleship.shared.ClientMessages.
+import std.test.Test.{assert_equal}.
+
+@test
+pub move_and_sync_payloads_preserve_the_wire_contract(): Bool ->
+    assert_equal("move", ClientMessages.move_kind())
+        and assert_equal("sync", ClientMessages.sync_kind()).

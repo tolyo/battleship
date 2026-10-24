@@ -1,0 +1,24 @@
+module battleship.browser.TargetTest.
+
+import battleship.browser.Target.
+import std.test.Test.{assert_equal}.
+
+@test
+pub target_coordinates_are_available_only_while_a_move_can_be_submitted(): Bool ->
+    let tile = Target.tile(4, 5, "empty");
+    let active = Target.match_state("playing", true);
+    let allowed = Target.decide(active, tile);
+    let pending = Target.decide(Target.match_state("playing", false), tile);
+    let waiting = Target.decide(Target.match_state("waiting", true), tile);
+    allowed.allowed
+        and assert_equal(4, allowed.row)
+        and assert_equal(5, allowed.column)
+        and not pending.allowed
+        and not waiting.allowed.
+
+@test
+pub hit_and_miss_tiles_cannot_be_submitted_again(): Bool ->
+    let active = Target.match_state("playing", true);
+    let hit = Target.decide(active, Target.tile(4, 5, "hit"));
+    let miss = Target.decide(active, Target.tile(4, 5, "miss"));
+    not hit.allowed and not miss.allowed.

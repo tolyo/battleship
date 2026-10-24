@@ -1,0 +1,69 @@
+module battleship.browser.BoardViewTest.
+
+import battleship.browser.BoardView.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.BoardView.{Cluster, Tile, UnitCoordinates}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+@test
+pub own_board_reveals_ship_identity(): Bool ->
+    case BoardView.tile_views([["7"]], true) {
+        [tile | _rest] -> tile_matches(tile, "unit", "7");
+        _ -> false
+    }.
+
+@test
+pub target_board_hides_ship_identity(): Bool ->
+    case BoardView.tile_views([["7"]], false) {
+        [tile | _rest] -> tile_matches(tile, "empty", "");
+        _ -> false
+    }.
+
+@test
+pub groups_coordinates_by_ship_identifier(): Bool ->
+    let [ship | []] <- BoardView.unit_coordinates([["3", "3"]]) else {
+        _ -> false
+    };
+    unit_matches(ship).
+
+@test
+pub touching_live_ship_keeps_cluster_active(): Bool ->
+    case BoardView.sunk_clusters([["+", "3"]]) {
+        [] -> true;
+        _ -> false
+    }.
+
+@test
+pub adjacent_vertical_hits_form_one_sunk_cluster(): Bool ->
+    let [cluster | []] <- BoardView.sunk_clusters([["+"], ["+"]]) else {
+        _ -> false
+    };
+    vertical_cluster_matches(cluster).
+
+tile_matches(tile: Tile, state: String, unit_id: String): Bool ->
+    assert_equal(state, tile#Tile.state) and assert_equal(unit_id, tile#Tile.unit_id).
+
+unit_matches(unit: UnitCoordinates): Bool ->
+    assert_equal("3", unit#UnitCoordinates.id)
+        and two_points(unit#UnitCoordinates.coordinates, 0, 0, 0, 1).
+
+vertical_cluster_matches(cluster: Cluster): Bool ->
+    assert_equal("vertical", cluster#Cluster.orientation)
+        and two_points(cluster#Cluster.coordinates, 0, 0, 1, 0).
+
+two_points(
+    points: List[Coordinate],
+    first_row: Int,
+    first_column: Int,
+    second_row: Int,
+    second_column: Int,
+): Bool ->
+    case points {
+        [first | [second | []]] ->
+            assert_equal(first_row, first#Coordinate.row)
+                and assert_equal(first_column, first#Coordinate.column)
+                and assert_equal(second_row, second#Coordinate.row)
+                and assert_equal(second_column, second#Coordinate.column);
+        _ -> false
+    }.

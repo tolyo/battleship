@@ -3,7 +3,6 @@
  */
 module battleship.handlers.Room.
 
-import battleship.JsonText.{stringify}.
 import battleship.model.server.{RoomProtocol, RoomSession}.
 import std.data.Json.
 import std.http.Response.
@@ -16,7 +15,7 @@ pub contract_json(): String ->
     .put("route", Json.string(RoomProtocol.route()))
     .put("firstPlayerId", Json.string(RoomSession.first_player_id()))
     .put("secondPlayerId", Json.string(RoomSession.second_player_id()))
-    |> stringify().
+    |> Json.to_string().
 
 pub protocol(_request: Request): Response ->
     Response.json_text(contract_json()).

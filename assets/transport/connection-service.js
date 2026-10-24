@@ -28,7 +28,8 @@ export class ConnectionService {
     this.close();
     this.state = 'connecting';
 
-    const connection = this.$websocket(url, [], {
+    const connection = this.$websocket(url, {
+      protocols: [],
       heartbeatTimeout: 0,
       maxRetries: 0,
       onOpen: () => {

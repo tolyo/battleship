@@ -3,24 +3,40 @@
  */
 module battleship.handlers.Pages.
 
-import std.http.Response.
+import battleship.browser.Templates.
+import std.core.Option.{Some}.
+import std.http.{Request, Response}.
 
 import type std.http.{Request, Response}.
 
 pub index(_request: Request): Response ->
-    Response.file("index.html", content_type = "text/html; charset=utf-8").
+    Response.html_file("index.html").
 
 pub login(_request: Request): Response ->
-    Response.file("login/login.html", content_type = "text/html; charset=utf-8").
+    Response.html(Templates.login()).
 
 pub register(_request: Request): Response ->
-    Response.file("register/register.html", content_type = "text/html; charset=utf-8").
+    Response.html(Templates.register()).
 
 pub dashboard(_request: Request): Response ->
-    Response.file("dashboard/dashboard.html", content_type = "text/html; charset=utf-8").
+    Response.html(Templates.dashboard()).
 
 pub room(_request: Request): Response ->
-    Response.file("room-page/room.html", content_type = "text/html; charset=utf-8").
+    Response.html(Templates.room()).
 
 pub map(_request: Request): Response ->
-    Response.file("map/map.html", content_type = "text/html; charset=utf-8").
+    Response.html(Templates.map()).
+
+pub favicon(_request: Request): Response ->
+    Response.svg_file("favicon.svg").
+
+pub component(request: Request): Response ->
+    case request.param("name") {
+        Some("unit") -> Response.html(Templates.unit());
+        Some("board") -> Response.html(Templates.board());
+        Some("board-grid") -> Response.html(Templates.board_grid());
+        Some("setup-controls") -> Response.html(Templates.setup_controls());
+        Some("status-panel") -> Response.html(Templates.status_panel());
+        Some("target-board") -> Response.html(Templates.target_board());
+        _ -> Response.text("component not found", status = 404)
+    }.

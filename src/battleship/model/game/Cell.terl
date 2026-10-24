@@ -1,8 +1,8 @@
 /**
  * Battleship board cell model.
  *
- * This is the Terlan-native representation of the board cell contract. It
- * keeps the rule surface target-neutral for generated backends.
+ * Stores ship identifiers and the markers for empty, blocked, hit, and missed
+ * cells used by board and match rules.
  */
 module battleship.model.game.Cell.
 

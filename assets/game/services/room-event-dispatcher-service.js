@@ -60,8 +60,8 @@ export class RoomEventDispatcherService {
 
   /**
    * @param {import('./match-state-service.js').MatchStateService} matchState
-   * @param {import('./match-view-service.js').MatchViewService} matchView
-   * @param {import('./room-entry-service.js').RoomEntryService} roomEntry
+   * @param {import('../../../_build/browser/js/modules/battleship/client/MatchSnapshots.js').Snapshots<unknown>} matchView
+   * @param {import('../../../_build/browser/js/modules/battleship/client/RoomEntry.js').EntryService<unknown>} roomEntry
    * @param {import('./room-restore-service.js').RoomRestoreService} roomRestore
    */
   constructor(matchState, matchView, roomEntry, roomRestore) {

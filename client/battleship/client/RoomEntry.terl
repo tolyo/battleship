@@ -1,0 +1,57 @@
+module battleship.client.RoomEntry.
+
+import battleship.host.RoomIdentity.
+import std.core.Option.{None, Some}.
+import std.js.String.
+
+import type battleship.host.RoomIdentity.{RoomIdentity}.
+import type std.core.Option.{Option}.
+
+pub type Completion = Unit.
+
+pub struct Options {
+    updateUrl: Bool,
+}.
+
+pub struct StorePort {
+    enterRoom: (String, String, Options) -> Completion,
+}.
+
+pub struct StatePort[V] {
+    enterRoom: (RoomIdentity[V]) -> Bool,
+}.
+
+pub struct ViewPort[V] {
+    receiveSnapshot: (V) -> Bool,
+}.
+
+pub struct EntryService[V] {
+    enter: (RoomIdentity[V], Options) -> Bool,
+}.
+
+pub create[V](store: StorePort, state: StatePort[V], view: ViewPort[V]): EntryService[V] ->
+    EntryService {
+        enter: ((entry, options) ->
+            if {
+                state#StatePort.enterRoom(entry) -> accepted(store, view, entry, options);
+                true -> false
+            }),
+    }.
+
+accepted[V](store: StorePort, view: ViewPort[V], entry: RoomIdentity[V], options: Options): Bool ->
+    let snapshot_applied = receive_snapshot(view, RoomIdentity.view(entry));
+    let identity_stored =
+        store#StorePort.enterRoom(
+            String.to_core(RoomIdentity.room_id(entry)),
+            String.to_core(RoomIdentity.player_id(entry)),
+            Options {updateUrl: options.updateUrl},
+        );
+    true.
+
+receive_snapshot[V](view: ViewPort[V], snapshot: Option[V]): Unit ->
+    case snapshot {
+        Some(value) ->
+            let ignored = view#ViewPort.receiveSnapshot(value);
+            Unit;
+        None -> Unit
+    }.

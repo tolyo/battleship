@@ -59,6 +59,18 @@ describe('setupRowsFromDataState', () => {
     expect(rows[2][5].classes['droppable-target']).toBe(false);
   });
 
+  it('normalizes sparse and nullish browser cells without losing empty strings', () => {
+    const partial = /** @type {any[]} */ ([]);
+    partial[1] = null;
+    partial[2] = '';
+    const dataState = /** @type {any} */ ([null, partial]);
+    const rows = setupRowsFromDataState(dataState);
+    expect(rows[0][0].dataState).toBe(CellState.EMPTY);
+    expect(rows[1][0].dataState).toBe(CellState.EMPTY);
+    expect(rows[1][1].dataState).toBe(CellState.EMPTY);
+    expect(rows[1][2].dataState).toBe('');
+  });
+
   it('defaults missing setup cells to empty state', () => {
     const rows = setupRowsFromDataState([]);
 
@@ -136,6 +148,42 @@ describe('rowsWithSunkState', () => {
     expect(rows[3][7].sunkStart).toBe(true);
     expect(rows[4][7].sunkVertical).toBe(true);
     expect(rows[5][7].sunkEnd).toBe(true);
+  });
+
+  it('preserves row and tile identities and untouched class objects', () => {
+    const rows = rowsFromTiles('own-board', [
+      { row: 0, column: 0, state: 'unit', unitId: '0' },
+    ]);
+    const row = rows[0];
+    const tile = row[0];
+    const untouchedClasses = rows[9][9].classes;
+    expect(
+      rowsWithSunkState(rows, [
+        { coordinates: [{ row: 0, column: 0 }], orientation: 'vertical' },
+      ])
+    ).toBe(rows);
+    expect(rows[0]).toBe(row);
+    expect(rows[0][0]).toBe(tile);
+    expect(tile.unitId).toBe('0');
+    expect(tile.classes.placed).toBe(true);
+    expect(tile.classes['sunk-single']).toBe(true);
+    expect(rows[9][9].classes).toBe(untouchedClasses);
+  });
+
+  it('uses the last cluster when a tile appears more than once', () => {
+    const rows = rowsWithSunkState(emptyTileRows('own-board'), [
+      {
+        coordinates: [
+          { row: 0, column: 0 },
+          { row: 0, column: 1 },
+        ],
+        orientation: 'horizontal',
+      },
+      { coordinates: [{ row: 0, column: 0 }], orientation: 'vertical' },
+    ]);
+    expect(rows[0][0].sunkSingle).toBe(true);
+    expect(rows[0][0].sunkHorizontal).toBe(false);
+    expect(rows[0][1].sunkHorizontal).toBe(true);
   });
 
   it('ignores sunk coordinates outside the rendered board', () => {

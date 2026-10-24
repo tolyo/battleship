@@ -70,6 +70,10 @@ describe('RoomClientService', () => {
       '/ws?room_id=room-1&player_id=player-1',
       jasmine.any(Object)
     );
+    connection.lastHandlers.onOpen();
+    expect(connection.send).toHaveBeenCalledOnceWith({
+      type: CLIENT_MESSAGE.SYNC,
+    });
   });
 
   it('does not connect when match state rejects restore', () => {
@@ -91,15 +95,21 @@ describe('RoomClientService', () => {
   });
 
   it('restores from the current room url when present', () => {
-    const { client, roomRestore } = roomClient();
+    const { client, roomRestore, connection } = roomClient();
 
     expect(client.restoreRoomFromCurrentUrl()).toBeTrue();
 
-    expect(roomRestore.restoreCurrentRequest).toHaveBeenCalledOnceWith();
+    expect(roomRestore.restoreCurrentRequest).toHaveBeenCalledOnceWith(
+      jasmine.any(Function)
+    );
+    expect(connection.connect).toHaveBeenCalledOnceWith(
+      '/ws?room_id=room-1&player_id=player-1',
+      jasmine.any(Object)
+    );
   });
 
   it('reports unavailable rooms when the current room has no remembered player', () => {
-    const { client, roomRestore } = roomClient({
+    const { client, roomRestore, connection } = roomClient({
       roomRestoreOverrides: {
         restoreCurrentRequest: jasmine
           .createSpy('restoreCurrentRequest')
@@ -108,8 +118,11 @@ describe('RoomClientService', () => {
     });
 
     expect(client.restoreRoomFromCurrentUrl()).toBeFalse();
+    expect(connection.connect).not.toHaveBeenCalled();
 
-    expect(roomRestore.restoreCurrentRequest).toHaveBeenCalledOnceWith();
+    expect(roomRestore.restoreCurrentRequest).toHaveBeenCalledOnceWith(
+      jasmine.any(Function)
+    );
   });
 
   it('sends target moves only for open connections and valid moves', () => {
@@ -118,7 +131,7 @@ describe('RoomClientService', () => {
       targetOverrides: {
         moveForTile: jasmine
           .createSpy('moveForTile')
-          .and.returnValue({ row: 4, column: 5 }),
+          .and.returnValue({ allowed: true, row: 4, column: 5 }),
       },
     });
 
@@ -143,11 +156,26 @@ describe('RoomClientService', () => {
       targetOverrides: {
         moveForTile: jasmine
           .createSpy('moveForTile')
-          .and.returnValue(undefined),
+          .and.returnValue({ allowed: false, row: 4, column: 5 }),
       },
     });
 
     client.submitMove({ row: 4, column: 5, state: 'hit' });
+
+    expect(connection.send).not.toHaveBeenCalled();
+  });
+
+  it('does not send another target while a move is pending', () => {
+    const { client, connection } = roomClient({
+      connectionOverrides: { open: true },
+      matchStateOverrides: {
+        moveSubmitted: jasmine
+          .createSpy('moveSubmitted')
+          .and.returnValue(false),
+      },
+    });
+
+    client.submitMove({ row: 4, column: 5, state: 'empty' });
 
     expect(connection.send).not.toHaveBeenCalled();
   });
@@ -256,6 +284,7 @@ function roomClient({
     tryEnterWaiting: jasmine.createSpy('tryEnterWaiting').and.returnValue(true),
     isRestoring: false,
     socketOpened: jasmine.createSpy('socketOpened'),
+    moveSubmitted: jasmine.createSpy('moveSubmitted').and.returnValue(true),
     roomUnavailable: jasmine.createSpy('roomUnavailable'),
     startRestore: jasmine.createSpy('startRestore').and.returnValue(true),
     enterRoom: jasmine.createSpy('enterRoom').and.returnValue(true),
@@ -269,14 +298,14 @@ function roomClient({
   const target = {
     moveForTile: jasmine
       .createSpy('moveForTile')
-      .and.returnValue({ row: 1, column: 2 }),
+      .and.returnValue({ allowed: true, row: 1, column: 2 }),
     ...targetOverrides,
   };
   const roomRestore = {
     restoreCurrentRequest: jasmine
       .createSpy('restoreCurrentRequest')
-      .and.callFake(() =>
-        roomRestore.startRestore({ roomId: 'room-1', playerId: 'player-1' }, {})
+      .and.callFake((restore) =>
+        restore({ roomId: 'room-1', playerId: 'player-1' })
       ),
     startRestore: jasmine
       .createSpy('startRestore')

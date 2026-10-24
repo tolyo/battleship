@@ -1,0 +1,38 @@
+module battleship.client.OperationTimeout.
+
+import battleship.host.{TimerHost, TimerState}.
+import std.core.Option.{None, Some}.
+
+import type battleship.host.TimerHost.{TimerHost}.
+import type battleship.host.TimerState.{TimerState}.
+import type std.js.Number.{JsNumber}.
+
+pub type Completion = Unit.
+
+pub struct Timeout {
+    start: (() -> Completion, JsNumber) -> Completion,
+    clear: () -> Completion,
+}.
+
+pub create(host: TimerHost): Timeout ->
+    let state = new_state();
+    Timeout {
+        start: ((callback, delay) -> start(host, state, callback, delay)),
+        clear: (() -> clear(host, state)),
+    }.
+
+new_state(): TimerState[JsNumber] ->
+    TimerState.construct[JsNumber](None).
+
+start(host: TimerHost, state: TimerState[JsNumber], callback: () -> Unit, delay: JsNumber): Unit ->
+    let cleared = clear(host, state);
+    let handle = TimerHost.set_timeout(host, callback, delay);
+    TimerState.set_timer_id(state, Some(handle)).
+
+clear(host: TimerHost, state: TimerState[JsNumber]): Unit ->
+    case TimerState.timer_id(state) {
+        Some(handle) ->
+            let cleared = TimerHost.clear_timeout(host, handle);
+            TimerState.set_timer_id(state, None);
+        None -> Unit
+    }.

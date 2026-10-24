@@ -1,0 +1,172 @@
+module battleship.browser.SetupState.
+
+import battleship.browser.{BoardRows, Fleet, Placement, SessionConfig}.
+
+import type battleship.browser.BoardRows.{GridRow}.
+import type battleship.browser.Placement.{Layout, Placement, RandomLayout}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+pub struct Setup {
+    placements: List[Placement],
+    preview: List[Coordinate],
+}.
+
+pub struct Update {
+    changed: Bool,
+    accepted: Bool,
+    placementsChanged: Bool,
+    previewChanged: Bool,
+    placements: List[Placement],
+    preview: List[Coordinate],
+    coordinates: List[Coordinate],
+    error: String,
+    boardState: List[List[String]],
+    ownRows: List[GridRow],
+    boardReady: Bool,
+    status: String,
+}.
+
+pub snapshot(placements: List[Placement], preview: List[Coordinate]): Setup ->
+    Setup {placements: placements, preview: preview}.
+
+pub initial(): Setup ->
+    snapshot([], []).
+
+pub project(setup: Setup): Update ->
+    finish(setup, false, [], false, false).
+
+pub can_place(active: Bool, setup: Setup, id: String, coordinates: List[Coordinate]): Bool ->
+    active and Placement.can_place_setup(setup.placements, id, coordinates).
+
+pub update(
+    active: Bool,
+    setup: Setup,
+    event: String,
+    id: String,
+    coordinates: List[Coordinate],
+    seed: Int,
+): Update ->
+    if {
+        not active -> unchanged(setup, false, []);
+        event == "reset" -> finish(initial(), false, [], true, true);
+        event == "randomize" -> randomized(setup, Placement.random_layout(seed));
+        event == "place" -> placed(setup, id, coordinates);
+        event == "clear" -> finish(snapshot(without_unit(setup.placements, id), []), false, [], true, true);
+        event == "preview" -> previewed(setup, coordinates, false);
+        event == "clear_preview" -> clear_preview(setup);
+        event == "place_at" -> if {
+            can_place(true, setup, id, coordinates) -> placed(setup, id, coordinates);
+            true -> unchanged(setup, false, [])
+        };
+        event == "preview_at" -> if {
+            can_place(true, setup, id, coordinates) -> previewed(setup, coordinates, true);
+            true -> clear_preview(setup)
+        };
+        true -> unchanged(setup, false, [])
+    }.
+
+placed(setup: Setup, id: String, coordinates: List[Coordinate]): Update ->
+    finish(snapshot(set_unit(setup.placements, id, coordinates), []), true, coordinates, true, true).
+
+previewed(setup: Setup, coordinates: List[Coordinate], accepted: Bool): Update ->
+    if {
+        same_coordinates(setup.preview, coordinates) -> unchanged(setup, accepted, coordinates);
+        true -> finish(snapshot(setup.placements, coordinates), accepted, coordinates, false, true)
+    }.
+
+clear_preview(setup: Setup): Update ->
+    case setup.preview {
+        [] -> unchanged(setup, false, []);
+        _ -> finish(snapshot(setup.placements, []), false, [], false, true)
+    }.
+
+randomized(setup: Setup, random: RandomLayout): Update ->
+    if {
+        random#RandomLayout.error != "" -> unchanged(setup, false, [])#Update{error: random#RandomLayout.error};
+        true -> finish(snapshot(random#RandomLayout.placements, []), true, [], true, true)
+    }.
+
+finish(
+    setup: Setup,
+    accepted: Bool,
+    coordinates: List[Coordinate],
+    placements_changed: Bool,
+    preview_changed: Bool,
+): Update ->
+    let layout = Placement.layout(setup.placements);
+    let ready = layout#Layout.complete and layout#Layout.placedUnitCells == Fleet.occupied_cells();
+    let text = SessionConfig.statuses();
+    Update {
+        changed: true,
+        accepted: accepted,
+        placementsChanged: placements_changed,
+        previewChanged: preview_changed,
+        placements: setup.placements,
+        preview: setup.preview,
+        coordinates: coordinates,
+        error: "",
+        boardState: layout#Layout.boardState,
+        ownRows: BoardRows.setup_rows(layout#Layout.tileDataState, setup.preview),
+        boardReady: ready,
+        status: if {
+            ready -> text.fleetReady;
+            true -> text.placeFleet
+        },
+    }.
+
+unchanged(setup: Setup, accepted: Bool, coordinates: List[Coordinate]): Update ->
+    Update {
+        changed: false,
+        accepted: accepted,
+        placementsChanged: false,
+        previewChanged: false,
+        placements: setup.placements,
+        preview: setup.preview,
+        coordinates: coordinates,
+        error: "",
+        boardState: [],
+        ownRows: [],
+        boardReady: false,
+        status: "",
+    }.
+
+set_unit(
+    placements: List[Placement],
+    id: String,
+    coordinates: List[Coordinate],
+): List[Placement] ->
+    case placements {
+        [] -> [Placement.placement(id, coordinates)];
+        [placed | rest] ->
+            if {
+                placed#Placement.id == id -> [Placement.placement(id, coordinates) | rest];
+                true -> [placed | set_unit(rest, id, coordinates)]
+            }
+    }.
+
+without_unit(placements: List[Placement], id: String): List[Placement] ->
+    case placements {
+        [] -> [];
+        [placed | rest] ->
+            if {
+                placed#Placement.id == id -> without_unit(rest, id);
+                true -> [placed | without_unit(rest, id)]
+            }
+    }.
+
+same_coordinates(left: List[Coordinate], right: List[Coordinate]): Bool ->
+    case left {
+        [] ->
+            case right {
+                [] -> true;
+                _ -> false
+            };
+        [first | rest] ->
+            case right {
+                [second | tail] ->
+                    first#Coordinate.row == second#Coordinate.row
+                        and first#Coordinate.column == second#Coordinate.column
+                        and same_coordinates(rest, tail);
+                _ -> false
+            }
+    }.

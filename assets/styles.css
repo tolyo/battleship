@@ -1,13 +1,6 @@
 /**
- * Main Entry Point CSS File
- *
- * This CSS file serves as the main entry point for your project. It imports
- * various CSS modules and libraries to establish a stable basis, reset styles,
- * and define your project's theme and layout.
- *
- * Semantic HTML CSS styles are used as defaults. This allows to quickly
- * swap out this choice of defaults without making any changes to the codebase.
- * Recommended reference design implementation https://pink.appwrite.io/
+ * Battleship styles: browser resets, Angular Wave styles, design tokens,
+ * the shared theme and layout, and page-specific styles.
  */
 
 /* Modern Normalize for consistent baseline styles */

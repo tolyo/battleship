@@ -1,0 +1,32 @@
+module battleship.browser.ComponentsTest.
+
+import battleship.browser.Components.
+import std.test.Test.{assert_equal}.
+
+@test
+pub page_templates_and_control_bindings_match_angular_contracts(): Bool ->
+    assert_equal("/_login", Components.login().templateUrl)
+        and assert_equal("/_room", Components.room().templateUrl)
+        and assert_equal("/_components/status-panel", Components.status_panel().templateUrl)
+        and assert_equal("<", Components.status_panel().bindings.status)
+        and assert_equal("&", Components.setup_controls().bindings.onReady)
+        and assert_equal("&", Components.setup_controls().bindings.onRandom)
+        and assert_equal("&", Components.setup_controls().bindings.onReset)
+        and assert_equal("<", Components.target_board().bindings.visible)
+        and assert_equal("&", Components.target_board().bindings.onSubmit).
+
+@test
+pub registration_controller_starts_before_success(): Bool ->
+    assert_equal(false, Components.register_controller().success)
+        and assert_equal("/_register", Components.register().templateUrl).
+
+@test
+pub board_components_bind_inputs_without_controller_copies(): Bool ->
+    assert_equal("/_components/board", Components.board().templateUrl)
+        and assert_equal("<", Components.board().bindings.unitViews)
+
+        and assert_equal("<", Components.board().bindings.active)
+        and assert_equal("/_components/board-grid", Components.board_grid().templateUrl)
+        and assert_equal("<", Components.board_grid().bindings.visible)
+        and assert_equal("<", Components.board_grid().bindings.hidden)
+        and assert_equal("&?", Components.board_grid().bindings.onTileClick).

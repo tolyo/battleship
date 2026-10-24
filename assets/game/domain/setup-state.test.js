@@ -1,4 +1,4 @@
-import { emptyBoardState } from './board-state.js';
+import { empty_board as emptyBoardState } from '../../../_build/browser/js/modules/battleship/browser/Fleet.js';
 import { emptyTileRows } from './board-rows.js';
 import { CellState, SessionStatus } from './constants.js';
 import { initialRoomSessionData, SessionPhase } from './room-state.js';
@@ -11,6 +11,7 @@ import {
   previewSetupUnit,
   previewSetupUnitAt,
   randomizeUnits,
+  rebuildSetupBoard,
   resetSetupUnits,
 } from './setup-state.js';
 import { unitCoordinatesFromStart } from './unit-placement.js';
@@ -105,6 +106,56 @@ describe('setup state', () => {
     expect(Object.values(state.data.unitPlacements).flat().length).toBe(20);
     expect(state.data.boardReady).toBe(true);
     expect(state.data.status).toBe(SessionStatus.FLEET_READY);
+  });
+
+  it('preserves unchanged coordinate arrays when another unit is updated', () => {
+    const state = setupState();
+    const first = unitCoordinatesFromStart('0', '0', 'HORIZONTAL', 4);
+    const second = unitCoordinatesFromStart('2', '0', 'HORIZONTAL', 3);
+    const preview = [{ row: 4, column: 5 }];
+    placeSetupUnit(state, '0', first);
+    placeSetupUnit(state, '1', second);
+    expect(state.data.unitPlacements[0]).toBe(first);
+    expect(state.data.unitPlacements[1]).toBe(second);
+    previewSetupUnit(state, preview);
+    expect(state.data.setupPreviewCoordinates).toBe(preview);
+    clearSetupUnit(state, '1');
+    expect(state.data.unitPlacements[0]).toBe(first);
+  });
+
+  it('rebuilds projections without replacing placement or preview objects', () => {
+    const unitPlacements = {
+      0: unitCoordinatesFromStart('0', '0', 'HORIZONTAL', 4),
+    };
+    const setupPreviewCoordinates = [{ row: 2, column: 3 }];
+    const state = setupState({ unitPlacements, setupPreviewCoordinates });
+    rebuildSetupBoard(state);
+    expect(state.data.unitPlacements).toBe(unitPlacements);
+    expect(state.data.setupPreviewCoordinates).toBe(setupPreviewCoordinates);
+    expect(state.data.ownRows[2][3].preview).toBe(true);
+    expect(state.boardState[0][0]).toBe('0');
+  });
+
+  it('keeps the current setup intact when seeded randomization fails', () => {
+    const state = setupState({
+      setupPreviewCoordinates: [{ row: 2, column: 3 }],
+    });
+    const before = structuredClone(state);
+    const rows = state.data.ownRows;
+    expect(() => randomizeUnits(state, 0)).toThrowError(
+      'Unable to place unit 1'
+    );
+    expect(state).toEqual(before);
+    expect(state.data.ownRows).toBe(rows);
+  });
+
+  it('does not request browser randomness outside setup', () => {
+    const state = setupState({ current: SessionPhase.PLAYING });
+    const random = spyOn(Math, 'random').and.throwError(
+      'Unexpected randomness'
+    );
+    randomizeUnits(state);
+    expect(random).not.toHaveBeenCalled();
   });
 
   it('projects setup placement previews into visible board classes', () => {

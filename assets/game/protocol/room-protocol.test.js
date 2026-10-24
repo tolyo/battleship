@@ -5,8 +5,8 @@ import {
   ROOM_SERVER_MESSAGE,
   CLIENT_MESSAGE,
   lobbyUrl,
-  moveMessage,
   restoreUrl,
+  moveMessage,
 } from './room-protocol.js';
 
 describe('room protocol URLs', () => {

@@ -1,20 +1,11 @@
-import { GRID, CellState } from './constants.js';
-import {
-  ownTileViews,
-  targetTileViews,
-  unitCoordinatesById,
-  sunkClusters,
-} from './tile-view-model.js';
+import { project } from '../../../_build/browser/js/modules/battleship/browser/MatchView.js';
+import { checkedBoard, tileViewsFromModel } from './tile-view-model.js';
 
 /**
  * @typedef {'empty' | 'unit' | 'hit' | 'miss'} TileState
  */
 
-/**
- * @typedef {object} Coordinate
- * @property {number} row
- * @property {number} column
- */
+/** @typedef {import('../../../_build/browser/js/modules/battleship/browser/UnitGeometry.js').Coordinate} Coordinate */
 
 /**
  * @typedef {object} BoardTileView
@@ -48,21 +39,26 @@ export function matchViewModelFromView(view) {
   if (!isRecord(view)) {
     return undefined;
   }
-
-  const currentPlayer = ownPlayerFromView(view);
-  const opponent = opponentFromView(view);
-  const ownBoard = isBoard(currentPlayer?.board)
-    ? currentPlayer.board
-    : emptyBoard();
-  const targetBoard = isBoard(opponent?.board) ? opponent.board : emptyBoard();
-  const turnState = turnStateFromView(view);
-
+  const model = project(
+    playerBoard(view.own_player),
+    playerBoard(view.opponent),
+    stringField(view.phase),
+    stringField(view.state),
+    Array.isArray(view.allowed_actions)
+      ? Array.from(view.allowed_actions, (action) =>
+          stringField(isRecord(action) ? action.action : undefined)
+        )
+      : []
+  );
   return {
-    ...turnState,
-    ownTiles: ownTileViews(ownBoard),
-    targetTiles: targetTileViews(targetBoard),
-    unitCoordinatesById: unitCoordinatesById(ownBoard),
-    sunkClusters: sunkClusters(ownBoard),
+    isMyTurn: model.isMyTurn,
+    status: model.status,
+    ownTiles: tileViewsFromModel(model.ownTiles),
+    targetTiles: tileViewsFromModel(model.targetTiles),
+    unitCoordinatesById: Object.fromEntries(
+      model.unitCoordinates.map(({ id, coordinates }) => [id, coordinates])
+    ),
+    sunkClusters: /** @type {SunkClusterView[]} */ (model.sunkClusters),
   };
 }
 
@@ -74,79 +70,23 @@ function isRecord(value) {
   return typeof value === 'object' && value !== null;
 }
 
-/**
- * @param {unknown} value
- * @returns {value is unknown[][]}
- */
-function isBoard(value) {
-  return Array.isArray(value) && value.every((row) => Array.isArray(row));
-}
-
-/**
- * @returns {unknown[][]}
- */
-function emptyBoard() {
-  return GRID.map(() => GRID.map(() => CellState.EMPTY));
-}
-
-/**
- * @param {Record<string, unknown>} view
- * @returns {{ id: string, board: unknown } | undefined}
- */
-function ownPlayerFromView(view) {
-  return playerFromNamedView(view.own_player);
-}
-
-/**
- * @param {Record<string, unknown>} view
- * @returns {{ id: string, board: unknown } | undefined}
- */
-function opponentFromView(view) {
-  return playerFromNamedView(view.opponent);
+/** @param {unknown} value */
+function stringField(value) {
+  return typeof value === 'string' ? value : '';
 }
 
 /**
  * @param {unknown} player
- * @returns {{ id: string, board: unknown } | undefined}
+ * @returns {string[][]}
  */
-function playerFromNamedView(player) {
-  if (!isRecord(player) || typeof player.id !== 'string') {
-    return undefined;
+function playerBoard(player) {
+  if (
+    !isRecord(player) ||
+    typeof player.id !== 'string' ||
+    !Array.isArray(player.board) ||
+    !player.board.every(Array.isArray)
+  ) {
+    return [];
   }
-
-  return { id: player.id, board: player.board };
-}
-
-/**
- * @param {Record<string, unknown>} view
- * @returns {{ isMyTurn: boolean, status: string }}
- */
-function turnStateFromView(view) {
-  const allowedMove = allowedMoveFromView(view);
-  const finished = view.phase === 'finished' || view.state === 'FINISHED';
-  const isMyTurn = allowedMove && !finished;
-
-  if (finished) {
-    return { isMyTurn, status: 'Game finished' };
-  }
-
-  if (isMyTurn) {
-    return { isMyTurn, status: 'Your turn' };
-  }
-
-  return { isMyTurn, status: "Awaiting opponent's move" };
-}
-
-/**
- * @param {Record<string, unknown>} view
- * @returns {boolean}
- */
-function allowedMoveFromView(view) {
-  if (!Array.isArray(view.allowed_actions)) {
-    return false;
-  }
-
-  return view.allowed_actions.some(
-    (action) => isRecord(action) && action.action === 'move'
-  );
+  return checkedBoard(player.board);
 }

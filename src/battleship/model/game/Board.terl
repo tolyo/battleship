@@ -25,7 +25,7 @@ pub struct Board {
 }.
 
 /**
- * Constructs a row from validated cells.
+ * Constructs a row from its cells.
  */
 pub constructor Row {
     (cells: List[Cell]): Row ->
@@ -33,7 +33,7 @@ pub constructor Row {
 }.
 
 /**
- * Constructs a board from validated rows.
+ * Constructs a board from its rows.
  */
 pub constructor Board {
     (rows: List[Row]): Board ->

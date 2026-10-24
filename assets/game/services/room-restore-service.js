@@ -1,4 +1,4 @@
-import { OperationTimeout } from '../../transport/operation-timeout.js';
+import { create as createTimeout } from '../../../_build/browser/js/modules/battleship/client/OperationTimeout.js';
 import {
   DEFAULT_RESTORE_TIMEOUT_MS,
   ROOM_UNAVAILABLE_STATUS,
@@ -7,28 +7,30 @@ import { RESTORE_REQUEST } from '../../room-store/room-store-service.js';
 import { isRestoreContext } from './connection-context.js';
 
 export class RoomRestoreService {
-  static $inject = ['roomStore', 'matchState', 'roomRecovery'];
+  static $inject = ['roomStore', 'matchState', 'roomRecovery', '$window'];
 
   /**
    * @param {import('../../room-store/room-store-service.js').RoomStoreService} roomStore
    * @param {import('./match-state-service.js').MatchStateService} matchState
-   * @param {import('./room-recovery-service.js').RoomRecoveryService} roomRecovery
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/RoomRecovery.js').Recovery} roomRecovery
+   * @param {import('../../../bindings/Host.js').TimerHost} timerHost
    */
-  constructor(roomStore, matchState, roomRecovery) {
+  constructor(roomStore, matchState, roomRecovery, timerHost) {
     this.roomStore = roomStore;
     this.matchState = matchState;
     this.roomRecovery = roomRecovery;
-    this.restoreTimeout = new OperationTimeout();
+    this.restoreTimeout = createTimeout(timerHost);
   }
 
   /**
+   * @param {(entry: import('../../room-store/room-store-service.js').StoredRoomEntry) => boolean} restore
    * @returns {boolean}
    */
-  restoreCurrentRequest() {
+  restoreCurrentRequest(restore) {
     const request = this.roomStore.currentRestoreRequest();
 
     if (request.type === RESTORE_REQUEST.RESTORE) {
-      return this.startRestore(request);
+      return restore(request);
     }
 
     if (request.type === RESTORE_REQUEST.MISSING_PLAYER) {

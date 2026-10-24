@@ -1,0 +1,25 @@
+module battleship.client.SetupPage.
+
+import terlan.angular.interfaces.{OnDestroy, OnInit}.
+
+pub type Completion = Unit.
+
+pub struct ClientPort {
+    restoreRoomFromCurrentUrl: () -> Bool,
+    close: () -> Completion,
+}.
+
+pub struct PageState[M, S] {
+    state: M,
+    roomClient: ClientPort,
+    setup: S,
+}.
+
+pub create[M, S](state: M, client: ClientPort, setup: S): PageState[M, S] ->
+    let controller = PageState {state: state, roomClient: client, setup: setup};
+    let initialized = OnInit.with_members(controller, () -> initialize(client));
+    OnDestroy.with_members(initialized, () -> client#ClientPort.close()).
+
+initialize(client: ClientPort): Unit ->
+    let ignored = client#ClientPort.restoreRoomFromCurrentUrl();
+    Unit.

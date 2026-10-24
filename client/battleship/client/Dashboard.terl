@@ -1,0 +1,13 @@
+module battleship.client.Dashboard.
+
+import battleship.host.DashboardScope.
+import std.core.Option.{Some}.
+
+import type battleship.host.DashboardScope.{DashboardScope}.
+
+pub struct Controller {
+}.
+
+pub create(scope: DashboardScope): Controller ->
+    let ignored = DashboardScope.set_authenticated(scope, Some(true));
+    Controller {}.

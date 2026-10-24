@@ -1,0 +1,59 @@
+<form
+  id="register"
+  ng-post="/_register"
+  ng-if="$ctrl.success === false"
+  success="$ctrl.success = true"
+>
+  <h2>Register form</h2>
+
+  <label ng-class="${username_classes}">
+    Username
+    <input
+      name="username"
+      type="text"
+      aria-invalid="${username_invalid}"
+      ng-keyup="errors.username = undefined"
+    />
+    <span ng-bind="errors.username"></span>
+  </label>
+
+  <label ng-class="${email_classes}">
+    Email
+    <input
+      name="email"
+      type="text"
+      aria-invalid="${email_invalid}"
+      ng-keyup="errors.email = undefined"
+    />
+    <span ng-bind="errors.email"></span>
+  </label>
+
+  <label ng-class="${password_classes}">
+    Password
+    <input
+      name="password"
+      type="password"
+      aria-invalid="${password_invalid}"
+      ng-keyup="errors.password = undefined"
+    />
+    <span ng-bind="errors.password"></span>
+  </label>
+
+  <label ng-class="${repeat_password_classes}">
+    Repeat password
+    <input
+      name="repeatpassword"
+      type="password"
+      aria-invalid="${repeat_password_invalid}"
+      ng-keyup="errors.repeatpassword = undefined"
+    />
+
+    <span ng-bind="errors.repeatpassword"></span>
+  </label>
+
+  <button type="submit">Sign up</button>
+</form>
+
+<section ng-if="$ctrl.success">
+  Account successfully created. Proceed to <a ng-sref="login">Log in</a>
+</section>

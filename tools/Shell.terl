@@ -1,0 +1,10 @@
+module battleship.tools.Shell.
+
+import std.template.Template.
+
+template Shell from "../browser/battleship/browser/templates/shell-markup.terl.html" {
+    title: String,
+}.
+
+pub page(): Template.Html ->
+    Shell(title = "Battleship").

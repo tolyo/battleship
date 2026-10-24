@@ -1,0 +1,28 @@
+module battleship.browser.UnitGeometryTest.
+
+import battleship.browser.UnitGeometry.
+import battleship.browser.UnitGeometry.{Coordinate}.
+import std.test.Test.{assert_equal}.
+
+@test
+pub vertical_unit_uses_height(): Bool ->
+    let size = UnitGeometry.element_size(4, "VERTICAL");
+    assert_equal("30px", size.width) and assert_equal("120px", size.height).
+
+@test
+pub empty_coordinates_use_horizontal_orientation(): Bool ->
+    assert_equal("HORIZONTAL", UnitGeometry.orientation([])).
+
+@test
+pub orders_coordinates_by_row_then_column(): Bool ->
+    assert_equal(
+        [Coordinate(1, 8), Coordinate(2, 1), Coordinate(2, 3)],
+        UnitGeometry.sorted_coordinates([Coordinate(2, 3), Coordinate(1, 8), Coordinate(2, 1)]),
+    ).
+
+@test
+pub vertical_placement_advances_rows(): Bool ->
+    assert_equal(
+        [Coordinate(2, 3), Coordinate(3, 3)],
+        UnitGeometry.coordinates_from_start(2, 3, "VERTICAL", 2),
+    ).

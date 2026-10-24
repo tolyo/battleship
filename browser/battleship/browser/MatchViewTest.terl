@@ -1,0 +1,74 @@
+module battleship.browser.MatchViewTest.
+
+import battleship.browser.MatchView.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.BoardView.{Tile, UnitCoordinates}.
+import type battleship.browser.MatchView.{View}.
+
+@test
+pub move_action_is_the_authoritative_turn_signal(): Bool ->
+    turn_matches(
+        MatchView.project([], [], "active", "PLAYING", ["wait", "move"]),
+        true,
+        "Your turn",
+    ).
+
+@test
+pub finished_phase_disables_an_advertised_move(): Bool ->
+    turn_matches(MatchView.project([], [], "finished", "PLAYING", ["move"]), false, "Game finished").
+
+@test
+pub legacy_finished_state_disables_an_advertised_move(): Bool ->
+    turn_matches(MatchView.project([], [], "active", "FINISHED", ["move"]), false, "Game finished").
+
+@test
+pub missing_move_action_waits_for_the_opponent(): Bool ->
+    turn_matches(
+        MatchView.project([], [], "active", "PLAYING", ["wait"]),
+        false,
+        "Awaiting opponent's move",
+    ).
+
+@test
+pub projects_private_units_public_shots_and_sunk_clusters_together(): Bool ->
+    projection_matches(
+        MatchView.project([["0"], [], ["+", "+"]], [["7", "m"]], "active", "PLAYING", []),
+    ).
+
+turn_matches(view: View, my_turn: Bool, status: String): Bool ->
+    assert_equal(my_turn, view#View.isMyTurn)
+        and assert_equal(status, view#View.status)
+        and assert_equal(100, length(view#View.ownTiles))
+        and assert_equal(100, length(view#View.targetTiles)).
+
+projection_matches(view: View): Bool ->
+    first_tile_matches(view#View.ownTiles, "unit", "0")
+        and first_tile_matches(view#View.targetTiles, "empty", "")
+        and unit_identity_matches(view#View.unitCoordinates)
+        and assert_equal(1, length(view#View.sunkClusters)).
+
+first_tile_matches(tiles: List[Tile], state: String, unit_id: String): Bool ->
+    case tiles {
+        [tile | _rest] -> tile_matches(tile, state, unit_id);
+        _ -> false
+    }.
+
+tile_matches(tile: Tile, state: String, unit_id: String): Bool ->
+    assert_equal(state, tile#Tile.state) and assert_equal(unit_id, tile#Tile.unit_id).
+
+unit_identity_matches(units: List[UnitCoordinates]): Bool ->
+    case units {
+        [ship | []] -> unit_matches(ship);
+        _ -> false
+    }.
+
+unit_matches(ship: UnitCoordinates): Bool ->
+    assert_equal("0", ship#UnitCoordinates.id)
+        and assert_equal(1, length(ship#UnitCoordinates.coordinates)).
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.

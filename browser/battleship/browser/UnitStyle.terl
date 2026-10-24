@@ -1,0 +1,37 @@
+module battleship.browser.UnitStyle.
+
+import battleship.browser.UnitGeometry.
+import std.core.Int.{to_string}.
+
+pub struct CssStyle {
+    left: String,
+    top: String,
+    width: String,
+    height: String,
+}.
+
+pub struct State {
+    value: CssStyle,
+}.
+
+pub initial(): State ->
+    State {value: CssStyle {left: "0px", top: "0px", width: "30px", height: "30px"}}.
+
+pub resized(state: State, size: Int, orientation: String): State ->
+    let dimensions = UnitGeometry.element_size(size, orientation);
+    if {
+        state.value.width == dimensions.width and state.value.height == dimensions.height -> state;
+        true -> State {value: state.value#CssStyle{width: dimensions.width, height: dimensions.height}}
+    }.
+
+pub positioned(state: State, left: Int, top: Int): State ->
+    positioned_text(state, to_string(left) + "px", to_string(top) + "px").
+
+pub positioned_css(state: State, left: String, top: String): State ->
+    positioned_text(state, left, top).
+
+positioned_text(state: State, left: String, top: String): State ->
+    if {
+        state.value.left == left and state.value.top == top -> state;
+        true -> State {value: state.value#CssStyle{left: left, top: top}}
+    }.

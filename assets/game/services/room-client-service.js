@@ -1,9 +1,10 @@
 import {
   decodeRoomEvent,
   lobbyUrl,
-  moveMessage,
   restoreUrl,
+  moveMessage,
 } from '../protocol/room-protocol.js';
+import { sync } from '../../../_build/browser/js/modules/battleship/client/ClientProtocol.js';
 import { CONNECTION_MODE, isLobbyContext } from './connection-context.js';
 
 export class RoomClientService {
@@ -19,10 +20,10 @@ export class RoomClientService {
   /**
    * @param {import('../../transport/connection-service.js').ConnectionService} connection
    * @param {import('./match-state-service.js').MatchStateService} matchState
-   * @param {import('./target-service.js').TargetService} target
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/Target.js').Target} target
    * @param {import('./room-restore-service.js').RoomRestoreService} roomRestore
    * @param {import('./room-event-dispatcher-service.js').RoomEventDispatcherService} roomEventDispatcher
-   * @param {import('./room-connection-lifecycle-service.js').RoomConnectionLifecycleService} roomConnectionLifecycle
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/ConnectionLifecycle.js').Lifecycle<import('./connection-context.js').ConnectionContext>} roomConnectionLifecycle
    */
   constructor(
     connection,
@@ -49,7 +50,9 @@ export class RoomClientService {
   }
 
   restoreRoomFromCurrentUrl() {
-    return this.roomRestore.restoreCurrentRequest();
+    return this.roomRestore.restoreCurrentRequest((entry) =>
+      this.restoreRoom(entry)
+    );
   }
 
   /**
@@ -80,7 +83,7 @@ export class RoomClientService {
     }
 
     const move = this.target.moveForTile(tile);
-    if (!move) {
+    if (!move.allowed || !this.matchState.moveSubmitted()) {
       return;
     }
 
@@ -100,6 +103,8 @@ export class RoomClientService {
       onOpen: () => {
         if (isLobbyContext(context)) {
           this.matchState.socketOpened();
+        } else {
+          this.connection.send(sync());
         }
       },
       onMessage: (data) => {

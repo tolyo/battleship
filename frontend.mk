@@ -1,4 +1,4 @@
-.PHONY: clean clean_build setup start build format lint check unit-test unit-test-tap coverage test
+.PHONY: clean clean_build setup start build format lint check unit-test unit-test-tap coverage test browser-modules
 
 # -----------------------------------------------------
 #  Configuration
@@ -43,12 +43,13 @@ setup: clean
 	@echo "$(INFO) Installing Playwright browsers..."
 	@npx playwright install --with-deps
 
-## Start local dev server
+## Show how to start the shared development server
 start:
-	@echo "$(INFO) Frontend build is owned by terlc serve."
+	@echo "$(INFO) Run 'make start' with the main Makefile to serve the frontend and backend."
 	
 ## Build prod
-build: clean_build
+build: clean_build browser-modules
+	@$(TERLC) static emit tools/Shell.terl --out-dir _build/templates
 	@echo "$(INFO) Building frontend through terlc web profile..."
 	@$(TERLC) build --target js.browser --out-dir $(BUILD_DIR)
 
@@ -68,20 +69,23 @@ lint:
 	@npx eslint ./assets --fix
 
 ## Typecheck code with TypeScript
-check:
+check: browser-modules
 	@echo "$(INFO) Typechecking with tsc..."
 	@npx tsc --noEmit --pretty false
 	@$(MAKE) -f frontend.mk unit-test
 
-unit-test:
+browser-modules:
+	@$(MAKE) -f Makefile terlan-build-browser TERLC="$(TERLC)"
+
+unit-test: browser-modules
 	@echo "$(INFO) Running JS unit tests..."
-	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "assets/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/color-tap-reporter.cjs "assets/**/*.test.js" "browser/**/*Test.js" "client/**/*Test.js"
 
-unit-test-tap:
+unit-test-tap: browser-modules
 	@echo "$(INFO) Running JS unit tests as TAP..."
-	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "assets/**/*.test.js"
+	@npx jasmine --reporter=./tools/jasmine/tap-reporter.cjs "assets/**/*.test.js" "browser/**/*Test.js" "client/**/*Test.js"
 
-coverage:
+coverage: browser-modules
 	@echo "$(INFO) Measuring frontend application coverage at 100%..."
 	@npm run --silent test:coverage
 

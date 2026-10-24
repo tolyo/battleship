@@ -1,0 +1,316 @@
+module battleship.browser.BoardRows.
+
+import std.core.Int.{to_string}.
+
+import type battleship.browser.BoardView.{Cluster, Tile}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+pub struct ClassFlag {
+    name: String,
+    enabled: Bool,
+}.
+
+pub struct GridTile {
+    row: Int,
+    column: Int,
+    state: String,
+    unitId: String,
+    id: String,
+    boardName: String,
+    dataState: String,
+    preview: Bool,
+    sunk: Bool,
+    sunkHorizontal: Bool,
+    sunkVertical: Bool,
+    sunkSingle: Bool,
+    sunkStart: Bool,
+    sunkEnd: Bool,
+    classes: List[ClassFlag],
+}.
+
+pub struct GridRow {
+    id: String,
+    tiles: List[GridTile],
+}.
+
+struct Mark {
+    row: Int,
+    column: Int,
+    present: Bool,
+    horizontal: Bool,
+    vertical: Bool,
+    single: Bool,
+    start: Bool,
+    end: Bool,
+}.
+
+pub empty_rows(board_name: String): List[GridRow] ->
+    rows_from_tiles(board_name, []).
+
+pub rows_from_tiles(board_name: String, tiles: List[Tile]): List[GridRow] ->
+    view_rows(board_name, tiles, 0).
+
+view_rows(board_name: String, tiles: List[Tile], row: Int): List[GridRow] ->
+    if {
+        row >= 10 -> [];
+        true -> [grid_row(board_name, row, view_cells(board_name, tiles, row, 0)) | view_rows(board_name, tiles, row + 1)]
+    }.
+
+view_cells(board_name: String, tiles: List[Tile], row: Int, column: Int): List[GridTile] ->
+    if {
+        column >= 10 -> [];
+        true -> [find_tile(board_name, tiles, row, column) | view_cells(board_name, tiles, row, column + 1)]
+    }.
+
+find_tile(board_name: String, tiles: List[Tile], row: Int, column: Int): GridTile ->
+    case tiles {
+        [] -> decorate(board_name, row, column, "empty", "", "_", false);
+        [tile | rest] ->
+            if {
+                tile#Tile.row == row and tile#Tile.column == column -> decorate(
+                    board_name,
+                    row,
+                    column,
+                    tile#Tile.state,
+                    tile#Tile.unit_id,
+                    data_state(tile#Tile.state),
+                    false,
+                );
+                true -> find_tile(board_name, rest, row, column)
+            }
+    }.
+
+pub setup_rows(board: List[List[String]], preview: List[Coordinate]): List[GridRow] ->
+    setup_rows_at(board, preview, 0).
+
+setup_rows_at(board: List[List[String]], preview: List[Coordinate], row: Int): List[GridRow] ->
+    if {
+        row >= 10 -> [];
+        true -> [grid_row("own-board", row, setup_cells(board, preview, row, 0)) | setup_rows_at(board, preview, row + 1)]
+    }.
+
+setup_cells(
+    board: List[List[String]],
+    preview: List[Coordinate],
+    row: Int,
+    column: Int,
+): List[GridTile] ->
+    if {
+        column >= 10 -> [];
+        true -> let value = setup_cell(board, row, column);
+        [decorate(
+    "own-board",
+    row,
+    column,
+    if {
+        value == "X" -> "unit";
+        true -> "empty"
+    },
+    "",
+    value,
+    contains(preview, row, column),
+) | setup_cells(board, preview, row, column + 1)]
+    }.
+
+setup_cell(board: List[List[String]], row: Int, column: Int): String ->
+    case board {
+        [] -> "_";
+        [first | rest] ->
+            if {
+                row == 0 -> setup_column(first, column);
+                true -> setup_cell(rest, row - 1, column)
+            }
+    }.
+
+setup_column(cells: List[String], column: Int): String ->
+    case cells {
+        [] -> "_";
+        [first | rest] ->
+            if {
+                column == 0 -> first;
+                true -> setup_column(rest, column - 1)
+            }
+    }.
+
+contains(points: List[Coordinate], row: Int, column: Int): Bool ->
+    case points {
+        [] -> false;
+        [point | rest] ->
+            point#Coordinate.row == row and point#Coordinate.column == column
+                or contains(rest, row, column)
+    }.
+
+grid_row(board_name: String, row: Int, tiles: List[GridTile]): GridRow ->
+    GridRow {id: board_name + "-row-" + to_string(row), tiles: tiles}.
+
+data_state(state: String): String ->
+    if {
+        state == "unit" -> "X";
+        state == "hit" -> "+";
+        state == "miss" -> "m";
+        true -> "_"
+    }.
+
+decorate(
+    board_name: String,
+    row: Int,
+    column: Int,
+    state: String,
+    unit_id: String,
+    data_state: String,
+    preview: Bool,
+): GridTile ->
+    with_classes(
+        GridTile {
+            row: row,
+            column: column,
+            state: state,
+            unitId: unit_id,
+            id: board_name + "-" + to_string(row) + "-" + to_string(column),
+            boardName: board_name,
+            dataState: data_state,
+            preview: preview,
+            sunk: false,
+            sunkHorizontal: false,
+            sunkVertical: false,
+            sunkSingle: false,
+            sunkStart: false,
+            sunkEnd: false,
+            classes: [],
+        },
+    ).
+
+with_classes(tile: GridTile): GridTile ->
+    tile#GridTile{
+        classes: [
+            flag("placed", tile.state == "unit"),
+            flag("hit", tile.state == "hit"),
+            flag("miss", tile.state == "miss"),
+            flag("droppable-target", tile.preview),
+            flag("sunk", tile.sunk),
+            flag("sunk-horizontal", tile.sunkHorizontal),
+            flag("sunk-vertical", tile.sunkVertical),
+            flag("sunk-single", tile.sunkSingle),
+            flag("sunk-start", tile.sunkStart),
+            flag("sunk-end", tile.sunkEnd),
+        ],
+    }.
+
+flag(name: String, enabled: Bool): ClassFlag ->
+    ClassFlag {name: name, enabled: enabled}.
+
+pub sunk_updates(tiles: List[GridTile], clusters: List[Cluster]): List[GridTile] ->
+    update_tiles(tiles, reverse(cluster_marks(clusters))).
+
+update_tiles(tiles: List[GridTile], marks: List[Mark]): List[GridTile] ->
+    case tiles {
+        [] -> [];
+        [tile | rest] ->
+            let mark = find_mark(marks, tile#GridTile.row, tile#GridTile.column);
+            if {
+                mark.present -> [apply_mark(tile, mark) | update_tiles(rest, marks)];
+                true -> update_tiles(rest, marks)
+            }
+    }.
+
+apply_mark(tile: GridTile, mark: Mark): GridTile ->
+    with_classes(
+        tile#GridTile{
+            sunk: true,
+            sunkHorizontal: mark.horizontal,
+            sunkVertical: mark.vertical,
+            sunkSingle: mark.single,
+            sunkStart: mark.start,
+            sunkEnd: mark.end,
+        },
+    ).
+
+find_mark(marks: List[Mark], row: Int, column: Int): Mark ->
+    case marks {
+        [] ->
+            Mark {
+                row: row,
+                column: column,
+                present: false,
+                horizontal: false,
+                vertical: false,
+                single: false,
+                start: false,
+                end: false,
+            };
+        [mark | rest] ->
+            if {
+                mark.row == row and mark.column == column -> mark;
+                true -> find_mark(rest, row, column)
+            }
+    }.
+
+cluster_marks(clusters: List[Cluster]): List[Mark] ->
+    case clusters {
+        [] -> [];
+        [cluster | rest] ->
+            let coordinates = sort(cluster#Cluster.coordinates, cluster#Cluster.orientation == "horizontal");
+            append(
+                marks_at(coordinates, cluster#Cluster.orientation, length(coordinates), 0),
+                cluster_marks(rest),
+            )
+    }.
+
+marks_at(points: List[Coordinate], orientation: String, count: Int, index: Int): List[Mark] ->
+    case points {
+        [] -> [];
+        [point | rest] ->
+            [Mark {
+    row: point#Coordinate.row,
+    column: point#Coordinate.column,
+    present: true,
+    horizontal: count > 1 and orientation == "horizontal",
+    vertical: count > 1 and orientation == "vertical",
+    single: count == 1,
+    start: index == 0,
+    end: index == count - 1,
+} | marks_at(rest, orientation, count, index + 1)]
+    }.
+
+sort(points: List[Coordinate], horizontal: Bool): List[Coordinate] ->
+    case points {
+        [] -> [];
+        [point | rest] -> insert(sort(rest, horizontal), point, horizontal)
+    }.
+
+insert(points: List[Coordinate], point: Coordinate, horizontal: Bool): List[Coordinate] ->
+    case points {
+        [] -> [point];
+        [first | rest] ->
+            if {
+                before(point, first, horizontal) -> [point | points];
+                true -> [first | insert(rest, point, horizontal)]
+            }
+    }.
+
+before(left: Coordinate, right: Coordinate, horizontal: Bool): Bool ->
+    if {
+        horizontal -> left#Coordinate.column <= right#Coordinate.column;
+        true -> left#Coordinate.row <= right#Coordinate.row
+    }.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.
+
+append[T](left: List[T], right: List[T]): List[T] ->
+    case left {
+        [] -> right;
+        [first | rest] -> [first | append(rest, right)]
+    }.
+
+reverse[T](values: List[T]): List[T] ->
+    reverse_into(values, []).
+
+reverse_into[T](values: List[T], result: List[T]): List[T] ->
+    case values {
+        [] -> result;
+        [first | rest] -> reverse_into(rest, [first | result])
+    }.

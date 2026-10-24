@@ -1,8 +1,8 @@
 /**
  * Battleship room session contract.
  *
- * This module owns the deterministic room/player identity and websocket
- * payload rules shared by the browser client and Terlan runtime checks.
+ * Defines deterministic room/player identifiers, restore predicates, and
+ * room-entry payload helpers.
  */
 module battleship.model.server.RoomSession.
 

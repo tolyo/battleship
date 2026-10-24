@@ -1,0 +1,5 @@
+module battleship.shared.ClientMessages.
+
+pub move_kind(): String -> "move".
+
+pub sync_kind(): String -> "sync".

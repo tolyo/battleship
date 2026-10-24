@@ -127,6 +127,23 @@ describe('matchViewModelFromView', () => {
     expect(viewModel?.status).toBe("Awaiting opponent's move");
   });
 
+  it('ignores malformed player boards and non-string action fields', () => {
+    const viewModel = matchViewModelFromView({
+      own_player: { id: 'p1', board: ['invalid'] },
+      opponent: null,
+      allowed_actions: [{}, { action: 7 }],
+      phase: 3,
+      state: false,
+    });
+    expect(viewModel?.ownTiles.every((tile) => tile.state === 'empty')).toBe(
+      true
+    );
+    expect(viewModel?.targetTiles.every((tile) => tile.state === 'empty')).toBe(
+      true
+    );
+    expect(viewModel?.isMyTurn).toBe(false);
+  });
+
   it('reports legacy finished state values', () => {
     const viewModel = matchViewModelFromView({
       ...viewState(),

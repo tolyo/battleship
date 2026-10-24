@@ -1,0 +1,40 @@
+module battleship.browser.ConnectionLifecycleTest.
+
+import battleship.browser.ConnectionLifecycle.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.ConnectionLifecycle.{Lifecycle}.
+
+@test
+pub an_active_restore_uses_its_cleanup_callback(): Bool ->
+    let restore = ConnectionLifecycle.restore_callbacks(is_restore);
+    assert_equal("restore", ConnectionLifecycle.disconnect(restore, 7, restored, fallback)).
+
+@test
+pub other_connections_and_inactive_restores_use_the_fallback(): Bool ->
+    let restore = ConnectionLifecycle.restore_callbacks(is_restore);
+    assert_equal("session", ConnectionLifecycle.disconnect(restore, 8, restored, fallback)).
+
+@test
+pub close_and_error_controllers_accept_both_disconnect_paths(): Bool ->
+    let restore = ConnectionLifecycle.restore_callbacks(is_restore);
+    let state = ConnectionLifecycle.match_callbacks(accepted, rejected);
+    let lifecycle = ConnectionLifecycle.create(restore, state);
+    assert_equal(Unit, lifecycle#Lifecycle.onClose(7, completed))
+        and assert_equal(Unit, lifecycle#Lifecycle.onClose(8, completed))
+        and assert_equal(Unit, lifecycle#Lifecycle.onError(7, completed))
+        and assert_equal(Unit, lifecycle#Lifecycle.onError(8, completed)).
+
+is_restore(context: Int): Bool ->
+    context == 7.
+
+restored(): String -> "restore".
+
+fallback(): String -> "session".
+
+accepted(): Bool -> true.
+
+rejected(): Bool -> false.
+
+completed(): Unit ->
+    Unit.

@@ -3,7 +3,7 @@
  */
 module battleship.handlers.WebSocket.
 
-import battleship.model.server.{GameSession, RoomProtocol, RoomSession}.
+import battleship.model.server.{GameSession, RoomProtocol}.
 import std.core.Unit.
 
 pub waiting(): String ->
@@ -24,11 +24,8 @@ pub inbound(
 pub cancelled(_reason: String): Unit ->
     Unit.
 
-pub matched(room_id: String, role: Int, _first_request: String, _second_request: String): String ->
-    if {
-        role == 1 -> RoomSession.first_player_match_message(room_id);
-        true -> RoomSession.second_player_match_message(room_id)
-    }.
+pub matched(room_id: String, role: Int, first_request: String, second_request: String): String ->
+    GameSession.matched_json(room_id, role, first_request, second_request).
 
 pub restored(
     room_id: String,

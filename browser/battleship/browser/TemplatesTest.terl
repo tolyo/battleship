@@ -1,0 +1,36 @@
+module battleship.browser.TemplatesTest.
+
+import battleship.browser.Templates.
+import std.test.Test.{assert}.
+
+@test
+pub setup_markup_keeps_visibility_and_control_bindings(): Bool ->
+    let grid = Templates.board_grid();
+    let controls = Templates.setup_controls();
+    assert(grid.contains("ng-show=\"$ctrl.visible === undefined ? !$ctrl.hidden : $ctrl.visible\""))
+        and assert(grid.contains("ng-class=\"{ disabled: $ctrl.disabled }\""))
+        and assert(grid.contains("{{tile.id}}"))
+        and assert(controls.contains("$ctrl.onReady()"))
+        and assert(controls.contains("$ctrl.onRandom()"))
+        and assert(controls.contains("$ctrl.onReset()"))
+        and assert(Templates.map().contains("data-custom-element")).
+
+@test
+pub shell_and_pages_render_native_html(): Bool ->
+    assert(Templates.shell().contains("<title>Battleship</title>"))
+        and assert(Templates.shell().contains("/favicon.svg"))
+        and assert(Templates.login().contains("/_login"))
+        and assert(Templates.register().contains("/_register"))
+        and assert(Templates.room().contains("<setup-page"))
+        and assert(Templates.dashboard().contains("<h1>Room</h1>")).
+
+@test
+pub board_templates_read_live_inputs_and_guard_optional_clicks(): Bool ->
+    assert(
+    Templates.board_grid()
+        .contains("$ctrl.onTileClick &amp;&amp; $ctrl.onTileClick({ tile: tile })"),
+)
+        and assert(Templates.board().contains("unitView in $ctrl.unitViews"))
+        and assert(Templates.board().contains("unitView.coordinates"))
+        and assert(Templates.board().contains("unitView.placeholderStyle"))
+        and assert(Templates.board().contains("{ 'active-room': $ctrl.active }")).

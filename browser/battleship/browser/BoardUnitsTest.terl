@@ -1,0 +1,32 @@
+module battleship.browser.BoardUnitsTest.
+
+import battleship.browser.{BoardUnits, Placement, UnitGeometry}.
+import std.test.Test.{assert, assert_equal}.
+
+@test
+pub empty_placements_keep_the_complete_fleet_and_placeholder_sizes(): Bool ->
+    case BoardUnits.project([]) {
+        [first, second, _, _, _, _, _, _, _, last] ->
+            assert_equal("0", first.id)
+                and assert_equal(4, first.size)
+                and assert_equal("120px", first.placeholderStyle.width)
+                and assert_equal("90px", second.placeholderStyle.width)
+                and assert_equal("9", last.id)
+                and assert_equal([], first.coordinates)
+                and assert_equal([], last.coordinates);
+        _ -> assert(false)
+    }.
+
+@test
+pub views_attach_coordinates_by_identity_without_changing_fleet_order(): Bool ->
+    let coordinates = [UnitGeometry.coordinate(4, 5)];
+    case BoardUnits.project(
+        [Placement.placement("1", coordinates), Placement.placement("unknown", coordinates)],
+    ) {
+        [first | [second | _]] ->
+            assert_equal("0", first.id)
+                and assert_equal([], first.coordinates)
+                and assert_equal("1", second.id)
+                and assert_equal(coordinates, second.coordinates);
+        _ -> assert(false)
+    }.

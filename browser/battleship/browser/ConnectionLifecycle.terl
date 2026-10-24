@@ -1,0 +1,48 @@
+module battleship.browser.ConnectionLifecycle.
+
+pub type Completion = Unit.
+
+pub struct RestoreCallbacks[C] {
+    handleConnectionDisconnect: (C) -> Bool,
+}.
+
+pub struct MatchCallbacks {
+    connectionClosed: () -> Bool,
+    connectionError: () -> Bool,
+}.
+
+pub struct Lifecycle[C] {
+    onClose: (C, () -> Completion) -> Completion,
+    onError: (C, () -> Completion) -> Completion,
+}.
+
+pub restore_callbacks[C](disconnect: (C) -> Bool): RestoreCallbacks[C] ->
+    RestoreCallbacks {handleConnectionDisconnect: disconnect}.
+
+pub match_callbacks(closed: () -> Bool, error: () -> Bool): MatchCallbacks ->
+    MatchCallbacks {connectionClosed: closed, connectionError: error}.
+
+pub disconnect[C, R](
+    restore: RestoreCallbacks[C],
+    context: C,
+    on_restore_close: () -> R,
+    fallback: () -> R,
+): R ->
+    if {
+        restore#RestoreCallbacks.handleConnectionDisconnect(context) -> on_restore_close();
+        true -> fallback()
+    }.
+
+pub create[C](restore: RestoreCallbacks[C], state: MatchCallbacks): Lifecycle[C] ->
+    Lifecycle {
+        onClose: ((context, on_restore_close) -> disconnect(restore, context, on_restore_close, () -> notify_closed(state))),
+        onError: ((context, on_restore_close) -> disconnect(restore, context, on_restore_close, () -> notify_error(state))),
+    }.
+
+notify_closed(state: MatchCallbacks): Unit ->
+    let ignored = state#MatchCallbacks.connectionClosed();
+    Unit.
+
+notify_error(state: MatchCallbacks): Unit ->
+    let ignored = state#MatchCallbacks.connectionError();
+    Unit.

@@ -13,5 +13,9 @@
     "typeRoots": ["./node_modules/@types"]
   },
   "include": ["./global.d.ts", "./assets/**/*.js", "./assets/**/*.ts"],
-  "exclude": ["./node_modules", "./assets/**/*.test.js"]
+  "exclude": [
+    "./node_modules",
+    "./assets/**/*.test.js",
+    "./assets/**/*.spec.ts"
+  ]
 }

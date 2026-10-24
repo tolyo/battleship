@@ -1,8 +1,16 @@
-import loginComponent from './login/login.js';
-import roomComponent from './room-page/room.js';
-import setupControlsComponent from './game/components/setup-controls.js';
-import statusPanelComponent from './game/components/status-panel.js';
-import targetBoardComponent from './game/components/target-board.js';
+import {
+  login,
+  room,
+  setup_controls,
+  status_panel,
+  target_board,
+} from '../_build/browser/js/modules/battleship/browser/Components.js';
+
+const loginComponent = login();
+const roomComponent = room();
+const setupControlsComponent = setup_controls();
+const statusPanelComponent = status_panel();
+const targetBoardComponent = target_board();
 
 describe('declarative component contracts', () => {
   it('keeps server-rendered page template routes explicit', () => {

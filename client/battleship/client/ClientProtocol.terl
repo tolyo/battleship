@@ -1,0 +1,20 @@
+module battleship.client.ClientProtocol.
+
+import battleship.host.{ClientMove, ClientSignal}.
+import battleship.shared.ClientMessages.
+import std.js.String.
+
+import type battleship.host.ClientMove.{ClientMove}.
+import type battleship.host.ClientSignal.{ClientSignal}.
+import type std.js.Number.{JsNumber}.
+
+pub sync(): ClientSignal ->
+    ClientSignal.construct(String.from_core(ClientMessages.sync_kind())).
+
+pub struct MoveCoordinate {
+    row: JsNumber,
+    column: JsNumber,
+}.
+
+pub move(point: MoveCoordinate): ClientMove ->
+    ClientMove.construct(String.from_core(ClientMessages.move_kind()), point.row, point.column).

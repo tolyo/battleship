@@ -1,4 +1,9 @@
 import { decodeServerMessage } from './server-message.js';
+export { move as moveMessage } from '../../../_build/browser/js/modules/battleship/client/ClientProtocol.js';
+import {
+  move_kind as moveKind,
+  sync_kind as syncKind,
+} from '../../../_build/browser/js/modules/battleship/shared/ClientMessages.js';
 
 export const ROOM_EVENT = Object.freeze({
   WAITING: 'waiting',
@@ -21,7 +26,8 @@ export const ROOM_SERVER_MESSAGE = Object.freeze({
 });
 
 export const CLIENT_MESSAGE = Object.freeze({
-  MOVE: 'move',
+  MOVE: moveKind(),
+  SYNC: syncKind(),
 });
 
 /**
@@ -41,18 +47,6 @@ export function lobbyUrl(entry) {
  */
 export function restoreUrl(entry) {
   return `/ws?room_id=${encodeURIComponent(entry.roomId)}&player_id=${encodeURIComponent(entry.playerId)}`;
-}
-
-/**
- * @param {{ row: number, column: number }} coordinate
- * @returns {{ type: string, row: number, column: number }}
- */
-export function moveMessage(coordinate) {
-  return {
-    type: CLIENT_MESSAGE.MOVE,
-    row: coordinate.row,
-    column: coordinate.column,
-  };
 }
 
 /**
