@@ -7,55 +7,58 @@ import std.core.Option.{None, Some}.
 import std.core.Result.{Err, Ok}.
 import std.css.Stylesheet.{rule}.
 import std.css.Values.{px, rgb, root_em}.
-import std.css.properties.BoxSizing.{border_box}.
-import std.css.properties.Cursor.{not_allowed}.
-import std.css.properties.Display.{flex}.
+import std.css.keywords.{Auto as MarginAuto, BorderBox, Flex, NotAllowed, Solid as BorderSolid}.
 import std.css.properties.Gap.{length as gap_length}.
 import std.css.properties.Height.{length as height_length}.
-import std.css.properties.Opacity.{number as opacity}.
 import std.css.properties.Width.{length as width_length}.
 import std.css.properties.{Border, Margin}.
 
 import type std.core.{Option, Result}.
 import type std.css.Stylesheet.{Rule}.
-import type std.css.properties.Border.{OptionalProperty as BorderProperty}.
-import type std.css.properties.BoxSizing.{OptionalProperty as BoxSizingProperty}.
-import type std.css.properties.Cursor.{OptionalProperty as CursorProperty}.
-import type std.css.properties.Display.{OptionalProperty as DisplayProperty}.
-import type std.css.properties.Gap.{OptionalProperty as GapProperty}.
-import type std.css.properties.Height.{OptionalProperty as HeightProperty}.
-import type std.css.properties.Margin.{OptionalProperty as MarginProperty}.
-import type std.css.properties.Opacity.{OptionalProperty as OpacityProperty}.
-import type std.css.properties.Width.{OptionalProperty as WidthProperty}.
+import type std.css.keywords.{BorderBox, Flex, NotAllowed}.
+import type std.css.properties.Border.{Checked as BorderValue}.
+import type std.css.properties.Gap.{Checked as GapValue}.
+import type std.css.properties.Height.{Checked as HeightValue}.
+import type std.css.properties.Margin.{Checked as MarginValue}.
+import type std.css.properties.Width.{Checked as WidthValue}.
 
 /**
  * Shares the width and height properties between board and tile styles.
  */
-pub struct Dimensions includes WidthProperty, HeightProperty {
+pub struct Dimensions {
+    width: Option[WidthValue],
+    height: Option[HeightValue],
 }.
 
 /**
  * Combines sizing and layout properties for partial style blocks.
  */
-pub struct LayoutStyle includes BoxSizingProperty, DisplayProperty, GapProperty {
+pub struct LayoutStyle {
+    box_sizing: Option[BorderBox],
+    display: Option[Flex],
+    gap: Option[GapValue],
 }.
 
 /**
  * Combines appearance and interaction properties for partial style blocks.
  */
-pub struct InteractionStyle includes OpacityProperty, CursorProperty {
+pub struct InteractionStyle {
+    opacity: Option[Float],
+    cursor: Option[NotAllowed],
 }.
 
 /**
  * Shares specification-checked compound spacing declarations.
  */
-pub struct SpacingStyle includes MarginProperty {
+pub struct SpacingStyle {
+    margin: Option[MarginValue],
 }.
 
 /**
  * Shares typed border declarations for the unit interaction states.
  */
-pub struct DecorationStyle includes BorderProperty {
+pub struct DecorationStyle {
+    border: Option[BorderValue],
 }.
 
 /**
@@ -108,76 +111,43 @@ pub rules(tile_size: Float, board_size: Float, control_gap: Float): Result[List[
                         base#Style{
                             width: Some(tile_width),
                             height: Some(tile_height),
-                            box_sizing: Some(border_box()),
+                            box_sizing: Some(BorderBox),
                         },
                     ),
-                    rule("#setup-controls", base#Style{display: Some(flex()), gap: Some(gap)}),
+                    rule("#setup-controls", base#Style{display: Some(Flex), gap: Some(gap)}),
                     rule(
                         "#own-board.disabled, #target-board.disabled",
-                        base#Style{opacity: Some(opacity(0.8)), cursor: Some(not_allowed())},
+                        base#Style{opacity: Some(0.8), cursor: Some(NotAllowed)},
                     ),
                     rule(
                         "#map #units .place-holder",
                         base#Style{
-                            margin: Some(
-                                Margin.quad(
-                                    Margin.component_length(root_em(1.0)),
-                                    Margin.component_length(px(0.0)),
-                                    Margin.component_length(root_em(1.5)),
-                                    Margin.component_length(root_em(1.0)),
-                                ),
-                            ),
+                            margin: Some(Margin.quad(root_em(1.0), px(0.0), root_em(1.5), root_em(1.0))),
                         },
                     ),
-                    rule(
-                        "main",
-                        base#Style{
-                            margin: Some(
-                                Margin.pair(
-                                    Margin.component_length(px(0.0)),
-                                    Margin.component_auto(),
-                                ),
-                            ),
-                        },
-                    ),
+                    rule("main", base#Style{margin: Some(Margin.pair(px(0.0), MarginAuto))}),
                     rule(
                         ".unit",
                         base#Style{
-                            border: Some(
-                                Border.compose(border_width, Border.line_style_solid(), unit_color),
-                            ),
+                            border: Some(Border.compose(border_width, BorderSolid, unit_color)),
                         },
                     ),
                     rule(
                         ".unit.killed",
                         base#Style{
-                            border: Some(
-                                Border.compose(
-                                    border_width,
-                                    Border.line_style_solid(),
-                                    killed_color,
-                                ),
-                            ),
+                            border: Some(Border.compose(border_width, BorderSolid, killed_color)),
                         },
                     ),
                     rule(
                         ".unit.dragged",
                         base#Style{
-                            border: Some(
-                                Border.compose(
-                                    border_width,
-                                    Border.line_style_solid(),
-                                    dragged_color,
-                                ),
-                            ),
+                            border: Some(Border.compose(border_width, BorderSolid, dragged_color)),
                         },
                     ),
                     rule(
                         ".unit.error",
                         base#Style{
-                            border: Some(
-                                Border.compose(border_width, Border.line_style_solid(), error_color),
-                            ),
+                            border: Some(Border.compose(border_width, BorderSolid, error_color)),
                         },
                     ),
                 ],

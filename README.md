@@ -37,10 +37,11 @@ Run `make compile` after source changes or a compiler upgrade, then restart
 
 Board dimensions, tile sizing, setup controls, disabled-state styles, spacing, and
 unit-state borders live in `src/battleship/Styles.terl`.
-The module composes specification-generated CSS
-property structs with `includes` and constructs typed CSS values. Compound margins
-use `Margin.pair` and `Margin.quad` with typed components, including `auto`.
-Unit borders use `Border.compose` with distinct width and style parts and a
+The module composes optional style fields with `includes` and uses checked value
+types from the generated CSS properties. Keywords such as `BorderBox`, `Flex`,
+and `NotAllowed` come from `std.css.keywords`. Compound margins use `Margin.pair`
+and `Margin.quad` with typed lengths and `MarginAuto` directly. Unit borders use
+`Border.compose` with a validated width part, the `BorderSolid` keyword, and a
 validated RGB color. Their normal, killed, dragged, and error rules preserve
 the original cascade order. The module's pure `stylesheet/0` function is evaluated
 during the web build. `[web.assets].styles`
