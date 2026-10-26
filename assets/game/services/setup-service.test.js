@@ -1,6 +1,6 @@
 import { SetupService } from './setup-service.js';
 import { CellState } from '../domain/constants.js';
-import { emptyBoardState } from '../domain/board-state.js';
+import { empty_board as emptyBoardState } from '../../../_build/browser/js/modules/battleship/browser/Fleet.js';
 import { initialRoomSessionData } from '../domain/room-state.js';
 
 describe('SetupService', () => {

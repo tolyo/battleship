@@ -1,0 +1,213 @@
+module battleship.browser.RoomState.
+
+import battleship.browser.SessionConfig.
+
+pub struct Session {
+    status: String,
+    boardReady: Bool,
+    isMyTurn: Bool,
+    canSubmitMove: Bool,
+    unitsLocked: Bool,
+    targetVisible: Bool,
+    targetDisabled: Bool,
+}.
+
+pub struct Rule {
+    phase: String,
+    event: String,
+    nextPhase: String,
+    effect: String,
+    payload: String,
+    status: String,
+}.
+
+pub struct Decision {
+    accepted: Bool,
+    nextPhase: String,
+    effect: String,
+    session: Session,
+}.
+
+pub struct JoinDecision {
+    event: String,
+    accepted: Bool,
+}.
+
+pub initial(): Session ->
+    let text = SessionConfig.statuses();
+    Session {
+        status: text.placeFleet,
+        boardReady: false,
+        isMyTurn: false,
+        canSubmitMove: false,
+        unitsLocked: false,
+        targetVisible: false,
+        targetDisabled: true,
+    }.
+
+pub rules(): List[Rule] ->
+    let phase = SessionConfig.phases();
+    let event = SessionConfig.events();
+    let text = SessionConfig.statuses();
+    [
+        rule(phase.setup, event.setupIncomplete, "", "", "none", text.placeFleetFirst),
+        rule(phase.setup, event.joinRequested, phase.connecting, "lock", "none", text.connecting),
+        rule(phase.setup, event.roomEntered, phase.playing, "enter", "none", text.inRoom),
+        rule(
+            phase.setup,
+            event.restoreStarted,
+            phase.restoring,
+            "restore",
+            "none",
+            text.reconnecting,
+        ),
+        rule(phase.setup, event.roomUnavailable, "", "", "none", text.roomUnavailable),
+        rule(
+            phase.connecting,
+            event.socketOpened,
+            phase.waiting,
+            "",
+            "none",
+            text.waitingForOpponent,
+        ),
+        rule(
+            phase.connecting,
+            event.connectionClosed,
+            phase.setup,
+            "unlock",
+            "none",
+            text.disconnected,
+        ),
+        rule(phase.connecting, event.roomEntered, phase.playing, "enter", "none", text.inRoom),
+        rule(phase.connecting, event.connectionError, "", "", "none", text.connectionError),
+        rule(phase.connecting, event.returnToSetup, phase.setup, "reset", "text", ""),
+        rule(phase.connecting, event.serverError, "", "text", "text", ""),
+        rule(phase.waiting, event.socketOpened, "", "", "none", text.waitingForOpponent),
+        rule(
+            phase.waiting,
+            event.connectionClosed,
+            phase.setup,
+            "unlock",
+            "none",
+            text.disconnected,
+        ),
+        rule(phase.waiting, event.roomEntered, phase.playing, "enter", "none", text.inRoom),
+        rule(phase.waiting, event.roomUnavailable, "", "", "none", text.roomUnavailable),
+        rule(phase.waiting, event.returnToSetup, phase.setup, "reset", "text", ""),
+        rule(phase.waiting, event.serverError, "", "text", "text", ""),
+        rule(phase.restoring, event.roomEntered, phase.playing, "enter", "none", text.inRoom),
+        rule(phase.restoring, event.stateReceived, phase.playing, "view", "view", ""),
+        rule(phase.restoring, event.returnToSetup, phase.setup, "reset", "text", ""),
+        rule(phase.restoring, event.connectionError, "", "", "none", text.connectionError),
+        rule(phase.restoring, event.roomUnavailable, "", "", "none", text.roomUnavailable),
+        rule(phase.restoring, event.serverError, "", "text", "text", ""),
+        rule(phase.playing, event.moveSubmitted, "", "submit", "none", text.awaitingMoveResult),
+        rule(phase.playing, event.stateReceived, "", "view", "view", ""),
+        rule(phase.playing, event.returnToSetup, phase.setup, "reset", "text", ""),
+        rule(phase.playing, event.opponentDisconnected, "", "", "none", text.opponentDisconnected),
+        rule(phase.playing, event.connectionClosed, "", "", "none", text.disconnected),
+        rule(phase.playing, event.connectionError, "", "", "none", text.connectionError),
+        rule(phase.playing, event.roomUnavailable, "", "", "none", text.roomUnavailable),
+        rule(phase.playing, event.serverError, "", "text", "text", ""),
+    ].
+
+rule(
+    phase: String,
+    event: String,
+    next_phase: String,
+    effect: String,
+    payload: String,
+    status: String,
+): Rule ->
+    Rule {
+        phase: phase,
+        event: event,
+        nextPhase: next_phase,
+        effect: effect,
+        payload: payload,
+        status: status,
+    }.
+
+pub advance(session: Session, phase: String, event: String, text: String, my_turn: Bool): Decision ->
+    advance_rule(rules(), session, phase, event, text, my_turn).
+
+advance_rule(
+    rules: List[Rule],
+    session: Session,
+    phase: String,
+    event: String,
+    text: String,
+    my_turn: Bool,
+): Decision ->
+    case rules {
+        [] -> Decision {accepted: false, nextPhase: "", effect: "", session: session};
+        [entry | rest] ->
+            if {
+                entry.phase == phase and entry.event == event -> Decision {
+                    accepted: true,
+                    nextPhase: entry.nextPhase,
+                    effect: entry.effect,
+                    session: apply_rule(session, entry, text, my_turn),
+                };
+                true -> advance_rule(rest, session, phase, event, text, my_turn)
+            }
+    }.
+
+apply_rule(session: Session, rule: Rule, text: String, my_turn: Bool): Session ->
+    if {
+        rule.effect == "lock" or rule.effect == "restore" -> session#Session{unitsLocked: true, targetVisible: true, status: rule.status};
+        rule.effect == "unlock" -> session#Session{
+            unitsLocked: false,
+            targetVisible: false,
+            targetDisabled: true,
+            status: rule.status,
+        };
+        rule.effect == "enter" -> session#Session{unitsLocked: true, targetVisible: true, status: rule.status};
+        rule.effect == "reset" -> session#Session{
+            isMyTurn: false,
+            canSubmitMove: false,
+            unitsLocked: false,
+            targetVisible: false,
+            targetDisabled: true,
+            status: text,
+        };
+        rule.effect == "view" -> session#Session{
+            isMyTurn: my_turn,
+            canSubmitMove: my_turn,
+            targetVisible: true,
+            targetDisabled: not my_turn,
+            status: text,
+        };
+        rule.effect == "submit" -> session#Session{canSubmitMove: false, targetDisabled: true, status: rule.status};
+        rule.effect == "text" -> session#Session{status: text};
+        true -> session#Session{status: rule.status}
+    }.
+
+pub can_target(phase: String, can_submit: Bool, tile_state: String): Bool ->
+    let phases = SessionConfig.phases();
+    phase == phases.playing and can_submit and tile_state != "hit" and tile_state != "miss".
+
+pub join_decision(phase: String, ready: Bool): JoinDecision ->
+    let phases = SessionConfig.phases();
+    let events = SessionConfig.events();
+    if {
+        phase != phases.setup -> JoinDecision {event: "", accepted: false};
+        ready -> JoinDecision {event: events.joinRequested, accepted: true};
+        true -> JoinDecision {event: events.setupIncomplete, accepted: false}
+    }.
+
+pub struct PhaseFlags {
+    phase: String,
+    isSetup: Bool,
+    isPlaying: Bool,
+    isRestoring: Bool,
+}.
+
+pub phase_flags(phase: String): PhaseFlags ->
+    let names = SessionConfig.phases();
+    PhaseFlags {
+        phase: phase,
+        isSetup: phase == names.setup,
+        isPlaying: phase == names.playing,
+        isRestoring: phase == names.restoring,
+    }.

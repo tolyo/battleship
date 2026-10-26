@@ -1,0 +1,34 @@
+module battleship.browser.UnitStyleTest.
+
+import battleship.browser.UnitStyle.
+import std.test.Test.{assert_equal}.
+
+@test
+pub positions_use_css_lengths_and_preserve_dimensions(): Bool ->
+    let horizontal = UnitStyle.resized(UnitStyle.initial(), 4, "HORIZONTAL");
+    let positioned = UnitStyle.positioned(horizontal, 12, 34);
+    assert_equal("12px", positioned.value.left)
+        and assert_equal("34px", positioned.value.top)
+        and assert_equal("120px", positioned.value.width)
+        and assert_equal("30px", positioned.value.height).
+
+@test
+pub rotation_changes_dimensions_without_moving_the_ship(): Bool ->
+    let positioned = UnitStyle.positioned(UnitStyle.initial(), 12, 34);
+    let vertical = UnitStyle.resized(positioned, 4, "VERTICAL");
+    assert_equal("12px", vertical.value.left)
+        and assert_equal("34px", vertical.value.top)
+        and assert_equal("30px", vertical.value.width)
+        and assert_equal("120px", vertical.value.height).
+
+@test
+pub unchanged_styles_preserve_the_existing_value(): Bool ->
+    let initial = UnitStyle.initial();
+    assert_equal(initial, UnitStyle.resized(initial, 1, "HORIZONTAL"))
+        and assert_equal(initial, UnitStyle.positioned(initial, 0, 0))
+        and assert_equal(initial, UnitStyle.positioned_css(initial, "0px", "0px")).
+
+@test
+pub fractional_layout_coordinates_are_preserved(): Bool ->
+    let positioned = UnitStyle.positioned_css(UnitStyle.initial(), "12.5px", "34.75px");
+    assert_equal("12.5px", positioned.value.left) and assert_equal("34.75px", positioned.value.top).

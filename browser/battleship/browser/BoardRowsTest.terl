@@ -1,0 +1,179 @@
+module battleship.browser.BoardRowsTest.
+
+import battleship.browser.{BoardRows, BoardView, UnitGeometry}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.BoardRows.{ClassFlag, GridRow, GridTile}.
+
+@test
+pub empty_grid_has_stable_row_and_tile_identifiers(): Bool ->
+    let rows = BoardRows.empty_rows("target-board");
+    assert_equal(10, length(rows)) and rows_have_ten_tiles(rows) and first_row_matches(rows).
+
+@test
+pub setup_preserves_blocked_cells_and_marks_preview(): Bool ->
+    let rows = BoardRows.setup_rows([["X", "o", ""]], [UnitGeometry.coordinate(0, 0)]);
+    case first_row_tiles(rows) {
+        [placed | [blocked | [blank | [missing | _rest]]]] ->
+            placed_preview_matches(placed)
+                and blocked_matches(blocked)
+                and assert_equal("", blank#GridTile.dataState)
+                and assert_equal("_", missing#GridTile.dataState);
+        _ -> false
+    }.
+
+@test
+pub view_rows_keep_unit_identity_and_resolved_shot_states(): Bool ->
+    let rows = BoardRows.rows_from_tiles("own-board", BoardView.tile_views([["0", "+", "m"]], true));
+    case first_row_tiles(rows) {
+        [ship | [hit | [miss | _rest]]] -> view_states_match(ship, hit, miss);
+        _ -> false
+    }.
+
+@test
+pub no_clusters_produce_no_tile_updates(): Bool ->
+    case BoardRows.sunk_updates(first_row_tiles(BoardRows.empty_rows("own-board")), []) {
+        [] -> true;
+        _ -> false
+    }.
+
+@test
+pub horizontal_cluster_marks_both_edges_and_middle(): Bool ->
+    let tiles = first_row_tiles(BoardRows.empty_rows("own-board"));
+    let clusters = BoardView.sunk_clusters([["+", "+", "+"]]);
+    case BoardRows.sunk_updates(tiles, clusters) {
+        [first | [middle | [last | []]]] -> cluster_edges_match(first, middle, last, true);
+        _ -> false
+    }.
+
+@test
+pub vertical_cluster_marks_both_edges_and_middle(): Bool ->
+    let tiles = flatten(BoardRows.empty_rows("own-board"));
+    let clusters = BoardView.sunk_clusters([["+"], ["+"], ["+"]]);
+    case BoardRows.sunk_updates(tiles, clusters) {
+        [first | [middle | [last | []]]] -> cluster_edges_match(first, middle, last, false);
+        _ -> false
+    }.
+
+@test
+pub single_tile_cluster_has_both_edges_and_no_orientation(): Bool ->
+    let tiles = first_row_tiles(BoardRows.empty_rows("own-board"));
+    case BoardRows.sunk_updates(tiles, BoardView.sunk_clusters([["+"]])) {
+        [tile | []] -> single_tile_matches(tile);
+        _ -> false
+    }.
+
+@test
+pub later_clusters_replace_previous_edge_flags(): Bool ->
+    let tiles = first_row_tiles(BoardRows.empty_rows("own-board"));
+    let clusters = append(BoardView.sunk_clusters([["+", "+"]]), BoardView.sunk_clusters([["+"]]));
+    case BoardRows.sunk_updates(tiles, clusters) {
+        [first | _rest] -> single_tile_matches(first);
+        _ -> false
+    }.
+
+first_row_matches(rows: List[GridRow]): Bool ->
+    case rows {
+        [row | _rest] ->
+            assert_equal("target-board-row-0", row#GridRow.id)
+                and first_tile_matches(row#GridRow.tiles);
+        _ -> false
+    }.
+
+first_tile_matches(tiles: List[GridTile]): Bool ->
+    case tiles {
+        [tile | _rest] -> empty_tile_matches(tile);
+        _ -> false
+    }.
+
+empty_tile_matches(tile: GridTile): Bool ->
+    assert_equal("target-board-0-0", tile#GridTile.id)
+        and assert_equal("empty", tile#GridTile.state)
+        and assert_equal("_", tile#GridTile.dataState)
+        and not tile#GridTile.sunk
+        and not tile#GridTile.preview
+        and assert_equal(10, length(tile#GridTile.classes)).
+
+placed_preview_matches(tile: GridTile): Bool ->
+    assert_equal("unit", tile#GridTile.state)
+        and tile#GridTile.preview
+        and enabled(tile#GridTile.classes, "placed")
+        and enabled(tile#GridTile.classes, "droppable-target").
+
+blocked_matches(tile: GridTile): Bool ->
+    assert_equal("empty", tile#GridTile.state)
+        and assert_equal("o", tile#GridTile.dataState)
+        and not enabled(tile#GridTile.classes, "placed").
+
+view_states_match(ship: GridTile, hit: GridTile, miss: GridTile): Bool ->
+    assert_equal("0", ship#GridTile.unitId)
+        and assert_equal("X", ship#GridTile.dataState)
+        and enabled(ship#GridTile.classes, "placed")
+        and assert_equal("+", hit#GridTile.dataState)
+        and enabled(hit#GridTile.classes, "hit")
+        and assert_equal("m", miss#GridTile.dataState)
+        and enabled(miss#GridTile.classes, "miss").
+
+cluster_edges_match(first: GridTile, middle: GridTile, last: GridTile, horizontal: Bool): Bool ->
+    first#GridTile.sunk
+        and first#GridTile.sunkStart
+        and not first#GridTile.sunkEnd
+        and not middle#GridTile.sunkStart
+        and not middle#GridTile.sunkEnd
+        and last#GridTile.sunkEnd
+        and not last#GridTile.sunkStart
+        and not first#GridTile.sunkSingle
+        and assert_equal(horizontal, first#GridTile.sunkHorizontal)
+        and assert_equal(not horizontal, first#GridTile.sunkVertical)
+        and enabled(first#GridTile.classes, "sunk")
+        and enabled(first#GridTile.classes, "sunk-start")
+        and enabled(last#GridTile.classes, "sunk-end").
+
+single_tile_matches(tile: GridTile): Bool ->
+    tile#GridTile.sunk
+        and tile#GridTile.sunkSingle
+        and tile#GridTile.sunkStart
+        and tile#GridTile.sunkEnd
+        and not tile#GridTile.sunkHorizontal
+        and not tile#GridTile.sunkVertical
+        and enabled(tile#GridTile.classes, "sunk-single").
+
+first_row_tiles(rows: List[GridRow]): List[GridTile] ->
+    case rows {
+        [] -> [];
+        [row | _rest] -> row#GridRow.tiles
+    }.
+
+rows_have_ten_tiles(rows: List[GridRow]): Bool ->
+    case rows {
+        [] -> true;
+        [row | rest] -> length(row#GridRow.tiles) == 10 and rows_have_ten_tiles(rest)
+    }.
+
+enabled(flags: List[ClassFlag], name: String): Bool ->
+    case flags {
+        [] -> false;
+        [flag | rest] ->
+            if {
+                flag#ClassFlag.name == name -> flag#ClassFlag.enabled;
+                true -> enabled(rest, name)
+            }
+    }.
+
+flatten(rows: List[GridRow]): List[GridTile] ->
+    case rows {
+        [] -> [];
+        [row | rest] -> append(row#GridRow.tiles, flatten(rest))
+    }.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.
+
+append[T](left: List[T], right: List[T]): List[T] ->
+    case left {
+        [] -> right;
+        [first | rest] -> [first | append(rest, right)]
+    }.

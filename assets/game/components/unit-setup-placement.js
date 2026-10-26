@@ -32,7 +32,7 @@ export class UnitSetupPlacement {
   }
 
   /**
-   * @param {import('../domain/unit-catalog.js').Unit | undefined} unit
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/Fleet.js').Unit | undefined} unit
    */
   clearUnit(unit) {
     if (!unit) {
@@ -47,7 +47,7 @@ export class UnitSetupPlacement {
   }
 
   /**
-   * @param {import('../domain/unit-catalog.js').Unit | undefined} unit
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/Fleet.js').Unit | undefined} unit
    * @param {string} row
    * @param {string} column
    * @param {'VERTICAL' | 'HORIZONTAL'} orientation
@@ -68,7 +68,7 @@ export class UnitSetupPlacement {
   }
 
   /**
-   * @param {import('../domain/unit-catalog.js').Unit | undefined} unit
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/Fleet.js').Unit | undefined} unit
    * @param {string} row
    * @param {string} column
    * @param {'VERTICAL' | 'HORIZONTAL'} orientation
@@ -83,7 +83,7 @@ export class UnitSetupPlacement {
   }
 
   /**
-   * @param {import('../domain/unit-catalog.js').Unit | undefined} unit
+   * @param {import('../../../_build/browser/js/modules/battleship/browser/Fleet.js').Unit | undefined} unit
    * @param {import('../domain/match-view-model.js').Coordinate[]} coordinates
    */
   commit(unit, coordinates) {

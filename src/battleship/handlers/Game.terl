@@ -1,12 +1,10 @@
 /**
- * Terlan JSON API for Battleship.
+ * Battleship game configuration API.
  *
- * These functions expose Terlan-owned game rules through deterministic HTTP
- * responses used by the browser client.
+ * Returns board dimensions and fleet metadata as JSON for the browser client.
  */
 module battleship.handlers.Game.
 
-import battleship.JsonText.{stringify}.
 import battleship.model.game.{Board, Cell, Unit}.
 import std.data.Json.
 import std.http.Response.
@@ -20,14 +18,14 @@ pub config_json(): String ->
     .put("boardSize", Json.int(Board.row_count()))
     .put("fleetSize", Json.int(Unit.fleet_count()))
     .put("fleetCellCount", Json.int(Unit.total_size()))
-    |> stringify().
+    |> Json.to_string().
 
 pub fleet_json(): String ->
     Json.object()
     .put("count", Json.int(Unit.fleet_count()))
     .put("totalSize", Json.int(Unit.total_size()))
     .put("status", Json.string("migrated-to-terlan"))
-    |> stringify().
+    |> Json.to_string().
 
 pub board_json(): String ->
     Json.object()
@@ -35,7 +33,7 @@ pub board_json(): String ->
     .put("columns", Json.int(Board.row_count()))
     .put("cells", Json.int(Board.cell_count()))
     .put("emptyCell", Json.int(empty_cell().value))
-    |> stringify().
+    |> Json.to_string().
 
 empty_cell(): Cell ->
     Cell(-1).

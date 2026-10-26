@@ -1,0 +1,209 @@
+module battleship.browser.BoardView.
+
+import battleship.browser.UnitGeometry.
+import battleship.browser.UnitGeometry.{Coordinate}.
+import std.core.Int.{to_string}.
+
+pub struct Tile {
+    row: Int,
+    column: Int,
+    state: String,
+    unit_id: String,
+}.
+
+pub struct UnitCoordinates {
+    id: String,
+    coordinates: List[Coordinate],
+}.
+
+pub struct Cluster {
+    coordinates: List[Coordinate],
+    orientation: String,
+}.
+
+struct Gathered {
+    coordinates: List[Coordinate],
+    visited: List[Coordinate],
+}.
+
+pub tile_views(board: List[List[String]], reveal_units: Bool): List[Tile] ->
+    tiles(board, reveal_units, 0).
+
+tiles(board: List[List[String]], reveal: Bool, index: Int): List[Tile] ->
+    if {
+        index >= 100 -> [];
+        true -> let row = index div 10;
+        let column = index rem 10;
+        let value = cell(board, row, column);
+        let show_unit = reveal and is_unit(value);
+        [Tile {
+    row: row,
+    column: column,
+    state: if {
+        show_unit -> "unit";
+        value == "+" or value == "o" -> "hit";
+        value == "m" or value == "x" -> "miss";
+        true -> "empty"
+    },
+    unit_id: if {
+        show_unit -> value;
+        true -> ""
+    },
+} | tiles(board, reveal, index + 1)]
+    }.
+
+pub unit_coordinates(board: List[List[String]]): List[UnitCoordinates] ->
+    units(board, 0).
+
+units(board: List[List[String]], id: Int): List[UnitCoordinates] ->
+    if {
+        id >= 10 -> [];
+        true -> let name = to_string(id);
+        let coordinates = find_cells(board, name, 0);
+        case coordinates {
+            [] -> units(board, id + 1);
+            _ -> [UnitCoordinates {id: name, coordinates: coordinates} | units(board, id + 1)]
+        }
+    }.
+
+find_cells(board: List[List[String]], value: String, index: Int): List[Coordinate] ->
+    if {
+        index >= 100 -> [];
+        true -> let row = index div 10;
+        let column = index rem 10;
+        if {
+            cell(board, row, column) == value -> [UnitGeometry.coordinate(row, column) | find_cells(board, value, index + 1)];
+            true -> find_cells(board, value, index + 1)
+        }
+    }.
+
+pub sunk_clusters(board: List[List[String]]): List[Cluster] ->
+    scan_clusters(board, 0, []).
+
+scan_clusters(board: List[List[String]], index: Int, visited: List[Coordinate]): List[Cluster] ->
+    if {
+        index >= 100 -> [];
+        true -> let point = UnitGeometry.coordinate(index div 10, index rem 10);
+        if {
+            contains(visited, point) or cell(board, point.row, point.column) != "+" -> scan_clusters(board, index + 1, visited);
+            true -> let gathered = gather(board, [point], visited, []);
+            if {
+                touches_unit(board, gathered.coordinates) -> scan_clusters(board, index + 1, gathered.visited);
+                true -> [Cluster {coordinates: gathered.coordinates, orientation: cluster_orientation(gathered.coordinates)} | scan_clusters(board, index + 1, gathered.visited)]
+            }
+        }
+    }.
+
+gather(
+    board: List[List[String]],
+    pending: List[Coordinate],
+    visited: List[Coordinate],
+    coordinates: List[Coordinate],
+): Gathered ->
+    case pending {
+        [] -> Gathered {coordinates: coordinates, visited: visited};
+        [point | rest] ->
+            if {
+                contains(visited, point) or cell(board, point.row, point.column) != "+" -> gather(board, rest, visited, coordinates);
+                true -> gather(
+                    board,
+                    append(reverse(neighbors(point)), rest),
+                    [point | visited],
+                    append(coordinates, [point]),
+                )
+            }
+    }.
+
+touches_unit(board: List[List[String]], coordinates: List[Coordinate]): Bool ->
+    case coordinates {
+        [] -> false;
+        [point | rest] -> adjacent_unit(board, neighbors(point)) or touches_unit(board, rest)
+    }.
+
+adjacent_unit(board: List[List[String]], coordinates: List[Coordinate]): Bool ->
+    case coordinates {
+        [] -> false;
+        [point | rest] ->
+            is_unit(cell(board, point.row, point.column)) or adjacent_unit(board, rest)
+    }.
+
+neighbors(point: Coordinate): List[Coordinate] ->
+    in_bounds(
+        [
+            UnitGeometry.coordinate(point.row - 1, point.column),
+            UnitGeometry.coordinate(point.row + 1, point.column),
+            UnitGeometry.coordinate(point.row, point.column - 1),
+            UnitGeometry.coordinate(point.row, point.column + 1),
+        ],
+    ).
+
+in_bounds(coordinates: List[Coordinate]): List[Coordinate] ->
+    case coordinates {
+        [] -> [];
+        [point | rest] ->
+            if {
+                point.row >= 0 and point.row < 10 and point.column >= 0 and point.column < 10 -> [point | in_bounds(rest)];
+                true -> in_bounds(rest)
+            }
+    }.
+
+cluster_orientation(coordinates: List[Coordinate]): String ->
+    case coordinates {
+        [_first | [_second | _rest]] ->
+            if {
+                UnitGeometry.orientation(coordinates) == "HORIZONTAL" -> "horizontal";
+                true -> "vertical"
+            };
+        _ -> "vertical"
+    }.
+
+contains(coordinates: List[Coordinate], point: Coordinate): Bool ->
+    case coordinates {
+        [] -> false;
+        [first | rest] ->
+            first.row == point.row and first.column == point.column or contains(rest, point)
+    }.
+
+append[T](left: List[T], right: List[T]): List[T] ->
+    case left {
+        [] -> right;
+        [first | rest] -> [first | append(rest, right)]
+    }.
+
+reverse[T](values: List[T]): List[T] ->
+    case values {
+        [] -> [];
+        [first | rest] -> append(reverse(rest), [first])
+    }.
+
+pub is_unit(value: String): Bool ->
+    value == "0"
+        or value == "1"
+        or value == "2"
+        or value == "3"
+        or value == "4"
+        or value == "5"
+        or value == "6"
+        or value == "7"
+        or value == "8"
+        or value == "9".
+
+pub cell(board: List[List[String]], row: Int, column: Int): String ->
+    case board {
+        [] -> "";
+        [first | rest] ->
+            if {
+                row == 0 -> cell_in_row(first, column);
+                true -> cell(rest, row - 1, column)
+            }
+    }.
+
+cell_in_row(row: List[String], column: Int): String ->
+    case row {
+        [] -> "";
+        [first | rest] ->
+            if {
+                column == 0 -> first;
+                true -> cell_in_row(rest, column - 1)
+            }
+    }.

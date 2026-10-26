@@ -1,0 +1,40 @@
+module battleship.browser.Target.
+
+import battleship.browser.RoomState.
+
+pub struct MatchState {
+    phase: String,
+    canSubmitMove: Bool,
+}.
+
+pub struct Tile {
+    row: Int,
+    column: Int,
+    state: String,
+}.
+
+pub struct MoveDecision {
+    allowed: Bool,
+    row: Int,
+    column: Int,
+}.
+
+pub struct Target {
+    moveForTile: (Tile) -> MoveDecision,
+}.
+
+pub match_state(phase: String, can_submit: Bool): MatchState ->
+    MatchState {phase: phase, canSubmitMove: can_submit}.
+
+pub tile(row: Int, column: Int, state: String): Tile ->
+    Tile {row: row, column: column, state: state}.
+
+pub create(state: MatchState): Target ->
+    Target {moveForTile: ((tile) -> decide(state, tile))}.
+
+pub decide(state: MatchState, tile: Tile): MoveDecision ->
+    MoveDecision {
+        allowed: RoomState.can_target(state.phase, state.canSubmitMove, tile.state),
+        row: tile.row,
+        column: tile.column,
+    }.

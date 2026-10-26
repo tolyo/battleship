@@ -1,0 +1,161 @@
+module battleship.browser.RoomStateTest.
+
+import battleship.browser.RoomState.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.RoomState.{Decision, JoinDecision, Rule, Session}.
+
+@test
+pub initial_session_waits_for_fleet_setup(): Bool ->
+    initial_matches(RoomState.initial()).
+
+@test
+pub joining_requires_setup_and_a_complete_fleet(): Bool ->
+    join_matches(RoomState.join_decision("setup", false), "setup_incomplete", false)
+        and join_matches(RoomState.join_decision("setup", true), "join_requested", true)
+        and join_matches(RoomState.join_decision("playing", true), "", false).
+
+@test
+pub transition_graph_has_unique_phase_event_pairs(): Bool ->
+    let rules = RoomState.rules();
+    assert_equal(31, length(rules)) and unique_rules(rules).
+
+@test
+pub lobby_open_and_disconnect_follow_the_declared_phases(): Bool ->
+    let joined = RoomState.advance(RoomState.initial(), "setup", "join_requested", "", false);
+    let waiting = RoomState.advance(joined#Decision.session, "connecting", "socket_opened", "", false);
+    let disconnected = RoomState.advance(waiting#Decision.session, "waiting", "connection_closed", "", false);
+    decision_matches(joined, "connecting", "Connecting...", true)
+        and decision_matches(waiting, "waiting", "Waiting for opponent...", true)
+        and decision_matches(disconnected, "setup", "Disconnected", false)
+        and assert_equal(true, joined#Decision.session#Session.targetVisible)
+        and assert_equal(true, waiting#Decision.session#Session.targetVisible)
+        and assert_equal(false, disconnected#Decision.session#Session.targetVisible).
+
+@test
+pub unsupported_events_leave_the_session_unchanged(): Bool ->
+    let result = RoomState.advance(RoomState.initial(), "playing", "restore_started", "ignored", true);
+    not result#Decision.accepted
+        and assert_equal("", result#Decision.nextPhase)
+        and initial_matches(result#Decision.session).
+
+@test
+pub submitting_a_move_locks_targets_until_the_next_snapshot(): Bool ->
+    let entered = RoomState.advance(RoomState.initial(), "setup", "room_entered", "", false);
+    let active = RoomState.advance(entered#Decision.session, "playing", "state_received", "Your turn", true);
+    let pending = RoomState.advance(active#Decision.session, "playing", "move_submitted", "", false);
+    let next =
+        RoomState.advance(
+            pending#Decision.session,
+            "playing",
+            "state_received",
+            "Awaiting opponent's move",
+            false,
+        );
+    turn_matches(active#Decision.session, true, true, false, "Your turn")
+        and turn_matches(pending#Decision.session, true, false, true, "Waiting for move result...")
+        and turn_matches(next#Decision.session, false, false, true, "Awaiting opponent's move").
+
+@test
+pub returning_to_setup_resets_permissions_and_requests_host_cleanup(): Bool ->
+    let active = RoomState.advance(RoomState.initial(), "restoring", "state_received", "Your turn", true);
+    let reset =
+        RoomState.advance(
+            active#Decision.session,
+            "playing",
+            "return_to_setup",
+            "Room unavailable",
+            false,
+        );
+    assert_equal("setup", reset#Decision.nextPhase)
+        and assert_equal("reset", reset#Decision.effect)
+        and reset_matches(reset#Decision.session).
+
+@test
+pub disconnecting_from_a_match_keeps_the_match_locked(): Bool ->
+    let entered = RoomState.advance(RoomState.initial(), "setup", "room_entered", "", false);
+    let disconnected = RoomState.advance(entered#Decision.session, "playing", "connection_closed", "", false);
+    decision_matches(disconnected, "", "Disconnected", true).
+
+@test
+pub move_permissions_reject_other_phases_and_resolved_tiles(): Bool ->
+    RoomState.can_target("playing", true, "empty")
+        and RoomState.can_target("playing", true, "unit")
+        and not RoomState.can_target("setup", true, "empty")
+        and not RoomState.can_target("playing", false, "empty")
+        and not RoomState.can_target("playing", true, "hit")
+        and not RoomState.can_target("playing", true, "miss").
+
+initial_matches(session: Session): Bool ->
+    assert_equal("Place your fleet", session#Session.status)
+        and not session#Session.boardReady
+        and not session#Session.isMyTurn
+        and not session#Session.canSubmitMove
+        and not session#Session.unitsLocked
+        and not session#Session.targetVisible
+        and session#Session.targetDisabled.
+
+join_matches(decision: JoinDecision, event: String, accepted: Bool): Bool ->
+    assert_equal(event, decision#JoinDecision.event)
+        and assert_equal(accepted, decision#JoinDecision.accepted).
+
+decision_matches(decision: Decision, next: String, status: String, locked: Bool): Bool ->
+    decision#Decision.accepted
+        and assert_equal(next, decision#Decision.nextPhase)
+        and session_matches(decision#Decision.session, status, locked).
+
+session_matches(session: Session, status: String, locked: Bool): Bool ->
+    assert_equal(status, session#Session.status)
+        and assert_equal(locked, session#Session.unitsLocked).
+
+turn_matches(
+    session: Session,
+    my_turn: Bool,
+    can_submit: Bool,
+    disabled: Bool,
+    status: String,
+): Bool ->
+    assert_equal(my_turn, session#Session.isMyTurn)
+        and assert_equal(can_submit, session#Session.canSubmitMove)
+        and assert_equal(disabled, session#Session.targetDisabled)
+        and session#Session.targetVisible
+        and assert_equal(status, session#Session.status).
+
+reset_matches(session: Session): Bool ->
+    not session#Session.isMyTurn
+        and not session#Session.canSubmitMove
+        and not session#Session.unitsLocked
+        and not session#Session.targetVisible
+        and session#Session.targetDisabled
+        and assert_equal("Room unavailable", session#Session.status).
+
+unique_rules(rules: List[Rule]): Bool ->
+    case rules {
+        [] -> true;
+        [rule | rest] -> not contains_rule(rest, rule) and unique_rules(rest)
+    }.
+
+contains_rule(rules: List[Rule], candidate: Rule): Bool ->
+    case rules {
+        [] -> false;
+        [rule | rest] ->
+            rule#Rule.phase == candidate#Rule.phase and rule#Rule.event == candidate#Rule.event
+                or contains_rule(rest, candidate)
+    }.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.
+
+@test
+pub phase_flags_keep_host_view_permissions_explicit(): Bool ->
+    let setup = RoomState.phase_flags("setup");
+    let playing = RoomState.phase_flags("playing");
+    let restoring = RoomState.phase_flags("restoring");
+    assert_equal(true, setup.isSetup)
+        and assert_equal(false, setup.isPlaying)
+        and assert_equal(false, setup.isRestoring)
+        and assert_equal(true, playing.isPlaying)
+        and assert_equal(true, restoring.isRestoring).

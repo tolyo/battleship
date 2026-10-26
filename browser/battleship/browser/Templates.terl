@@ -1,0 +1,163 @@
+module battleship.browser.Templates.
+
+import std.template.Template.
+
+template BoardGridMarkup from "./templates/board-grid-markup.terl.html" {
+    submit_expression: String,
+    disabled_classes: String,
+    board_id: String,
+    tile_class: String,
+    tile_id: String,
+    tile_row: String,
+    tile_column: String,
+    tile_state: String,
+}.
+
+template BoardMarkup from "./templates/board-markup.terl.html" {
+    active_classes: String,
+    placeholder_id: String,
+}.
+
+template DashboardMarkup from "./templates/dashboard-markup.terl.html" {}.
+
+template LoginMarkup from "./templates/login-markup.terl.html" {
+    email_classes: String,
+    email_invalid: String,
+    password_classes: String,
+    password_invalid: String,
+}.
+
+template MapMarkup from "./templates/map-markup.terl.html" {}.
+
+template RegisterMarkup from "./templates/register-markup.terl.html" {
+    username_classes: String,
+    username_invalid: String,
+    email_classes: String,
+    email_invalid: String,
+    password_classes: String,
+    password_invalid: String,
+    repeat_password_classes: String,
+    repeat_password_invalid: String,
+}.
+
+template RoomMarkup from "./templates/room-markup.terl.html" {}.
+
+template SetupControlsMarkup from "./templates/setup-controls-markup.terl.html" {}.
+
+template ShellMarkup from "./templates/shell-markup.terl.html" {
+    title: String,
+}.
+
+template StatusPanelMarkup from "./templates/status-panel-markup.terl.html" {}.
+
+template TargetBoardMarkup from "./templates/target-board-markup.terl.html" {
+    submit_expression: String,
+}.
+
+template UnitMarkup from "./templates/unit-markup.terl.html" {
+    unit_classes: String,
+    aria_disabled: String,
+    unit_id: String,
+}.
+
+pub board_grid(): String ->
+    Template.to_string(board_grid_fragment()).
+
+board_grid_fragment(): Template.Html ->
+    BoardGridMarkup(
+        submit_expression = "$ctrl.onTileClick && $ctrl.onTileClick({ tile: tile })",
+        disabled_classes = "{ disabled: $ctrl.disabled }",
+        board_id = "{{$ctrl.boardId}}",
+        tile_class = "{{$ctrl.tileClass}}",
+        tile_id = "{{tile.id}}",
+        tile_row = "{{tile.row}}",
+        tile_column = "{{tile.column}}",
+        tile_state = "{{tile.dataState}}",
+    ).
+
+pub board(): String ->
+    Template.to_string(board_fragment()).
+
+board_fragment(): Template.Html ->
+    BoardMarkup(
+        placeholder_id = "placeholder-{{unitView.id}}",
+        active_classes = "{ 'active-room': $ctrl.active }",
+    ).
+
+pub dashboard(): String ->
+    Template.to_string(dashboard_fragment()).
+
+dashboard_fragment(): Template.Html ->
+    DashboardMarkup().
+
+pub login(): String ->
+    Template.to_string(login_fragment()).
+
+login_fragment(): Template.Html ->
+    LoginMarkup(
+        email_classes = "{ error: errors.email }",
+        email_invalid = "{{ errors.email !== undefined}}",
+        password_classes = "{ error: errors.password }",
+        password_invalid = "{{ errors.password !== undefined}}",
+    ).
+
+pub map(): String ->
+    Template.to_string(map_fragment()).
+
+map_fragment(): Template.Html ->
+    MapMarkup().
+
+pub register(): String ->
+    Template.to_string(register_fragment()).
+
+register_fragment(): Template.Html ->
+    RegisterMarkup(
+        username_classes = "{ error: errors.username }",
+        username_invalid = "{{ errors.username !== undefined}}",
+        email_classes = "{ error: errors.email }",
+        email_invalid = "{{ errors.email !== undefined}}",
+        password_classes = "{ error: errors.password }",
+        password_invalid = "{{ errors.password !== undefined}}",
+        repeat_password_classes = "{ error: errors.repeatpassword }",
+        repeat_password_invalid = "{{ errors.repeatpassword !== undefined }}",
+    ).
+
+pub room(): String ->
+    Template.to_string(room_fragment()).
+
+room_fragment(): Template.Html ->
+    RoomMarkup().
+
+pub setup_controls(): String ->
+    Template.to_string(setup_controls_fragment()).
+
+setup_controls_fragment(): Template.Html ->
+    SetupControlsMarkup().
+
+pub shell(): String ->
+    Template.to_string(shell_fragment()).
+
+shell_fragment(): Template.Html ->
+    ShellMarkup(title = "Battleship").
+
+pub status_panel(): String ->
+    Template.to_string(status_panel_fragment()).
+
+status_panel_fragment(): Template.Html ->
+    StatusPanelMarkup().
+
+pub target_board(): String ->
+    Template.to_string(target_board_fragment()).
+
+target_board_fragment(): Template.Html ->
+    TargetBoardMarkup(submit_expression = "$ctrl.onSubmit({ tile: tile })").
+
+pub unit(): String ->
+    Template.to_string(unit_fragment()).
+
+unit_fragment(): Template.Html ->
+    UnitMarkup(
+        unit_classes = "{ locked: $ctrl.locked, dragged: $ctrl.drag.active }",
+        aria_disabled = "{{$ctrl.ariaDisabled}}",
+        unit_id = "{{$ctrl.unit.id}}",
+    ).

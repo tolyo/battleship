@@ -11,7 +11,7 @@ describe('appConfig', () => {
     globalThis.window = originalWindow;
   });
 
-  it('enables credentials and registers an unauthorized redirect interceptor', async () => {
+  it('uses same-origin cookies and registers an unauthorized redirect interceptor', async () => {
     const provider = {
       defaults: {},
       interceptors: [],
@@ -22,12 +22,12 @@ describe('appConfig', () => {
       },
     };
 
-    appConfig(provider);
+    Object.assign(provider, appConfig().$http);
 
-    expect(provider.defaults.withCredentials).toBe(true);
+    expect(provider.defaults.withCredentials).toBe(false);
     expect(provider.interceptors.length).toBe(1);
 
-    const interceptor = provider.interceptors[0][0]();
+    const interceptor = provider.interceptors[0]();
     await expectAsync(
       interceptor.responseError({ status: 401, data: 'unauthorized' })
     ).toBeRejectedWith({ status: 401, data: 'unauthorized' });
@@ -45,9 +45,9 @@ describe('appConfig', () => {
       },
     };
 
-    appConfig(provider);
+    Object.assign(provider, appConfig().$http);
 
-    const interceptor = provider.interceptors[0][0]();
+    const interceptor = provider.interceptors[0]();
     await expectAsync(
       interceptor.responseError({ status: 500, data: 'error' })
     ).toBeRejectedWith({ status: 500, data: 'error' });

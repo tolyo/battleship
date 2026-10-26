@@ -1,4 +1,9 @@
-import { OWN_BOARD_ID, GRID_SIZE } from '../domain/constants.js';
+import { OWN_BOARD_ID } from '../domain/constants.js';
+import {
+  element_size as elementSizeModel,
+  orientation,
+  sorted_coordinates as sortedCoordinatesModel,
+} from '../../../_build/browser/js/modules/battleship/browser/UnitGeometry.js';
 
 /**
  * @typedef {'VERTICAL' | 'HORIZONTAL'} Orientation
@@ -39,24 +44,11 @@ export function tileDataset(element) {
 
 /**
  * @param {{ size: number } | undefined} unit
- * @param {Orientation} orientation
+ * @param {Orientation} direction
  * @returns {ElementSize}
  */
-export function elementSize(unit, orientation) {
-  if (!unit) {
-    return { width: `${GRID_SIZE}px`, height: `${GRID_SIZE}px` };
-  }
-
-  return {
-    width:
-      orientation === 'HORIZONTAL'
-        ? `${GRID_SIZE * unit.size}px`
-        : `${GRID_SIZE}px`,
-    height:
-      orientation === 'VERTICAL'
-        ? `${GRID_SIZE * unit.size}px`
-        : `${GRID_SIZE}px`,
-  };
+export function elementSize(unit, direction) {
+  return elementSizeModel(unit?.size ?? 1, direction);
 }
 
 /**
@@ -64,15 +56,7 @@ export function elementSize(unit, orientation) {
  * @returns {Orientation}
  */
 export function orientationFromCoordinates(coordinates) {
-  if (coordinates.length === 0) {
-    return 'HORIZONTAL';
-  }
-
-  return coordinates.every(
-    (coordinate) => coordinate.row === coordinates[0].row
-  )
-    ? 'HORIZONTAL'
-    : 'VERTICAL';
+  return /** @type {Orientation} */ (orientation(coordinates));
 }
 
 /**
@@ -80,9 +64,7 @@ export function orientationFromCoordinates(coordinates) {
  * @returns {Coordinate[]}
  */
 export function sortedCoordinates(coordinates) {
-  return [...coordinates].sort((left, right) =>
-    left.row === right.row ? left.column - right.column : left.row - right.row
-  );
+  return sortedCoordinatesModel(coordinates);
 }
 
 /**
@@ -103,7 +85,7 @@ export function boardTileAt(coordinate) {
  * @returns {HTMLElement | undefined}
  */
 export function boardTileFromPoint(x, y) {
-  const elementBelow = document.elementFromPoint(x + 15, y + 15);
+  const elementBelow = document.elementFromPoint(x + 15 - window.scrollX, y + 15 - window.scrollY);
   if (
     elementBelow instanceof HTMLElement &&
     elementBelow.classList.contains('own-board-tile')

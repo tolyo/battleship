@@ -1,0 +1,44 @@
+module battleship.browser.UnitLayoutTest.
+
+import battleship.browser.{UnitGeometry, UnitLayout}.
+import std.test.Test.{assert_equal}.
+
+@test
+pub synchronization_keeps_coordinates_orientation_and_visibility_together(): Bool ->
+    let coordinates = [UnitGeometry.coordinate(2, 3), UnitGeometry.coordinate(3, 3)];
+    let state = UnitLayout.synchronized(UnitLayout.initial(), coordinates, true);
+    assert_equal("VERTICAL", state.orientation)
+        and assert_equal(true, state.visible)
+        and assert_equal(coordinates, state.previewCoordinates)
+        and assert_equal("HORIZONTAL", UnitLayout.opposite_orientation(state))
+        and assert_equal(true, UnitLayout.has_placement(state, true)).
+
+@test
+pub missing_anchors_hide_restored_units_and_cannot_commit_placement(): Bool ->
+    let state = UnitLayout.synchronized(UnitLayout.initial(), [UnitGeometry.coordinate(2, 3)], false);
+    assert_equal(false, state.visible)
+        and assert_equal(false, UnitLayout.has_placement(state, false))
+        and assert_equal(false, UnitLayout.has_placement(UnitLayout.initial(), true)).
+
+@test
+pub placeholder_reset_restores_initial_orientation_visibility_and_preview(): Bool ->
+    let state =
+        UnitLayout.synchronized(
+            UnitLayout.initial(),
+            [UnitGeometry.coordinate(2, 3), UnitGeometry.coordinate(3, 3)],
+            true,
+        );
+    let reset = UnitLayout.placeholder(UnitLayout.hidden(state));
+    assert_equal(UnitLayout.initial(), reset)
+        and assert_equal("VERTICAL", UnitLayout.opposite_orientation(reset)).
+
+@test
+pub hiding_preserves_placement_and_clearing_preserves_visibility(): Bool ->
+    let coordinates = [UnitGeometry.coordinate(1, 2)];
+    let state = UnitLayout.previewed(UnitLayout.initial(), coordinates);
+    let hidden = UnitLayout.hidden(state);
+    let cleared = UnitLayout.cleared(hidden);
+    assert_equal(coordinates, hidden.previewCoordinates)
+        and assert_equal(false, hidden.visible)
+        and assert_equal([], cleared.previewCoordinates)
+        and assert_equal(false, cleared.visible).

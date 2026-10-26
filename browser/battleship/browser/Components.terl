@@ -1,0 +1,161 @@
+module battleship.browser.Components.
+
+pub struct PageComponent {
+    templateUrl: String,
+}.
+
+pub struct PageControllerComponent[C] {
+    templateUrl: String,
+    controller: C,
+}.
+
+pub setup_page[C](controller: C): PageControllerComponent[C] ->
+    PageControllerComponent {templateUrl: "/_map", controller: controller}.
+
+pub struct TemplateComponent[B] {
+    bindings: B,
+    templateUrl: String,
+}.
+
+pub struct ControlledComponent[B, C] {
+    bindings: B,
+    templateUrl: String,
+    controller: C,
+}.
+
+pub struct UnitBindings {
+    unit: String,
+    coordinates: String,
+    locked: String,
+    setupActive: String,
+}.
+
+pub struct BoardBindings {
+    rows: String,
+    disabled: String,
+    active: String,
+    unitViews: String,
+    setupActive: String,
+}.
+
+pub struct BoardGridBindings {
+    boardId: String,
+    tileClass: String,
+    rows: String,
+    disabled: String,
+    hidden: String,
+    visible: String,
+    onTileClick: String,
+}.
+
+pub struct SetupControlsBindings {
+    setupActive: String,
+    boardReady: String,
+    onReady: String,
+    onRandom: String,
+    onReset: String,
+}.
+
+pub struct StatusPanelBindings {
+    playerLabel: String,
+    status: String,
+}.
+
+pub struct TargetBoardBindings {
+    rows: String,
+    hidden: String,
+    visible: String,
+    disabled: String,
+    onSubmit: String,
+}.
+
+pub dashboard[C](controller: C): PageControllerComponent[C] ->
+    PageControllerComponent {templateUrl: "/_dashboard", controller: controller}.
+
+pub login(): PageComponent ->
+    PageComponent {templateUrl: "/_login"}.
+
+pub room(): PageComponent ->
+    PageComponent {templateUrl: "/_room"}.
+
+pub unit[C](controller: C): ControlledComponent[UnitBindings, C] ->
+    ControlledComponent {
+        bindings: UnitBindings {unit: "<", coordinates: "<", locked: "<", setupActive: "<"},
+        templateUrl: "/_components/unit",
+        controller: controller,
+    }.
+
+pub board(): TemplateComponent[BoardBindings] ->
+    TemplateComponent {
+        bindings: BoardBindings {rows: "<", disabled: "<", active: "<", unitViews: "<", setupActive: "<"},
+        templateUrl: "/_components/board",
+    }.
+
+pub board_grid(): TemplateComponent[BoardGridBindings] ->
+    TemplateComponent {
+        bindings: BoardGridBindings {
+            boardId: "@",
+            tileClass: "@",
+            rows: "<",
+            disabled: "<",
+            hidden: "<",
+            visible: "<",
+            onTileClick: "&?",
+        },
+        templateUrl: "/_components/board-grid",
+    }.
+
+pub setup_controls(): TemplateComponent[SetupControlsBindings] ->
+    TemplateComponent {
+        bindings: SetupControlsBindings {
+            setupActive: "<",
+            boardReady: "<",
+            onReady: "&",
+            onRandom: "&",
+            onReset: "&",
+        },
+        templateUrl: "/_components/setup-controls",
+    }.
+
+pub status_panel(): TemplateComponent[StatusPanelBindings] ->
+    TemplateComponent {
+        bindings: StatusPanelBindings {playerLabel: "<", status: "<"},
+        templateUrl: "/_components/status-panel",
+    }.
+
+pub target_board(): TemplateComponent[TargetBoardBindings] ->
+    TemplateComponent {
+        bindings: TargetBoardBindings {rows: "<", hidden: "<", visible: "<", disabled: "<", onSubmit: "&"},
+        templateUrl: "/_components/target-board",
+    }.
+
+pub struct RegistrationState {
+    success: Bool,
+}.
+
+pub struct RegistrationComponent {
+    templateUrl: String,
+    controller: () -> RegistrationState,
+}.
+
+pub register_controller(): RegistrationState ->
+    RegistrationState {success: false}.
+
+pub register(): RegistrationComponent ->
+    RegistrationComponent {templateUrl: "/_register", controller: register_controller}.
+
+pub struct Route {
+    name: String,
+    url: String,
+    component: String,
+}.
+
+pub routes(): List[Route] ->
+    [
+        Route {name: "dashboard", url: "/dashboard", component: "dashboard"},
+        Route {name: "room", url: "/room", component: "room"},
+        Route {name: "activeRoom", url: "/room/:roomId", component: "room"},
+        Route {name: "register", url: "/register", component: "register"},
+        Route {name: "login", url: "/login", component: "login"},
+        Route {name: "home", url: "/", component: "setupPage"},
+    ].

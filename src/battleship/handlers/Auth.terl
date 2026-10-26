@@ -1,12 +1,10 @@
 /**
  * Battleship authentication response contract.
  *
- * This module owns HTTP-facing authentication payloads and delegates account
- * request validation to the Terlan account contract.
+ * Selects authentication responses using form validation and account queries.
  */
 module battleship.handlers.Auth.
 
-import battleship.JsonText.{stringify}.
 import battleship.model.server.Account.
 import std.core.Option.{None, Some}.
 import std.core.String.
@@ -30,7 +28,7 @@ pub register_request_valid(body: String): Bool ->
 
 pub login_json(): String ->
     Json.object().put("status", Json.string("ok"))
-    |> stringify().
+    |> Json.to_string().
 
 pub register_json(): String ->
     register_success_json(local_session_id()).
@@ -46,11 +44,11 @@ pub duplicate_user_json(): String ->
 
 pub register_success_json(user_id: String): String ->
     Json.object().put("status", Json.string("ok")).put("user_id", Json.string(user_id))
-    |> stringify().
+    |> Json.to_string().
 
 error_json(reason: String): String ->
     Json.object().put("status", Json.string("error")).put("reason", Json.string(reason))
-    |> stringify().
+    |> Json.to_string().
 
 pub login(request: Request): Response ->
     let body = request.body_text();

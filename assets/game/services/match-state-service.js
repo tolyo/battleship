@@ -1,5 +1,8 @@
-import Units from '../domain/unit-catalog.js';
-import { emptyBoardState } from '../domain/board-state.js';
+import { join_decision as joinDecision, phase_flags as phaseFlags } from '../../../_build/browser/js/modules/battleship/browser/RoomState.js';
+import {
+  empty_board as emptyBoardState,
+  units,
+} from '../../../_build/browser/js/modules/battleship/browser/Fleet.js';
 import {
   roomSessionConfig,
   RoomStateEvent,
@@ -15,7 +18,7 @@ export class MatchStateService {
    * @param {ng.Scope=} $rootScope
    */
   constructor(roomStore, $machine, $rootScope) {
-    this.units = Units;
+    this.units = units().map((unit) => Object.freeze(unit));
     this.$rootScope = $rootScope;
     /** @type {string[][]} */
     this.boardState = emptyBoardState();
@@ -31,7 +34,7 @@ export class MatchStateService {
    */
   get phase() {
     return /** @type {import('../domain/room-state.js').SessionPhaseValue} */ (
-      this.roomMachine.current
+      this.roomMachine.state
     );
   }
 
@@ -113,16 +116,9 @@ export class MatchStateService {
    * @returns {boolean}
    */
   tryEnterWaiting() {
-    if (!this.isSetup) {
-      return false;
-    }
-
-    if (!this.boardReady) {
-      this.transition(RoomStateEvent.SETUP_INCOMPLETE);
-      return false;
-    }
-
-    return this.transition(RoomStateEvent.JOIN_REQUESTED);
+    const decision = joinDecision(this.phase, this.boardReady);
+    const changed = decision.event ? this.transition(decision.event) : false;
+    return changed && decision.accepted;
   }
 
   socketOpened() {
@@ -157,6 +153,14 @@ export class MatchStateService {
 
   opponentDisconnected() {
     return this.transition(RoomStateEvent.OPPONENT_DISCONNECTED);
+  }
+
+  moveSubmitted() {
+    if (!this.canSubmitMove) {
+      return false;
+    }
+
+    return this.transition(RoomStateEvent.MOVE_SUBMITTED);
   }
 
   connectionClosed() {
@@ -195,7 +199,7 @@ export class MatchStateService {
    * @returns {boolean}
    */
   transition(type, payload) {
-    const changed = this.roomMachine.send(type, payload);
+    const changed = this.roomMachine.send(type, payload).ok;
     if (changed) {
       this.refresh();
     }
@@ -207,6 +211,7 @@ export class MatchStateService {
     const handler = /** @type {ScopeRefreshHandler | undefined} */ (
       this.$rootScope?.$handler
     );
+    handler?._checkListenersForAllKeys?.(phaseFlags(this.phase));
     handler?._checkListenersForAllKeys?.(this);
     handler?._checkListenersForAllKeys?.(this.data);
     handler?._flushScheduledTasks?.();

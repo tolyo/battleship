@@ -17,6 +17,7 @@ describe('unit geometry', () => {
     originalWindow = globalThis.window;
     originalDocument = globalThis.document;
     originalHTMLElement = globalThis.HTMLElement;
+    globalThis.window = { scrollX: 0, scrollY: 0 };
   });
 
   afterEach(() => {
@@ -100,6 +101,10 @@ describe('unit geometry', () => {
     installDom({ pointElement: unitTile });
 
     expect(boardTileFromPoint(10, 20)).toBe(unitTile);
+    expect(unitTile.lastPoint).toEqual({ x: 25, y: 35 });
+    globalThis.window = { scrollX: 5, scrollY: 12 };
+    expect(boardTileFromPoint(10, 20)).toBe(unitTile);
+    expect(unitTile.lastPoint).toEqual({ x: 20, y: 23 });
 
     installDom({ pointElement: otherTile });
 

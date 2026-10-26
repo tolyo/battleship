@@ -1,8 +1,7 @@
 /**
  * Battleship unit catalog.
  *
- * This module defines the immutable Terlan shape for the standard Battleship
- * fleet catalog.
+ * Defines the standard fleet, ship orientations, and immutable placement updates.
  */
 module battleship.model.game.Unit.
 

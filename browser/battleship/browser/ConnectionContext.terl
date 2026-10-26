@@ -1,0 +1,34 @@
+module battleship.browser.ConnectionContext.
+
+import std.core.Option.{None, Option, Some}.
+
+pub struct Entry {
+    roomId: String,
+    playerId: String,
+}.
+
+pub type Context = Option[Entry].
+
+pub stored_entry(room_id: String, player_id: String): Entry ->
+    Entry {roomId: room_id, playerId: player_id}.
+
+pub lobby(): Context ->
+    None.
+
+pub restore(entry: Entry): Context ->
+    Some(entry).
+
+pub is_lobby(context: Context): Bool ->
+    case context {
+        Some(_) -> false;
+        None -> true
+    }.
+
+pub is_restore(context: Context): Bool ->
+    case context {
+        Some(_) -> true;
+        None -> false
+    }.
+
+pub entry(context: Context): Option[Entry] ->
+    context.

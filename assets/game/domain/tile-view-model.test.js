@@ -7,6 +7,24 @@ import {
 import { CellState } from './constants.js';
 
 describe('tile view model', () => {
+  it('normalizes sparse browser boards before passing them to Terlan', () => {
+    const board = /** @type {unknown[][]} */ ([]);
+    board[1] = [];
+    board[1][2] = '7';
+    const tiles = ownTileViews(board);
+    expect(tileAt(tiles, 0, 0).state).toBe('empty');
+    expect(tileAt(tiles, 1, 2).unitId).toBe('7');
+  });
+
+  it('treats non-string cells from external data as empty', () => {
+    const board = [[null, {}, 7]];
+    expect(
+      targetTileViews(board)
+        .slice(0, 3)
+        .map((tile) => tile.state)
+    ).toEqual(['empty', 'empty', 'empty']);
+    expect(unitCoordinatesById(board)).toEqual({});
+  });
   it('reveals own units on own tiles', () => {
     const board = emptyBoard();
     board[1][2] = '7';

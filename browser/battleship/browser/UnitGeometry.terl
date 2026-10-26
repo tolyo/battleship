@@ -1,0 +1,106 @@
+module battleship.browser.UnitGeometry.
+
+import std.core.Int.{to_string}.
+
+pub struct Coordinate {
+    row: Int,
+    column: Int,
+}.
+
+pub constructor Coordinate {
+    (row: Int, column: Int): Coordinate ->
+        Coordinate {row: row, column: column}
+}.
+
+pub coordinate(row: Int, column: Int): Coordinate ->
+    Coordinate {row: row, column: column}.
+
+pub struct ElementSize {
+    width: String,
+    height: String,
+}.
+
+pub element_size(size: Int, orientation: String): ElementSize ->
+    ElementSize {
+        width: pixels(
+            if {
+                orientation == "HORIZONTAL" -> size * 30;
+                true -> 30
+            },
+        ),
+        height: pixels(
+            if {
+                orientation == "VERTICAL" -> size * 30;
+                true -> 30
+            },
+        ),
+    }.
+
+pub orientation(coordinates: List[Coordinate]): String ->
+    case coordinates {
+        [] -> "HORIZONTAL";
+        [first | rest] ->
+            if {
+                same_row(rest, first.row) -> "HORIZONTAL";
+                true -> "VERTICAL"
+            }
+    }.
+
+same_row(coordinates: List[Coordinate], row: Int): Bool ->
+    case coordinates {
+        [] -> true;
+        [coordinate | rest] -> coordinate.row == row and same_row(rest, row)
+    }.
+
+pub sorted_coordinates(coordinates: List[Coordinate]): List[Coordinate] ->
+    case coordinates {
+        [] -> [];
+        [coordinate | rest] -> insert(sorted_coordinates(rest), coordinate)
+    }.
+
+insert(coordinates: List[Coordinate], coordinate: Coordinate): List[Coordinate] ->
+    case coordinates {
+        [] -> [coordinate];
+        [first | rest] ->
+            if {
+                coordinate.row < first.row
+                    or coordinate.row == first.row and coordinate.column <= first.column -> [coordinate | coordinates];
+                true -> [first | insert(rest, coordinate)]
+            }
+    }.
+
+pub coordinates_from_start(row: Int, column: Int, orientation: String, size: Int): List[Coordinate] ->
+    coordinates_at(
+        row,
+        column,
+        orientation,
+        0,
+        if {
+            size < 10 -> size;
+            true -> 10
+        },
+    ).
+
+coordinates_at(
+    row: Int,
+    column: Int,
+    orientation: String,
+    offset: Int,
+    size: Int,
+): List[Coordinate] ->
+    if {
+        offset >= size -> [];
+        true -> [Coordinate {
+    row: if {
+        orientation == "VERTICAL" -> row + offset;
+        true -> row
+    },
+    column: if {
+        orientation == "HORIZONTAL" -> column + offset;
+        true -> column
+    },
+} | coordinates_at(row, column, orientation, offset + 1, size)]
+    }.
+
+pixels(value: Int): String ->
+    to_string(value) + "px".

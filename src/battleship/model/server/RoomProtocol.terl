@@ -6,7 +6,6 @@
  */
 module battleship.model.server.RoomProtocol.
 
-import battleship.JsonText.{stringify}.
 import std.data.Json.
 
 pub protocol(): String -> "battleship.room.v1".
@@ -43,18 +42,18 @@ pub room_update_json(): String ->
             .put("opponent", opponent)
             .put("allowed_actions", Json.array().push(action));
     Json.object().put("type", Json.string("room_update")).put("view", view)
-    |> stringify().
+    |> Json.to_string().
 
 pub error_json(reason: String): String ->
     Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
-    |> stringify().
+    |> Json.to_string().
 
 pub move_json(row: Int, column: Int): String ->
     Json.object()
     .put("type", Json.string("move"))
     .put("row", Json.int(row))
     .put("column", Json.int(column))
-    |> stringify().
+    |> Json.to_string().
 
 pub room_joined_json(room_id: String, player_id: String): String ->
     room_entry_json("room_joined", room_id, player_id, "").
@@ -73,8 +72,9 @@ pub room_entry_json(kind: String, room_id: String, player_id: String, opponent_i
             opponent_id == "" -> entry;
             true -> entry.put("opponent_id", Json.string(opponent_id))
         };
-    stringify(completed).
+    completed
+    |> Json.to_string().
 
 type_json(kind: String): String ->
     Json.object().put("type", Json.string(kind))
-    |> stringify().
+    |> Json.to_string().

@@ -1,0 +1,270 @@
+module battleship.browser.Placement.
+
+import battleship.browser.{BoardView, Fleet, UnitGeometry}.
+
+import type battleship.browser.Fleet.{Unit}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+pub struct Placement {
+    id: String,
+    coordinates: List[Coordinate],
+}.
+
+pub struct Layout {
+    boardState: List[List[String]],
+    tileDataState: List[List[String]],
+    complete: Bool,
+    placedUnitCells: Int,
+}.
+
+pub struct RandomLayout {
+    placements: List[Placement],
+    error: String,
+}.
+
+struct Occupied {
+    id: String,
+    row: Int,
+    column: Int,
+}.
+
+struct Work {
+    cells: List[Occupied],
+    complete: Bool,
+    count: Int,
+}.
+
+pub placement(id: String, coordinates: List[Coordinate]): Placement ->
+    Placement {id: id, coordinates: coordinates}.
+
+pub layout(placements: List[Placement]): Layout ->
+    let work = collect_units(Fleet.units(), placements, Work {cells: [], complete: true, count: 0});
+    Layout {
+        boardState: render_rows(work.cells, false, 0),
+        tileDataState: render_rows(work.cells, true, 0),
+        complete: work.complete,
+        placedUnitCells: work.count,
+    }.
+
+pub all_placed(placements: List[Placement]): Bool ->
+    let result = layout(placements);
+    result.complete and result.placedUnitCells == Fleet.occupied_cells().
+
+pub can_place_setup(placements: List[Placement], id: String, coordinates: List[Coordinate]): Bool ->
+    known_unit_fits(Fleet.units(), placements, id, coordinates).
+
+known_unit_fits(
+    units: List[Unit],
+    placements: List[Placement],
+    id: String,
+    coordinates: List[Coordinate],
+): Bool ->
+    case units {
+        [] -> false;
+        [ship | rest] ->
+            if {
+                ship#Unit.id == id -> length(coordinates) == ship#Unit.size
+                    and can_place_on_board(layout(without_unit(placements, id)).boardState, coordinates);
+                true -> known_unit_fits(rest, placements, id, coordinates)
+            }
+    }.
+
+without_unit(placements: List[Placement], id: String): List[Placement] ->
+    case placements {
+        [] -> [];
+        [item | rest] ->
+            if {
+                item.id == id -> without_unit(rest, id);
+                true -> [item | without_unit(rest, id)]
+            }
+    }.
+
+collect_units(units: List[Unit], placements: List[Placement], work: Work): Work ->
+    case units {
+        [] -> work;
+        [ship | rest] ->
+            let points = coordinates_for(placements, ship#Unit.id);
+            let next =
+                Work {
+                    cells: work.cells,
+                    complete: work.complete and length(points) == ship#Unit.size,
+                    count: work.count,
+                };
+            collect_units(rest, placements, collect_points(points, ship#Unit.id, next))
+    }.
+
+coordinates_for(placements: List[Placement], id: String): List[Coordinate] ->
+    case placements {
+        [] -> [];
+        [item | rest] ->
+            if {
+                item.id == id -> item.coordinates;
+                true -> coordinates_for(rest, id)
+            }
+    }.
+
+collect_points(points: List[Coordinate], id: String, work: Work): Work ->
+    case points {
+        [] -> work;
+        [point | rest] ->
+            if {
+                not in_bounds(point)
+                    or occupied_id(work.cells, point#Coordinate.row, point#Coordinate.column) != "" -> collect_points(
+                    rest,
+                    id,
+                    Work {cells: work.cells, complete: false, count: work.count},
+                );
+                true -> collect_points(
+                    rest,
+                    id,
+                    Work {
+                        cells: [Occupied {id: id, row: point#Coordinate.row, column: point#Coordinate.column} | work.cells],
+                        complete: work.complete,
+                        count: work.count + 1,
+                    },
+                )
+            }
+    }.
+
+occupied_id(cells: List[Occupied], row: Int, column: Int): String ->
+    case cells {
+        [] -> "";
+        [point | rest] ->
+            if {
+                point.row == row and point.column == column -> point.id;
+                true -> occupied_id(rest, row, column)
+            }
+    }.
+
+adjacent_occupied(cells: List[Occupied], row: Int, column: Int): Bool ->
+    case cells {
+        [] -> false;
+        [point | rest] ->
+            let dy = point.row - row;
+            let dx = point.column - column;
+            dy >= -1 and dy <= 1 and dx >= -1 and dx <= 1 or adjacent_occupied(rest, row, column)
+    }.
+
+render_rows(cells: List[Occupied], preview: Bool, row: Int): List[List[String]] ->
+    if {
+        row >= 10 -> [];
+        true -> [render_cells(cells, preview, row, 0) | render_rows(cells, preview, row + 1)]
+    }.
+
+render_cells(cells: List[Occupied], preview: Bool, row: Int, column: Int): List[String] ->
+    if {
+        column >= 10 -> [];
+        true -> let id = occupied_id(cells, row, column);
+        let value =
+            if {
+                id != "" -> if {
+                    preview -> "X";
+                    true -> id
+                };
+                preview and adjacent_occupied(cells, row, column) -> "o";
+                true -> "_"
+            };
+        [value | render_cells(cells, preview, row, column + 1)]
+    }.
+
+in_bounds(point: Coordinate): Bool ->
+    point#Coordinate.row >= 0
+        and point#Coordinate.row < 10
+        and point#Coordinate.column >= 0
+        and point#Coordinate.column < 10.
+
+can_place_on_board(board: List[List[String]], coordinates: List[Coordinate]): Bool ->
+    case coordinates {
+        [] -> true;
+        [point | rest] ->
+            in_bounds(point)
+                and empty_neighborhood(board, point#Coordinate.row, point#Coordinate.column, -1, -1)
+                and can_place_on_board(board, rest)
+    }.
+
+empty_neighborhood(board: List[List[String]], row: Int, column: Int, dy: Int, dx: Int): Bool ->
+    if {
+        dy > 1 -> true;
+        dx > 1 -> empty_neighborhood(board, row, column, dy + 1, -1);
+        true -> let y = row + dy;
+        let x = column + dx;
+        (y < 0 or y >= 10 or x < 0 or x >= 10 or BoardView.cell(board, y, x) == "_")
+            and empty_neighborhood(board, row, column, dy, dx + 1)
+    }.
+
+struct Candidate {
+    coordinates: List[Coordinate],
+    seed: Int,
+}.
+
+pub random_layout(seed: Int): RandomLayout ->
+    random_units(Fleet.units(), Fleet.empty_board(), [], seed rem 2147483647).
+
+random_units(
+    units: List[Unit],
+    board: List[List[String]],
+    placed: List[Placement],
+    seed: Int,
+): RandomLayout ->
+    case units {
+        [] -> RandomLayout {placements: reverse(placed), error: ""};
+        [ship | rest] ->
+            let candidate = find_random(ship#Unit.size, board, seed, 1000);
+            case candidate.coordinates {
+                [] -> RandomLayout {placements: [], error: "Unable to place unit " + ship#Unit.id};
+                _ ->
+                    let next = [placement(ship#Unit.id, candidate.coordinates) | placed];
+                    random_units(rest, layout(next).boardState, next, candidate.seed)
+            }
+    }.
+
+find_random(size: Int, board: List[List[String]], seed: Int, attempts: Int): Candidate ->
+    if {
+        attempts <= 0 -> Candidate {coordinates: [], seed: seed};
+        true -> let orientation_seed = next_seed(seed);
+        let row_seed = next_seed(orientation_seed);
+        let column_seed = next_seed(row_seed);
+        let horizontal = orientation_seed rem 2 > 0;
+        let row =
+            row_seed rem if {
+    horizontal -> 10;
+    true -> 11 - size
+};
+        let column =
+            column_seed rem if {
+    horizontal -> 11 - size;
+    true -> 10
+};
+        let points =
+            UnitGeometry.coordinates_from_start(
+                row,
+                column,
+                if {
+                    horizontal -> "HORIZONTAL";
+                    true -> "VERTICAL"
+                },
+                size,
+            );
+        if {
+            can_place_on_board(board, points) -> Candidate {coordinates: points, seed: column_seed};
+            true -> find_random(size, board, column_seed, attempts - 1)
+        }
+    }.
+
+next_seed(seed: Int): Int ->
+    seed * 48271 rem 2147483647.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.
+
+reverse[T](values: List[T]): List[T] ->
+    reverse_into(values, []).
+
+reverse_into[T](values: List[T], result: List[T]): List[T] ->
+    case values {
+        [] -> result;
+        [first | rest] -> reverse_into(rest, [first | result])
+    }.

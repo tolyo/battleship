@@ -1,0 +1,28 @@
+module battleship.browser.RoomRecovery.
+
+pub type Completion = Unit.
+
+pub struct StorePort {
+    leaveRoom: (String) -> Completion,
+}.
+
+pub struct MatchPort {
+    returnToSetup: (String) -> Bool,
+}.
+
+pub struct Recovery {
+    restoreFailed: (String, String) -> Bool,
+}.
+
+pub store_port(leave: (String) -> Completion): StorePort ->
+    StorePort {leaveRoom: leave}.
+
+pub match_port(reset: (String) -> Bool): MatchPort ->
+    MatchPort {returnToSetup: reset}.
+
+pub create(store: StorePort, state: MatchPort): Recovery ->
+    Recovery {
+        restoreFailed: ((room_id, status) ->
+            let ignored = store#StorePort.leaveRoom(room_id);
+            state#MatchPort.returnToSetup(status)),
+    }.

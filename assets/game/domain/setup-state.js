@@ -1,12 +1,15 @@
+import { project as projectUnitViews } from '../../../_build/browser/js/modules/battleship/browser/BoardUnits.js';
 import {
-  allUnitsPlaced,
-  boardStateFromPlacements,
-  canPlaceSetupUnit as canPlaceUnit,
-  randomUnitPlacements,
+  update,
+  project,
+  can_place as canPlace,
+} from '../../../_build/browser/js/modules/battleship/browser/SetupState.js';
+import {
+  checkedPlacements,
+  checkedCoordinates,
   unitCoordinatesFromStart,
 } from './unit-placement.js';
-import { SessionStatus } from './constants.js';
-import { setupRowsFromDataState } from './board-rows.js';
+import { rowsFromModel } from './board-rows.js';
 
 /**
  * @typedef {{
@@ -16,30 +19,81 @@ import { setupRowsFromDataState } from './board-rows.js';
  * }} SetupState
  */
 
-/**
- * @param {SetupState} state
- */
-export function resetSetupUnits(state) {
-  if (!state.isSetup) {
-    return;
-  }
-
-  state.data.setupPreviewCoordinates = [];
-  state.data.unitPlacements = {};
-  rebuildSetupBoard(state);
+/** @param {SetupState} state */
+function snapshot(state) {
+  return {
+    placements: checkedPlacements(state.data.unitPlacements),
+    preview: checkedCoordinates(state.data.setupPreviewCoordinates),
+  };
 }
 
 /**
  * @param {SetupState} state
+ * @param {import('../../../_build/browser/js/modules/battleship/browser/SetupState.js').Update} result
  */
-export function randomizeUnits(state) {
+function applyUpdate(state, result) {
+  if (result.error) {
+    throw new Error(result.error);
+  }
+  if (result.changed) {
+    if (result.placementsChanged) {
+      state.data.unitViews = projectUnitViews(result.placements);
+      state.data.unitPlacements = Object.fromEntries(
+        result.placements.map(({ id, coordinates }) => [id, coordinates])
+      );
+    }
+    if (result.previewChanged) {
+      state.data.setupPreviewCoordinates = result.preview;
+    }
+    state.boardState = result.boardState;
+    state.data.ownRows = rowsFromModel(result.ownRows);
+    state.data.boardReady = result.boardReady;
+    state.data.status = result.status;
+  }
+  return result;
+}
+
+/**
+ * @param {SetupState} state
+ * @param {string} event
+ * @param {string=} id
+ * @param {import('./match-view-model.js').Coordinate[]=} coordinates
+ * @param {number=} seed
+ */
+function change(state, event, id = '', coordinates = [], seed = 1) {
+  return applyUpdate(
+    state,
+    update(
+      state.isSetup,
+      snapshot(state),
+      event,
+      id,
+      checkedCoordinates(coordinates),
+      seed
+    )
+  );
+}
+
+/** @param {SetupState} state */
+export function resetSetupUnits(state) {
+  change(state, 'reset');
+}
+
+/**
+ * @param {SetupState} state
+ * @param {number=} seed
+ */
+export function randomizeUnits(state, seed) {
   if (!state.isSetup) {
     return;
   }
-
-  state.data.setupPreviewCoordinates = [];
-  state.data.unitPlacements = randomUnitPlacements();
-  rebuildSetupBoard(state);
+  change(
+    state,
+    'randomize',
+    '',
+    [],
+    seed ?? Math.floor(Math.random() * 2147483646) + 1
+  );
 }
 
 /**
@@ -48,16 +102,42 @@ export function randomizeUnits(state) {
  * @param {import('./match-view-model.js').Coordinate[]} coordinates
  */
 export function placeSetupUnit(state, unitId, coordinates) {
-  if (!state.isSetup) {
-    return;
-  }
+  change(state, 'place', unitId, coordinates);
+}
 
-  state.data.setupPreviewCoordinates = [];
-  state.data.unitPlacements = {
-    ...state.data.unitPlacements,
-    [unitId]: coordinates,
-  };
-  rebuildSetupBoard(state);
+/**
+ * @param {SetupState} state
+ * @param {string} unitId
+ */
+export function clearSetupUnit(state, unitId) {
+  change(state, 'clear', unitId);
+}
+
+/**
+ * @param {SetupState} state
+ * @param {import('./match-view-model.js').Coordinate[]} coordinates
+ */
+export function previewSetupUnit(state, coordinates) {
+  change(state, 'preview', '', coordinates);
+}
+
+/** @param {SetupState} state */
+export function clearSetupPreview(state) {
+  change(state, 'clear_preview');
+}
+
+/**
+ * @param {SetupState} state
+ * @param {string} unitId
+ * @param {import('./match-view-model.js').Coordinate[]} coordinates
+ */
+export function canPlaceSetupUnit(state, unitId, coordinates) {
+  return canPlace(
+    state.isSetup,
+    snapshot(state),
+    unitId,
+    checkedCoordinates(coordinates)
+  );
 }
 
 /**
@@ -67,7 +147,6 @@ export function placeSetupUnit(state, unitId, coordinates) {
  * @param {string} column
  * @param {'VERTICAL' | 'HORIZONTAL'} orientation
  * @param {number} size
- * @returns {import('./match-view-model.js').Coordinate[] | undefined}
  */
 export function placeSetupUnitAt(
   state,
@@ -77,52 +156,13 @@ export function placeSetupUnitAt(
   orientation,
   size
 ) {
-  const coordinates = legalSetupUnitCoordinates(
+  const result = change(
     state,
+    'place_at',
     unitId,
-    row,
-    column,
-    orientation,
-    size
+    unitCoordinatesFromStart(row, column, orientation, size)
   );
-  if (!coordinates) {
-    return undefined;
-  }
-
-  placeSetupUnit(state, unitId, coordinates);
-  return coordinates;
-}
-
-/**
- * @param {SetupState} state
- * @param {string} unitId
- */
-export function clearSetupUnit(state, unitId) {
-  if (!state.isSetup) {
-    return;
-  }
-
-  state.data.setupPreviewCoordinates = [];
-  const { [unitId]: _removed, ...nextPlacements } = state.data.unitPlacements;
-  state.data.unitPlacements = nextPlacements;
-  rebuildSetupBoard(state);
-}
-
-/**
- * @param {SetupState} state
- * @param {import('./match-view-model.js').Coordinate[]} coordinates
- */
-export function previewSetupUnit(state, coordinates) {
-  if (!state.isSetup) {
-    return;
-  }
-
-  if (sameCoordinates(state.data.setupPreviewCoordinates, coordinates)) {
-    return;
-  }
-
-  state.data.setupPreviewCoordinates = coordinates;
-  rebuildSetupBoard(state);
+  return result.accepted ? result.coordinates : undefined;
 }
 
 /**
@@ -132,7 +172,6 @@ export function previewSetupUnit(state, coordinates) {
  * @param {string} column
  * @param {'VERTICAL' | 'HORIZONTAL'} orientation
  * @param {number} size
- * @returns {import('./match-view-model.js').Coordinate[] | undefined}
  */
 export function previewSetupUnitAt(
   state,
@@ -142,110 +181,16 @@ export function previewSetupUnitAt(
   orientation,
   size
 ) {
-  const coordinates = legalSetupUnitCoordinates(
+  const result = change(
     state,
+    'preview_at',
     unitId,
-    row,
-    column,
-    orientation,
-    size
+    unitCoordinatesFromStart(row, column, orientation, size)
   );
-  if (!coordinates) {
-    clearSetupPreview(state);
-    return undefined;
-  }
-
-  previewSetupUnit(state, coordinates);
-  return coordinates;
+  return result.accepted ? result.coordinates : undefined;
 }
 
-/**
- * @param {SetupState} state
- */
-export function clearSetupPreview(state) {
-  if (!state.isSetup) {
-    return;
-  }
-
-  if (state.data.setupPreviewCoordinates.length === 0) {
-    return;
-  }
-
-  state.data.setupPreviewCoordinates = [];
-  rebuildSetupBoard(state);
-}
-
-/**
- * @param {SetupState} state
- * @param {string} unitId
- * @param {import('./match-view-model.js').Coordinate[]} coordinates
- * @returns {boolean}
- */
-export function canPlaceSetupUnit(state, unitId, coordinates) {
-  if (!state.isSetup) {
-    return false;
-  }
-
-  return canPlaceUnit(state.data.unitPlacements, unitId, coordinates);
-}
-
-/**
- * @param {SetupState} state
- * @param {string} unitId
- * @param {string} row
- * @param {string} column
- * @param {'VERTICAL' | 'HORIZONTAL'} orientation
- * @param {number} size
- * @returns {import('./match-view-model.js').Coordinate[] | undefined}
- */
-function legalSetupUnitCoordinates(
-  state,
-  unitId,
-  row,
-  column,
-  orientation,
-  size
-) {
-  const coordinates = unitCoordinatesFromStart(row, column, orientation, size);
-  return canPlaceSetupUnit(state, unitId, coordinates)
-    ? coordinates
-    : undefined;
-}
-
-/**
- * @param {import('./match-view-model.js').Coordinate[]} left
- * @param {import('./match-view-model.js').Coordinate[]} right
- * @returns {boolean}
- */
-function sameCoordinates(left, right) {
-  return (
-    left.length === right.length &&
-    left.every(
-      (coordinate, index) =>
-        coordinate.row === right[index].row &&
-        coordinate.column === right[index].column
-    )
-  );
-}
-
-/**
- * @param {SetupState} state
- */
+/** @param {SetupState} state */
 export function rebuildSetupBoard(state) {
-  const { boardState, tileDataState } = boardStateFromPlacements(
-    state.data.unitPlacements
-  );
-
-  state.boardState = boardState;
-  state.data.ownRows = setupRowsFromDataState(
-    tileDataState,
-    state.data.setupPreviewCoordinates
-  );
-  if (allUnitsPlaced(state.data.unitPlacements)) {
-    state.data.boardReady = true;
-    state.data.status = SessionStatus.FLEET_READY;
-  } else {
-    state.data.boardReady = false;
-    state.data.status = SessionStatus.PLACE_FLEET;
-  }
+  applyUpdate(state, project(snapshot(state)));
 }

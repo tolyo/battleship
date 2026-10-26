@@ -1,0 +1,95 @@
+module battleship.client.RoomEvents.
+
+import battleship.client.RoomEntry.
+import battleship.host.RoomEventEnvelope.
+import std.core.Option.{None, Option, Some}.
+import std.js.String.
+
+import type battleship.browser.ConnectionContext.{Context}.
+import type battleship.client.RoomEntry.{Options}.
+import type battleship.host.RoomEventEnvelope.{RoomEventEnvelope}.
+
+pub type Completion = Unit.
+
+pub struct MatchPort {
+    socketOpened: () -> Bool,
+    opponentDisconnected: () -> Bool,
+    roomUnavailable: () -> Bool,
+    serverError: (String) -> Bool,
+}.
+
+pub struct ViewPort[V] {
+    receiveOptionalSnapshot: (Option[V]) -> Bool,
+}.
+
+pub struct EntryPort[E] {
+    enter: (E, Options) -> Bool,
+}.
+
+pub struct RestorePort {
+    handleConnectionDisconnect: (Context) -> Bool,
+}.
+
+pub struct Dispatcher[E, V] {
+    dispatch: (RoomEventEnvelope[E, V], Context) -> Completion,
+}.
+
+pub create[E, V](
+    state: MatchPort,
+    view: ViewPort[V],
+    entry: EntryPort[E],
+    restore: RestorePort,
+): Dispatcher[E, V] ->
+    Dispatcher {
+        dispatch: ((event, context) -> dispatch(state, view, entry, restore, event, context)),
+    }.
+
+dispatch[E, V](
+    state: MatchPort,
+    view: ViewPort[V],
+    entry: EntryPort[E],
+    restore: RestorePort,
+    event: RoomEventEnvelope[E, V],
+    context: Context,
+): Unit ->
+    let kind = String.to_core(RoomEventEnvelope.type_(event));
+    if {
+        kind == "waiting" -> let ignored = state#MatchPort.socketOpened();
+        Unit;
+        kind == "room_entered" -> entered(entry, event);
+        kind == "state_received" -> let ignored = view#ViewPort.receiveOptionalSnapshot(RoomEventEnvelope.view(event));
+        Unit;
+        kind == "opponent_left" -> let ignored = state#MatchPort.opponentDisconnected();
+        Unit;
+        kind == "room_unavailable" -> unavailable(state, restore, context);
+        kind == "server_error" -> let ignored = state#MatchPort.serverError(reason(event));
+        Unit;
+        true -> Unit
+    }.
+
+entered[E, V](entry: EntryPort[E], event: RoomEventEnvelope[E, V]): Unit ->
+    case RoomEventEnvelope.entry(event) {
+        Some(value) ->
+            let ignored = entry#EntryPort.enter(value, RoomEntry.options(update_url(event)));
+            Unit;
+        None -> Unit
+    }.
+
+update_url[E, V](event: RoomEventEnvelope[E, V]): Bool ->
+    case RoomEventEnvelope.update_url(event) {
+        Some(value) -> value;
+        None -> false
+    }.
+
+reason[E, V](event: RoomEventEnvelope[E, V]): String ->
+    case RoomEventEnvelope.reason(event) {
+        Some(value) -> String.to_core(value);
+        None -> "server_error"
+    }.
+
+unavailable(state: MatchPort, restore: RestorePort, context: Context): Unit ->
+    if {
+        restore#RestorePort.handleConnectionDisconnect(context) -> Unit;
+        true -> let ignored = state#MatchPort.roomUnavailable();
+        Unit
+    }.

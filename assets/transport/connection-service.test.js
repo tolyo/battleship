@@ -110,7 +110,8 @@ function websocketFake() {
   const connections = [];
   return {
     connections,
-    connect(url, protocols, options) {
+    connect(url, options) {
+      const { protocols } = options;
       const connection = {
         send: jasmine.createSpy('send'),
         close: jasmine.createSpy('close'),

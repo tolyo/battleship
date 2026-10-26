@@ -1,33 +1,26 @@
-export const GRID = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-export const GRID_SIZE = 30;
-export const OWN_BOARD_ID = 'own-board';
+import {
+  grid,
+  tile_size as tileSize,
+  occupied_cells as occupiedCells,
+} from '../../../_build/browser/js/modules/battleship/browser/Fleet.js';
+import {
+  cell_states_names as cellStateNames,
+  statuses_names as statusNames,
+  own_board_id as ownBoardId,
+} from '../../../_build/browser/js/modules/battleship/browser/SessionConfig.js';
 
-/**
- * @enum {string}
- */
-export const CellState = {
-  EMPTY: '_',
-  FILLED: 'X',
-  BLOCKED: 'o',
-  HIT: '+',
-  MISS: 'm',
-};
+export const GRID = grid();
+export const GRID_SIZE = tileSize();
+export const OWN_BOARD_ID = ownBoardId();
 
-export const UNIT_CELLS = 20;
+/** @enum {string} */
+export const CellState = Object.fromEntries(
+  cellStateNames().map(({ name, value }) => [name, value])
+);
 
-/**
- * @enum {string}
- */
-export const SessionStatus = Object.freeze({
-  PLACE_FLEET: 'Place your fleet',
-  PLACE_FLEET_FIRST: 'Place your fleet first',
-  CONNECTING: 'Connecting...',
-  WAITING_FOR_OPPONENT: 'Waiting for opponent...',
-  DISCONNECTED: 'Disconnected',
-  CONNECTION_ERROR: 'connection_error',
-  OPPONENT_DISCONNECTED: 'Opponent disconnected',
-  IN_ROOM: 'In room',
-  RECONNECTING: 'Reconnecting...',
-  ROOM_UNAVAILABLE: 'Room unavailable',
-  FLEET_READY: 'Fleet ready',
-});
+export const UNIT_CELLS = occupiedCells();
+
+/** @enum {string} */
+export const SessionStatus = Object.freeze(
+  Object.fromEntries(statusNames().map(({ name, value }) => [name, value]))
+);

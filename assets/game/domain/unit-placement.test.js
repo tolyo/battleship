@@ -48,6 +48,28 @@ describe('boardStateFromPlacements', () => {
   });
 });
 
+describe('placement input boundary', () => {
+  it('treats missing placement lists as unplaced ships', () => {
+    const placements = /** @type {any} */ ({ 0: null, 1: undefined });
+    expect(boardStateFromPlacements(placements).placedUnitCells).toBe(0);
+    expect(allUnitsPlaced(placements)).toBe(false);
+  });
+
+  it('rejects non-integer and missing coordinate fields', () => {
+    const coordinates = /** @type {any} */ ([
+      'invalid',
+      null,
+      {},
+      { row: 0.5, column: 1 },
+      { row: 0, column: '2' },
+    ]);
+    expect(boardStateFromPlacements({ 0: coordinates }).placedUnitCells).toBe(
+      0
+    );
+    expect(canPlaceSetupUnit({}, '0', coordinates)).toBe(false);
+  });
+});
+
 describe('canPlaceSetupUnit', () => {
   const placements = {
     0: unitCoordinatesFromStart('0', '0', 'HORIZONTAL', 4),
@@ -104,10 +126,17 @@ describe('randomUnitPlacements', () => {
     expect(Object.values(placements).flat().length).toBe(20);
   });
 
-  it('fails explicitly when random choices cannot place the next unit', () => {
+  it('handles the lower boundary of browser randomness', () => {
     spyOn(Math, 'random').and.returnValue(0);
+    expect(allUnitsPlaced(randomUnitPlacements())).toBe(true);
+  });
 
-    expect(() => randomUnitPlacements()).toThrowError(
+  it('reproduces a fleet from its seed', () => {
+    expect(randomUnitPlacements(12345)).toEqual(randomUnitPlacements(12345));
+  });
+
+  it('reports a placement failure for the degenerate zero seed', () => {
+    expect(() => randomUnitPlacements(0)).toThrowError(
       Error,
       'Unable to place unit 1'
     );

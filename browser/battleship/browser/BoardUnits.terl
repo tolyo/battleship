@@ -1,0 +1,51 @@
+module battleship.browser.BoardUnits.
+
+import battleship.browser.Fleet.
+import std.core.Int.{to_string}.
+
+import type battleship.browser.Placement.{Placement}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+pub struct PlaceholderStyle {
+    width: String,
+}.
+
+pub struct UnitView {
+    id: String,
+    size: Int,
+    placeholderWidth: String,
+    coordinates: List[Coordinate],
+    placeholderStyle: PlaceholderStyle,
+}.
+
+pub project(placements: List[Placement]): List[UnitView] ->
+    project_units(Fleet.sizes(), 0, placements).
+
+project_units(sizes: List[Int], index: Int, placements: List[Placement]): List[UnitView] ->
+    case sizes {
+        [] -> [];
+        [size | rest] ->
+            let id = to_string(index);
+            let width = to_string(size * Fleet.tile_size()) + "px";
+            let coordinates = coordinates_for(placements, id);
+            let remaining = project_units(rest, index + 1, placements);
+            let view =
+                UnitView {
+                    id: id,
+                    size: size,
+                    placeholderWidth: width,
+                    coordinates: coordinates,
+                    placeholderStyle: PlaceholderStyle {width: width},
+                };
+            [view | remaining]
+    }.
+
+coordinates_for(placements: List[Placement], id: String): List[Coordinate] ->
+    case placements {
+        [] -> [];
+        [placement | rest] ->
+            if {
+                placement#Placement.id == id -> placement#Placement.coordinates;
+                true -> coordinates_for(rest, id)
+            }
+    }.

@@ -1,0 +1,42 @@
+module battleship.browser.MatchView.
+
+import battleship.browser.BoardView.
+
+import type battleship.browser.BoardView.{Cluster, Tile, UnitCoordinates}.
+
+pub struct View {
+    isMyTurn: Bool,
+    status: String,
+    ownTiles: List[Tile],
+    targetTiles: List[Tile],
+    unitCoordinates: List[UnitCoordinates],
+    sunkClusters: List[Cluster],
+}.
+
+pub project(
+    own_board: List[List[String]],
+    opponent_board: List[List[String]],
+    phase: String,
+    state: String,
+    allowed_actions: List[String],
+): View ->
+    let finished = phase == "finished" or state == "FINISHED";
+    let my_turn = has_move(allowed_actions) and not finished;
+    View {
+        isMyTurn: my_turn,
+        status: if {
+            finished -> "Game finished";
+            my_turn -> "Your turn";
+            true -> "Awaiting opponent's move"
+        },
+        ownTiles: BoardView.tile_views(own_board, true),
+        targetTiles: BoardView.tile_views(opponent_board, false),
+        unitCoordinates: BoardView.unit_coordinates(own_board),
+        sunkClusters: BoardView.sunk_clusters(own_board),
+    }.
+
+has_move(actions: List[String]): Bool ->
+    case actions {
+        [] -> false;
+        [action | rest] -> action == "move" or has_move(rest)
+    }.

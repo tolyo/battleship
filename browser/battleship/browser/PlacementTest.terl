@@ -1,0 +1,97 @@
+module battleship.browser.PlacementTest.
+
+import battleship.browser.{BoardView, Placement, UnitGeometry}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.Placement.{Layout, RandomLayout}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+@test
+pub duplicate_and_invalid_cells_make_layout_incomplete(): Bool ->
+    let result =
+        Placement.layout(
+            [
+                Placement.placement(
+                    "0",
+                    [
+                        UnitGeometry.coordinate(0, 0),
+                        UnitGeometry.coordinate(0, 0),
+                        UnitGeometry.coordinate(0, 1),
+                        UnitGeometry.coordinate(10, 1),
+                    ],
+                ),
+            ],
+        );
+    invalid_layout_matches(result).
+
+@test
+pub preview_marks_ship_and_surrounding_cells(): Bool ->
+    let result = Placement.layout([Placement.placement("0", line(0, 0, 4))]);
+    preview_matches(result).
+
+@test
+pub diagonal_adjacency_is_rejected(): Bool ->
+    let placed = [Placement.placement("0", line(0, 0, 4))];
+    not Placement.can_place_setup(placed, "6", line(1, 4, 1))
+        and Placement.can_place_setup(placed, "6", line(2, 4, 1)).
+
+@test
+pub moving_a_unit_ignores_its_previous_cells(): Bool ->
+    let placed = [Placement.placement("0", line(0, 0, 4))];
+    Placement.can_place_setup(placed, "0", line(0, 1, 4)).
+
+@test
+pub unknown_wrong_sized_and_off_board_units_are_rejected(): Bool ->
+    not Placement.can_place_setup([], "unknown", [])
+        and not Placement.can_place_setup([], "1", [])
+        and not Placement.can_place_setup([], "1", line(0, 8, 3)).
+
+@test
+pub all_units_are_required_for_ready_state(): Bool ->
+    not Placement.all_placed([Placement.placement("0", line(0, 0, 4))])
+        and Placement.all_placed(
+    [
+        Placement.placement("0", line(0, 0, 4)),
+        Placement.placement("1", line(2, 0, 3)),
+        Placement.placement("2", line(4, 0, 3)),
+        Placement.placement("3", line(6, 0, 2)),
+        Placement.placement("4", line(8, 0, 2)),
+        Placement.placement("5", line(0, 6, 2)),
+        Placement.placement("6", line(2, 6, 1)),
+        Placement.placement("7", line(4, 6, 1)),
+        Placement.placement("8", line(6, 6, 1)),
+        Placement.placement("9", line(8, 6, 1)),
+    ],
+).
+
+@test
+pub zero_seed_collision_returns_an_explicit_failure(): Bool ->
+    random_failure_matches(Placement.random_layout(0)).
+
+@test
+pub seeded_random_placement_is_complete_and_reproducible(): Bool ->
+    let first = Placement.random_layout(12345);
+    let second = Placement.random_layout(12345);
+    random_layout_matches(first, second).
+
+random_layout_matches(first: RandomLayout, second: RandomLayout): Bool ->
+    assert_equal("", first#RandomLayout.error)
+        and Placement.all_placed(first#RandomLayout.placements)
+        and assert_equal(first#RandomLayout.placements, second#RandomLayout.placements).
+
+line(row: Int, column: Int, size: Int): List[Coordinate] ->
+    UnitGeometry.coordinates_from_start(row, column, "HORIZONTAL", size).
+
+invalid_layout_matches(result: Layout): Bool ->
+    not result#Layout.complete
+        and assert_equal(2, result#Layout.placedUnitCells)
+        and assert_equal("0", BoardView.cell(result#Layout.boardState, 0, 0))
+        and assert_equal("0", BoardView.cell(result#Layout.boardState, 0, 1)).
+
+preview_matches(result: Layout): Bool ->
+    assert_equal("X", BoardView.cell(result#Layout.tileDataState, 0, 0))
+        and assert_equal("o", BoardView.cell(result#Layout.tileDataState, 1, 4))
+        and assert_equal("_", BoardView.cell(result#Layout.tileDataState, 2, 4)).
+
+random_failure_matches(result: RandomLayout): Bool ->
+    assert_equal("Unable to place unit 1", result#RandomLayout.error).

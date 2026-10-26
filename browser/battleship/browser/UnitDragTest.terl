@@ -1,0 +1,32 @@
+module battleship.browser.UnitDragTest.
+
+import battleship.browser.UnitDrag.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.UnitDrag.{Point, Pointer}.
+
+@test
+pub dragging_belongs_only_to_the_active_pointer(): Bool ->
+    let pointer = UnitDrag.pointer(7, 40.0, 60.0);
+    let state = UnitDrag.started(pointer, UnitDrag.point(10.0, 20.0));
+    assert_equal(true, state.active)
+        and assert_equal(true, state.firstMove)
+        and assert_equal(true, UnitDrag.owns(state, pointer))
+        and assert_equal(false, UnitDrag.owns(state, pointer#Pointer{pointerId: 8}))
+        and assert_equal(false, UnitDrag.moved(state).firstMove).
+
+@test
+pub movement_preserves_grab_offset_and_floors_fractional_pixels(): Bool ->
+    let state = UnitDrag.started(UnitDrag.pointer(1, 40.0, 60.0), UnitDrag.point(10.0, 20.0));
+    assert_equal(UnitDrag.point(15.0, 27.0), UnitDrag.position(state, UnitDrag.pointer(1, 45.8, 67.2)))
+        and assert_equal(UnitDrag.point(-1.0, -1.0), UnitDrag.position(state, UnitDrag.pointer(1, 29.8, 39.8))).
+
+@test
+pub stopped_and_initial_drags_reject_pointer_events(): Bool ->
+    let pointer = UnitDrag.pointer(7, 0.0, 0.0);
+    let stopped = UnitDrag.stopped(UnitDrag.started(pointer, UnitDrag.point(0.0, 0.0)));
+    assert_equal(false, stopped.active)
+        and assert_equal(false, stopped.firstMove)
+        and assert_equal(-1, stopped.pointerId)
+        and assert_equal(false, UnitDrag.owns(stopped, pointer))
+        and assert_equal(false, UnitDrag.owns(UnitDrag.initial(), pointer)).

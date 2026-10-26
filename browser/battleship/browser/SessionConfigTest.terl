@@ -1,0 +1,43 @@
+module battleship.browser.SessionConfigTest.
+
+import battleship.browser.{Fleet, SessionConfig}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.SessionConfig.{NamedValue}.
+
+@test
+pub host_metadata_preserves_phase_event_and_status_names(): Bool ->
+    assert_equal(5, length(SessionConfig.phases_names()))
+        and assert_equal(13, length(SessionConfig.events_names()))
+        and assert_equal(12, length(SessionConfig.statuses_names()))
+        and assert_equal("restoring", value_for(SessionConfig.phases_names(), "RESTORING"))
+        and assert_equal("restore_started", value_for(SessionConfig.events_names(), "RESTORE_STARTED"))
+        and assert_equal(
+    "Waiting for move result...",
+    value_for(SessionConfig.statuses_names(), "AWAITING_MOVE_RESULT"),
+).
+
+@test
+pub grid_and_cell_metadata_match_the_board_contract(): Bool ->
+    assert_equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], Fleet.grid())
+        and assert_equal(5, length(SessionConfig.cell_states_names()))
+        and assert_equal("_", value_for(SessionConfig.cell_states_names(), "EMPTY"))
+        and assert_equal("+", value_for(SessionConfig.cell_states_names(), "HIT"))
+        and assert_equal("own-board", SessionConfig.own_board_id())
+        and assert_equal(5000, SessionConfig.restore_timeout_ms()).
+
+value_for(values: List[NamedValue], name: String): String ->
+    case values {
+        [] -> "";
+        [value | rest] ->
+            if {
+                value#NamedValue.name == name -> value#NamedValue.value;
+                true -> value_for(rest, name)
+            }
+    }.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.

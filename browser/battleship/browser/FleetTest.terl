@@ -1,0 +1,34 @@
+module battleship.browser.FleetTest.
+
+import battleship.browser.{BoardView, Fleet}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.Fleet.{Unit}.
+
+@test
+pub catalogue_matches_fleet_and_tile_sizes(): Bool ->
+    case Fleet.units() {
+        [ship | rest] -> first_ship_matches(ship) and assert_equal(9, length(rest));
+        _ -> false
+    }.
+
+@test
+pub empty_board_has_ten_independent_rows(): Bool ->
+    let board = Fleet.empty_board();
+    assert_equal(10, length(board))
+        and assert_equal("_", BoardView.cell(board, 0, 0))
+        and assert_equal("_", BoardView.cell(board, 9, 9))
+        and assert_equal("", BoardView.cell(board, 10, 0)).
+
+first_ship_matches(ship: Unit): Bool ->
+    assert_equal("0", ship#Unit.id)
+        and assert_equal(4, ship#Unit.size)
+        and assert_equal("120px", ship#Unit.placeholderWidth)
+        and assert_equal(30, Fleet.tile_size())
+        and assert_equal(20, Fleet.occupied_cells()).
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.

@@ -1,0 +1,51 @@
+module battleship.browser.Fleet.
+
+import std.core.Int.{to_string}.
+
+pub struct Unit {
+    id: String,
+    size: Int,
+    placeholderWidth: String,
+}.
+
+pub sizes(): List[Int] -> [4, 3, 3, 2, 2, 2, 1, 1, 1, 1].
+
+pub units(): List[Unit] ->
+    catalog(sizes(), 0).
+
+catalog(sizes: List[Int], index: Int): List[Unit] ->
+    case sizes {
+        [] -> [];
+        [size | rest] -> [unit(to_string(index), size) | catalog(rest, index + 1)]
+    }.
+
+pub tile_size(): Int -> 30.
+
+pub occupied_cells(): Int -> 20.
+
+pub empty_board(): List[List[String]] ->
+    rows(0).
+
+rows(row: Int): List[List[String]] ->
+    if {
+        row >= 10 -> [];
+        true -> [cells(0) | rows(row + 1)]
+    }.
+
+cells(column: Int): List[String] ->
+    if {
+        column >= 10 -> [];
+        true -> ["_" | cells(column + 1)]
+    }.
+
+unit(id: String, size: Int): Unit ->
+    Unit {id: id, size: size, placeholderWidth: to_string(size * tile_size()) + "px"}.
+
+pub grid(): List[Int] ->
+    grid_at(0).
+
+grid_at(index: Int): List[Int] ->
+    if {
+        index >= 10 -> [];
+        true -> [index | grid_at(index + 1)]
+    }.

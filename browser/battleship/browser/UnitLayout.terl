@@ -1,0 +1,51 @@
+module battleship.browser.UnitLayout.
+
+import battleship.browser.UnitGeometry.
+
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+pub struct LayoutState {
+    orientation: String,
+    visible: Bool,
+    previewCoordinates: List[Coordinate],
+}.
+
+pub initial(): LayoutState ->
+    LayoutState {orientation: "HORIZONTAL", visible: true, previewCoordinates: []}.
+
+pub placeholder(state: LayoutState): LayoutState ->
+    initial().
+
+pub cleared(state: LayoutState): LayoutState ->
+    LayoutState {orientation: state.orientation, visible: state.visible, previewCoordinates: []}.
+
+pub hidden(state: LayoutState): LayoutState ->
+    state#LayoutState{visible: false}.
+
+pub synchronized(
+    state: LayoutState,
+    coordinates: List[Coordinate],
+    anchor_present: Bool,
+): LayoutState ->
+    let orientation = UnitGeometry.orientation(coordinates);
+    state#LayoutState{
+        orientation: orientation,
+        visible: anchor_present,
+        previewCoordinates: coordinates,
+    }.
+
+pub previewed(state: LayoutState, coordinates: List[Coordinate]): LayoutState ->
+    state#LayoutState{previewCoordinates: coordinates}.
+
+pub opposite_orientation(state: LayoutState): String ->
+    if {
+        state.orientation == "HORIZONTAL" -> "VERTICAL";
+        true -> "HORIZONTAL"
+    }.
+
+pub has_placement(state: LayoutState, anchor_present: Bool): Bool ->
+    anchor_present
+        and case state.previewCoordinates {
+    [] -> false;
+    _ -> true
+}.

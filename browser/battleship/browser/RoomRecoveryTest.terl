@@ -1,0 +1,26 @@
+module battleship.browser.RoomRecoveryTest.
+
+import battleship.browser.RoomRecovery.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.RoomRecovery.{Recovery}.
+
+@test
+pub recovery_forwards_the_failure_status_to_the_match(): Bool ->
+    let store = RoomRecovery.store_port(ignore_room);
+    let state = RoomRecovery.match_port(expected_status);
+    let recovery = RoomRecovery.create(store, state);
+    recovery#Recovery.restoreFailed("room-1", "Room unavailable").
+
+@test
+pub recovery_preserves_a_rejected_reset_result(): Bool ->
+    let store = RoomRecovery.store_port(ignore_room);
+    let state = RoomRecovery.match_port(expected_status);
+    let recovery = RoomRecovery.create(store, state);
+    assert_equal(false, recovery#Recovery.restoreFailed("room-1", "Other status")).
+
+ignore_room(_room_id: String): Unit ->
+    Unit.
+
+expected_status(status: String): Bool ->
+    status == "Room unavailable".

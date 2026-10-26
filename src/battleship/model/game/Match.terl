@@ -1,8 +1,8 @@
 /**
  * Battleship match rules.
  *
- * This module ports the core Erlang rules model into Terlan-owned source:
- * turn selection, move validation, strike resolution, and match completion.
+ * Selects turns, validates moves, resolves strikes, and records match completion
+ * through immutable updates to players, boards, and move history.
  */
 module battleship.model.game.Match.
 

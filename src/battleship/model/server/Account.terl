@@ -1,16 +1,15 @@
 /**
- * Battleship account contract.
+ * Account registration, credential checks, and form validation.
  *
- * The old Erlang backend used Postgres functions for account creation and
- * credential checks. This module restores that source-visible contract in
- * Terlan: SQL text, form validation, and response payloads live in the app
- * while runtime execution waits on the BEAM SafeNative Postgres bridge.
+ * Typed SQL queries read and create PostgreSQL users. The authentication
+ * handlers use these results to select response payloads and status codes.
  */
 module battleship.model.server.Account.
 
 import std.core.Option.{None, Option, Some}.
 import std.core.Result.{Err, Ok}.
 import std.core.String.
+import std.net.Uri.
 
 pub struct UserIdRow {
     id: String,
@@ -25,7 +24,7 @@ pub credentials_valid(body: String): Bool ->
 credentials_valid_for_email(body: String, email: String): Bool ->
     case form_value(body, "password") {
         Some(password) ->
-            case sql[UserIdRow] {
+            case sql[UserIdRow]{
                 SELECT id::text AS id
                 FROM users
                 WHERE email = ${email}
@@ -48,7 +47,7 @@ pub user_exists(body: String): Bool ->
 user_exists_for_username(body: String, username: String): Bool ->
     case form_value(body, "email") {
         Some(email) ->
-            case sql[UserIdRow] {
+            case sql[UserIdRow]{
                 SELECT id::text AS id
                 FROM users
                 WHERE username = ${username}
@@ -77,7 +76,7 @@ create_user_id_for_username(body: String, username: String): Option[String] ->
 create_user_id_for_email(body: String, username: String, email: String): Option[String] ->
     case form_value(body, "password") {
         Some(password) ->
-            case sql[UserIdRow] {
+            case sql[UserIdRow]{
                 SELECT register_user(${username}, ${email}, ${password})::text AS id
                 LIMIT 1
             } {
@@ -143,7 +142,7 @@ pub form_value(body: String, name: String): Option[String] ->
 
 pub form_pair_value(pair: String, name: String): Option[String] ->
     let {
-        Some({key, value}) <- String.split_once(pair, "=");
+        [{key, value} | _rest] <- Uri.query_pairs(pair);
         true <- field_name_matches(key, name)
     } else {
         _ -> None
@@ -151,4 +150,4 @@ pub form_pair_value(pair: String, name: String): Option[String] ->
     Some(value).
 
 pub field_name_matches(key: String, name: String): Bool ->
-    String.contains(key, name) and String.contains(name, key).
+    key == name.

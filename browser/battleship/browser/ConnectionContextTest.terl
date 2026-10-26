@@ -1,0 +1,23 @@
+module battleship.browser.ConnectionContextTest.
+
+import battleship.browser.ConnectionContext.
+import std.core.Option.{None, Some}.
+import std.test.Test.{assert_equal}.
+
+@test
+pub lobby_and_restore_contexts_retain_their_seat(): Bool ->
+    let seat = ConnectionContext.stored_entry("room-1", "player-1");
+    let lobby = ConnectionContext.lobby();
+    let restored = ConnectionContext.restore(seat);
+    let remembered =
+        case ConnectionContext.entry(restored) {
+            Some(value) ->
+                assert_equal("room-1", value.roomId) and assert_equal("player-1", value.playerId);
+            None -> false
+        };
+    ConnectionContext.is_lobby(lobby)
+        and not ConnectionContext.is_restore(lobby)
+        and assert_equal(None, ConnectionContext.entry(lobby))
+        and ConnectionContext.is_restore(restored)
+        and not ConnectionContext.is_lobby(restored)
+        and remembered.

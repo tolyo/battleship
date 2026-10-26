@@ -1,0 +1,160 @@
+module battleship.browser.SessionConfig.
+
+pub struct Phases {
+    setup: String,
+    connecting: String,
+    waiting: String,
+    restoring: String,
+    playing: String,
+}.
+
+pub struct Events {
+    setupIncomplete: String,
+    joinRequested: String,
+    socketOpened: String,
+    connectionClosed: String,
+    returnToSetup: String,
+    roomEntered: String,
+    restoreStarted: String,
+    stateReceived: String,
+    moveSubmitted: String,
+    roomUnavailable: String,
+    opponentDisconnected: String,
+    connectionError: String,
+    serverError: String,
+}.
+
+pub struct Statuses {
+    placeFleet: String,
+    placeFleetFirst: String,
+    connecting: String,
+    waitingForOpponent: String,
+    awaitingMoveResult: String,
+    disconnected: String,
+    connectionError: String,
+    opponentDisconnected: String,
+    inRoom: String,
+    reconnecting: String,
+    roomUnavailable: String,
+    fleetReady: String,
+}.
+
+pub struct CellStates {
+    empty: String,
+    filled: String,
+    blocked: String,
+    hit: String,
+    miss: String,
+}.
+
+pub phases(): Phases ->
+    Phases {
+        setup: "setup",
+        connecting: "connecting",
+        waiting: "waiting",
+        restoring: "restoring",
+        playing: "playing",
+    }.
+
+pub events(): Events ->
+    Events {
+        setupIncomplete: "setup_incomplete",
+        joinRequested: "join_requested",
+        socketOpened: "socket_opened",
+        connectionClosed: "connection_closed",
+        returnToSetup: "return_to_setup",
+        roomEntered: "room_entered",
+        restoreStarted: "restore_started",
+        stateReceived: "state_received",
+        moveSubmitted: "move_submitted",
+        roomUnavailable: "room_unavailable",
+        opponentDisconnected: "opponent_disconnected",
+        connectionError: "connection_error",
+        serverError: "server_error",
+    }.
+
+pub statuses(): Statuses ->
+    Statuses {
+        placeFleet: "Place your fleet",
+        placeFleetFirst: "Place your fleet first",
+        connecting: "Connecting...",
+        waitingForOpponent: "Waiting for opponent...",
+        awaitingMoveResult: "Waiting for move result...",
+        disconnected: "Disconnected",
+        connectionError: "connection_error",
+        opponentDisconnected: "Opponent disconnected",
+        inRoom: "In room",
+        reconnecting: "Reconnecting...",
+        roomUnavailable: "Room unavailable",
+        fleetReady: "Fleet ready",
+    }.
+
+pub cell_states(): CellStates ->
+    CellStates {empty: "_", filled: "X", blocked: "o", hit: "+", miss: "m"}.
+
+pub own_board_id(): String -> "own-board".
+
+pub restore_timeout_ms(): Int -> 5000.
+
+pub struct NamedValue {
+    name: String,
+    value: String,
+}.
+
+named(name: String, value: String): NamedValue ->
+    NamedValue {name: name, value: value}.
+
+pub phases_names(): List[NamedValue] ->
+    let values = phases();
+    [
+        named("SETUP", values.setup),
+        named("CONNECTING", values.connecting),
+        named("WAITING", values.waiting),
+        named("RESTORING", values.restoring),
+        named("PLAYING", values.playing),
+    ].
+
+pub events_names(): List[NamedValue] ->
+    let values = events();
+    [
+        named("SETUP_INCOMPLETE", values.setupIncomplete),
+        named("JOIN_REQUESTED", values.joinRequested),
+        named("SOCKET_OPENED", values.socketOpened),
+        named("CONNECTION_CLOSED", values.connectionClosed),
+        named("RETURN_TO_SETUP", values.returnToSetup),
+        named("ROOM_ENTERED", values.roomEntered),
+        named("RESTORE_STARTED", values.restoreStarted),
+        named("STATE_RECEIVED", values.stateReceived),
+        named("MOVE_SUBMITTED", values.moveSubmitted),
+        named("ROOM_UNAVAILABLE", values.roomUnavailable),
+        named("OPPONENT_DISCONNECTED", values.opponentDisconnected),
+        named("CONNECTION_ERROR", values.connectionError),
+        named("SERVER_ERROR", values.serverError),
+    ].
+
+pub statuses_names(): List[NamedValue] ->
+    let values = statuses();
+    [
+        named("PLACE_FLEET", values.placeFleet),
+        named("PLACE_FLEET_FIRST", values.placeFleetFirst),
+        named("CONNECTING", values.connecting),
+        named("WAITING_FOR_OPPONENT", values.waitingForOpponent),
+        named("AWAITING_MOVE_RESULT", values.awaitingMoveResult),
+        named("DISCONNECTED", values.disconnected),
+        named("CONNECTION_ERROR", values.connectionError),
+        named("OPPONENT_DISCONNECTED", values.opponentDisconnected),
+        named("IN_ROOM", values.inRoom),
+        named("RECONNECTING", values.reconnecting),
+        named("ROOM_UNAVAILABLE", values.roomUnavailable),
+        named("FLEET_READY", values.fleetReady),
+    ].
+
+pub cell_states_names(): List[NamedValue] ->
+    let values = cell_states();
+    [
+        named("EMPTY", values.empty),
+        named("FILLED", values.filled),
+        named("BLOCKED", values.blocked),
+        named("HIT", values.hit),
+        named("MISS", values.miss),
+    ].

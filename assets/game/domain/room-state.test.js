@@ -11,8 +11,8 @@ describe('roomSessionConfig', () => {
   it('keeps setup mode and reports incomplete setup before joining', () => {
     const session = testMachine(roomSessionConfig());
 
-    expect(session.send(RoomStateEvent.SETUP_INCOMPLETE)).toBe(true);
-    expect(session.current).toBe(SessionPhase.SETUP);
+    expect(session.send(RoomStateEvent.SETUP_INCOMPLETE).ok).toBe(true);
+    expect(session.state).toBe(SessionPhase.SETUP);
     expect(session.data.status).toBe(SessionStatus.PLACE_FLEET_FIRST);
     expect(session.data.unitsLocked).toBe(false);
   });
@@ -20,8 +20,8 @@ describe('roomSessionConfig', () => {
   it('moves a setup session into connecting and locks units', () => {
     const session = testMachine(roomSessionConfig());
 
-    expect(session.send(RoomStateEvent.JOIN_REQUESTED)).toBe(true);
-    expect(session.current).toBe(SessionPhase.CONNECTING);
+    expect(session.send(RoomStateEvent.JOIN_REQUESTED).ok).toBe(true);
+    expect(session.state).toBe(SessionPhase.CONNECTING);
     expect(session.data.status).toBe(SessionStatus.CONNECTING);
     expect(session.data.unitsLocked).toBe(true);
   });
@@ -32,7 +32,7 @@ describe('roomSessionConfig', () => {
     session.send(RoomStateEvent.JOIN_REQUESTED);
     session.send(RoomStateEvent.SOCKET_OPENED);
 
-    expect(session.current).toBe(SessionPhase.WAITING);
+    expect(session.state).toBe(SessionPhase.WAITING);
     expect(session.data.status).toBe(SessionStatus.WAITING_FOR_OPPONENT);
   });
 
@@ -44,7 +44,7 @@ describe('roomSessionConfig', () => {
       playerId: 'player-1',
     });
 
-    expect(session.current).toBe(SessionPhase.RESTORING);
+    expect(session.state).toBe(SessionPhase.RESTORING);
     expect(session.data.roomId).toBe('room-1');
     expect(session.data.playerId).toBe('player-1');
     expect(session.data.unitsLocked).toBe(true);
@@ -65,7 +65,7 @@ describe('roomSessionConfig', () => {
 
     session.send(RoomStateEvent.RETURN_TO_SETUP, ROOM_UNAVAILABLE_STATUS);
 
-    expect(session.current).toBe(SessionPhase.SETUP);
+    expect(session.state).toBe(SessionPhase.SETUP);
     expect(session.data.roomId).toBeUndefined();
     expect(session.data.playerId).toBeUndefined();
     expect(session.data.opponentId).toBeUndefined();
@@ -79,12 +79,11 @@ describe('roomSessionConfig', () => {
   it('executes every declared transition with its boundary payload', () => {
     const config = roomSessionConfig();
 
-    Object.entries(config.transitions).forEach(([phase, transitions]) => {
-      Object.entries(transitions).forEach(([event, transition]) => {
+    Object.entries(config.states).forEach(([phase, { on }]) => {
+      Object.entries(on).forEach(([event, transition]) => {
         const { data } = roomSessionConfig();
-        const nextPhase = transition(data, transitionPayload(event));
-
-        expect(nextPhase).toBe(expectedNextPhase(phase, event));
+        transition.update({ data, payload: transitionPayload(event) });
+        expect(transition.to).toBe(expectedNextPhase(phase, event) ?? phase);
         expect(data.status).toBe(expectedStatus(event));
       });
     });
@@ -121,36 +120,33 @@ describe('moveForTarget', () => {
  */
 function testMachine(config) {
   return {
-    current: config.initial,
+    state: config.initial,
     data: config.data,
     send(type, payload) {
-      const transition = config.transitions[this.current]?.[type];
+      const transition = config.states[this.state]?.on?.[type];
 
       if (!transition) {
-        return false;
+        return { ok: false, status: 'missing-transition' };
       }
 
-      const nextMode = transition(this.data, payload, this);
-      if (typeof nextMode === 'string' && nextMode) {
-        this.current = nextMode;
-      }
-
-      return true;
+      transition.update?.({ data: this.data, payload, machine: this });
+      this.state = transition.to ?? this.state;
+      return { ok: true, status: 'transitioned' };
     },
     can(type) {
-      return !!config.transitions[this.current]?.[type];
+      return !!config.states[this.state]?.on?.[type];
     },
     matches(mode) {
-      return this.current === mode;
+      return this.state === mode;
     },
     snapshot() {
       return structuredClone({
-        current: this.current,
+        state: this.state,
         data: this.data,
       });
     },
     restore(snapshot) {
-      this.current = snapshot.current;
+      this.state = snapshot.state;
       this.data = structuredClone(snapshot.data);
     },
   };
@@ -221,6 +217,7 @@ function expectedStatus(event) {
     [RoomStateEvent.ROOM_ENTERED]: SessionStatus.IN_ROOM,
     [RoomStateEvent.RESTORE_STARTED]: SessionStatus.RECONNECTING,
     [RoomStateEvent.STATE_RECEIVED]: 'Your turn',
+    [RoomStateEvent.MOVE_SUBMITTED]: SessionStatus.AWAITING_MOVE_RESULT,
     [RoomStateEvent.ROOM_UNAVAILABLE]: SessionStatus.ROOM_UNAVAILABLE,
     [RoomStateEvent.OPPONENT_DISCONNECTED]: SessionStatus.OPPONENT_DISCONNECTED,
     [RoomStateEvent.CONNECTION_ERROR]: SessionStatus.CONNECTION_ERROR,

@@ -1,0 +1,176 @@
+module battleship.browser.SetupStateTest.
+
+import battleship.browser.{BoardView, Placement, SetupState, UnitGeometry}.
+import std.test.Test.{assert_equal}.
+
+import type battleship.browser.BoardRows.{GridRow, GridTile}.
+import type battleship.browser.SetupState.{Setup, Update}.
+import type battleship.browser.UnitGeometry.{Coordinate}.
+
+@test
+pub setup_operations_are_ignored_outside_setup(): Bool ->
+    all_ignored(
+        [
+            "reset",
+            "randomize",
+            "place",
+            "clear",
+            "preview",
+            "clear_preview",
+            "place_at",
+            "preview_at",
+        ],
+    ).
+
+@test
+pub placement_updates_board_and_clears_preview(): Bool ->
+    let setup = SetupState.snapshot([], line(2, 0, 3));
+    placed_matches(SetupState.update(true, setup, "place", "0", line(0, 0, 4), 1)).
+
+@test
+pub replacing_and_clearing_preserves_other_units(): Bool ->
+    let setup =
+        SetupState.snapshot(
+            [Placement.placement("0", line(0, 0, 4)), Placement.placement("1", line(2, 0, 3))],
+            [],
+        );
+    let moved = SetupState.update(true, setup, "place", "0", line(4, 0, 4), 1);
+    let cleared = SetupState.update(true, as_setup(moved), "clear", "0", [], 1);
+    cleared_matches(cleared).
+
+@test
+pub randomization_produces_a_ready_fleet_and_reset_clears_it(): Bool ->
+    let randomized = SetupState.update(true, SetupState.initial(), "randomize", "", [], 12345);
+    let reset = SetupState.update(true, as_setup(randomized), "reset", "", [], 1);
+    random_matches(randomized) and reset_matches(reset).
+
+@test
+pub equivalent_previews_do_not_rebuild_the_board(): Bool ->
+    let setup = SetupState.snapshot([], line(2, 0, 3));
+    let result = SetupState.update(true, setup, "preview_at", "1", line(2, 0, 3), 1);
+    not result#Update.changed
+        and result#Update.accepted
+        and not result#Update.previewChanged
+        and not result#Update.placementsChanged
+        and assert_equal(3, length(result#Update.coordinates)).
+
+@test
+pub preview_changes_preserve_placements_and_project_droppable_cells(): Bool ->
+    let result = SetupState.update(true, SetupState.initial(), "preview", "", line(0, 0, 3), 1);
+    result#Update.changed
+        and result#Update.previewChanged
+        and not result#Update.placementsChanged
+        and first_row_has_preview(result#Update.ownRows).
+
+@test
+pub invalid_preview_clears_stale_coordinates_but_invalid_placement_keeps_them(): Bool ->
+    let setup = SetupState.snapshot([Placement.placement("0", line(0, 0, 4))], line(3, 0, 3));
+    let preview = SetupState.update(true, setup, "preview_at", "1", line(0, 1, 3), 1);
+    let placement = SetupState.update(true, setup, "place_at", "1", line(0, 1, 3), 1);
+    preview#Update.changed
+        and not preview#Update.accepted
+        and not preview#Update.placementsChanged
+        and assert_equal(0, length(preview#Update.preview))
+        and not placement#Update.changed
+        and not placement#Update.accepted
+        and assert_equal(3, length(placement#Update.preview)).
+
+@test
+pub preview_cleanup_is_a_no_op_when_no_preview_exists(): Bool ->
+    let result = SetupState.update(true, SetupState.initial(), "clear_preview", "", [], 1);
+    not result#Update.changed and assert_equal("", result#Update.error).
+
+@test
+pub projection_preserves_the_source_placement_and_preview_collections(): Bool ->
+    let setup = SetupState.snapshot([Placement.placement("0", line(0, 0, 4))], line(0, 0, 1));
+    let result = SetupState.project(setup);
+    result#Update.changed
+        and not result#Update.placementsChanged
+        and not result#Update.previewChanged
+        and first_row_has_preview(result#Update.ownRows)
+        and assert_equal("0", BoardView.cell(result#Update.boardState, 0, 0)).
+
+@test
+pub failed_randomization_preserves_the_previous_setup(): Bool ->
+    let setup = SetupState.snapshot([Placement.placement("0", line(0, 0, 4))], line(2, 0, 3));
+    let result = SetupState.update(true, setup, "randomize", "", [], 0);
+    not result#Update.changed
+        and assert_equal("Unable to place unit 1", result#Update.error)
+        and assert_equal(1, length(result#Update.placements))
+        and assert_equal(3, length(result#Update.preview)).
+
+@test
+pub placement_permissions_require_setup_and_legal_geometry(): Bool ->
+    let setup = SetupState.initial();
+    SetupState.can_place(true, setup, "1", line(2, 0, 3))
+        and not SetupState.can_place(false, setup, "1", line(2, 0, 3))
+        and not SetupState.can_place(true, setup, "unknown", [])
+        and not SetupState.can_place(true, setup, "1", line(0, 9, 3)).
+
+line(row: Int, column: Int, size: Int): List[Coordinate] ->
+    UnitGeometry.coordinates_from_start(row, column, "HORIZONTAL", size).
+
+as_setup(result: Update): Setup ->
+    SetupState.snapshot(result#Update.placements, result#Update.preview).
+
+all_ignored(events: List[String]): Bool ->
+    case events {
+        [] -> true;
+        [event | rest] ->
+            ignored(SetupState.update(false, SetupState.initial(), event, "0", line(0, 0, 4), 0))
+                and all_ignored(rest)
+    }.
+
+ignored(result: Update): Bool ->
+    not result#Update.changed
+        and not result#Update.accepted
+        and assert_equal("", result#Update.error).
+
+placed_matches(result: Update): Bool ->
+    result#Update.changed
+        and result#Update.accepted
+        and result#Update.placementsChanged
+        and result#Update.previewChanged
+        and assert_equal(0, length(result#Update.preview))
+        and assert_equal("0", BoardView.cell(result#Update.boardState, 0, 0))
+        and assert_equal("0", BoardView.cell(result#Update.boardState, 0, 3))
+        and not result#Update.boardReady
+        and assert_equal("Place your fleet", result#Update.status).
+
+cleared_matches(result: Update): Bool ->
+    assert_equal(1, length(result#Update.placements))
+        and assert_equal("_", BoardView.cell(result#Update.boardState, 4, 0))
+        and assert_equal("1", BoardView.cell(result#Update.boardState, 2, 0)).
+
+random_matches(result: Update): Bool ->
+    result#Update.boardReady
+        and assert_equal("Fleet ready", result#Update.status)
+        and Placement.all_placed(result#Update.placements).
+
+reset_matches(result: Update): Bool ->
+    result#Update.changed
+        and not result#Update.boardReady
+        and assert_equal(0, length(result#Update.placements))
+        and assert_equal("_", BoardView.cell(result#Update.boardState, 0, 0))
+        and assert_equal("Place your fleet", result#Update.status).
+
+first_row_has_preview(rows: List[GridRow]): Bool ->
+    case rows {
+        [row | _rest] -> first_tile_has_preview(row#GridRow.tiles);
+        _ -> false
+    }.
+
+first_tile_has_preview(tiles: List[GridTile]): Bool ->
+    case tiles {
+        [tile | _rest] -> tile_has_preview(tile);
+        _ -> false
+    }.
+
+tile_has_preview(tile: GridTile): Bool ->
+    tile#GridTile.preview.
+
+length[T](values: List[T]): Int ->
+    case values {
+        [] -> 0;
+        [_first | rest] -> 1 + length(rest)
+    }.

@@ -1,0 +1,17 @@
+<div
+  class="unit"
+  ng-ref="$ctrl.unitElement"
+  ng-ref-read="$element"
+  ng-class="${unit_classes}"
+  ng-style="$ctrl.style.value"
+  ng-show="$ctrl.layout.visible"
+  ng-attr-aria-disabled="${aria_disabled}"
+  ng-attr-id="${unit_id}"
+  ng-window-resize="$ctrl.realignToLayout()"
+  ng-on-pointerdown="$ctrl.onPointerDown($event)"
+  ng-on-pointermove="$ctrl.onPointerMove($event)"
+  ng-on-pointerup="$ctrl.onPointerUp($event)"
+  ng-on-pointercancel="$ctrl.onPointerCancel($event)"
+  ng-on-dblclick="$ctrl.onDoubleClick()"
+  data-event-prevent>
+</div>
