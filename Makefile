@@ -18,6 +18,7 @@ TERLAN_WEB_DIR = $(TERLAN_OUT_DIR)/.terlan/application/web
 TERLAN_EXECUTABLE = $(TERLAN_OUT_DIR)/bin/battleship
 TERLAN_INTEGRATION_PORT ?= 18080
 TERLAN_BROWSER_TEST_PORT ?= 4000
+TERLAN_ANGULAR_PACKAGE ?= $(abspath ../ng/angular.ts/integrations/terlan)
 TERLAN_ANGULAR_BINDINGS = $(TERLAN_OUT_DIR)/bindings/angular
 TERLAN_JS_BINDING_MANIFEST = $(CURDIR)/$(TERLAN_ANGULAR_BINDINGS)/std/js/manifests/std_js_bindings.json
 TERLAN_HOST_BINDINGS = $(TERLAN_OUT_DIR)/bindings/host
@@ -150,17 +151,12 @@ terlan-build-backend: terlan-build-browser
 	@$(TERLC) build . --target terlan-vm --out-dir $(TERLAN_OUT_DIR)
 
 angular-compat:
-	@if ! rg -q 'simpleCompare\(deProxy\(state._lastParentValue' node_modules/@angular-wave/angular.ts/dist/angular-ts.esm.js || \
-	    ! rg -q 'if \(expr\._computed\) \{' node_modules/@angular-wave/angular.ts/dist/angular-ts.esm.js || \
-	    ! rg -q 'simpleCompare\(deProxy\(state._lastParentValue' node_modules/@angular-wave/angular.ts/dist/core/compile/compile.js || \
-	    ! rg -q 'if \(expr\._computed\) \{' node_modules/@angular-wave/angular.ts/dist/core/scope/scope.js; then \
-		$(TERLC) test tools/AngularCompatibilityTest.terl --target terlan-vm; \
-	fi
+	@$(MAKE) -C "$(TERLAN_ANGULAR_PACKAGE)" compatibility TERLC="$(TERLC)" RUNTIME_ROOT="$(CURDIR)/node_modules/@angular-wave/angular.ts"
 
-$(TERLAN_ANGULAR_BINDINGS)/.complete: $(TERLC) node_modules/@angular-wave/angular.ts/@types/namespace.d.ts node_modules/@angular-wave/angular.ts/@types/interface.d.ts
+$(TERLAN_ANGULAR_BINDINGS)/.complete: $(TERLC) $(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs node_modules/@angular-wave/angular.ts/@types/namespace.d.ts node_modules/@angular-wave/angular.ts/@types/interface.d.ts
 	@mkdir -p $(TERLAN_OUT_DIR)/bindings
 	@set -eu; bindings_stage=$$(mktemp -d "$(TERLAN_OUT_DIR)/bindings/angular.stage.XXXXXX"); \
-		$(TERLC) bind angular-ts --out "$$bindings_stage"; \
+		node "$(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs" --compiler "$(TERLC)" --runtime-root "$(CURDIR)/node_modules/@angular-wave/angular.ts" --out "$$bindings_stage"; \
 		if [ -d "$(TERLAN_ANGULAR_BINDINGS)" ]; then mv "$(TERLAN_ANGULAR_BINDINGS)" "$$bindings_stage.previous"; fi; \
 		mv "$$bindings_stage" "$(TERLAN_ANGULAR_BINDINGS)"
 	@touch $@
@@ -174,6 +170,7 @@ $(TERLAN_HOST_BINDINGS)/.complete: $(TERLC) bindings/Host.d.ts
 	@touch $@
 
 terlan-build-browser: angular-compat $(TERLAN_ANGULAR_BINDINGS)/.complete $(TERLAN_HOST_BINDINGS)/.complete
+	@TERLAN_JS_BINDING_MANIFESTS="$(TERLAN_JS_BINDING_MANIFESTS)" $(TERLC) build "$(TERLAN_ANGULAR_PACKAGE)/src" --target js.shared --out-dir $(TERLAN_OUT_DIR)/browser --cache-dir .terlan --declarations
 	@$(TERLC) interface $$(rg --files src/battleship/shared -g '*.terl' -g '!*Test.terl') --out-dir .terlan
 	@$(TERLC) check browser --cache-dir .terlan
 	@for source in $$(rg --files browser src/battleship/shared -g '*.terl' -g '!*Test.terl'); do \

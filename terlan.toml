@@ -6,6 +6,9 @@ version = "0.0.1"
 source_roots = ["src", "browser"]
 artifact = "terlan-vm"
 
+[dependencies]
+angular = { path = "../ng/angular.ts/integrations/terlan" }
+
 [web.assets]
 directory = "assets"
 html_template = "_build/templates/page.html"
