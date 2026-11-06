@@ -1,0 +1,157 @@
+module battleship.client.Transport.
+
+import battleship.host.{MutableCell, SocketSlot}.
+import std.core.Option.{None, Option, Some}.
+
+import type battleship.host.MutableCell.{MutableCell}.
+import type battleship.host.SocketSlot.{SocketSlot}.
+
+pub type Completion = Unit.
+
+pub struct Handlers[D] {
+    onOpen: () -> Completion,
+    onMessage: (D) -> Completion,
+    onClose: () -> Completion,
+    onError: () -> Completion,
+}.
+
+pub struct SocketOptions[D] {
+    protocols: List[String],
+    heartbeatTimeout: Int,
+    maxRetries: Int,
+    onOpen: () -> Completion,
+    onMessage: (D) -> Completion,
+    onClose: () -> Completion,
+    onError: () -> Completion,
+}.
+
+pub struct Socket[P] {
+    send: (P) -> Completion,
+    close: () -> Completion,
+}.
+
+pub struct Transport[D, P] {
+    connect: (String, Handlers[D]) -> Completion,
+    send: (P) -> Completion,
+    close: () -> Completion,
+    isActive: () -> Bool,
+    isOpen: () -> Bool,
+}.
+
+pub create[D, P](open: (String, SocketOptions[D]) -> Socket[P]): Transport[D, P] ->
+    let state = new_state[P]();
+    Transport {
+        connect: ((url, handlers) -> connect(open, state, url, handlers)),
+        send: ((message) -> send(state, message)),
+        close: (() -> close(state)),
+        isActive: (() -> active(state)),
+        isOpen: (() -> opened(state)),
+    }.
+
+new_state[P](): MutableCell[SocketSlot[Socket[P]]] ->
+    MutableCell.construct[SocketSlot[Socket[P]]](None).
+
+new_slot[P](): SocketSlot[Socket[P]] ->
+    SocketSlot.construct[Socket[P]](None, true, false).
+
+connect[D, P](
+    open: (String, SocketOptions[D]) -> Socket[P],
+    state: MutableCell[SocketSlot[Socket[P]]],
+    url: String,
+    handlers: Handlers[D],
+): Unit ->
+    let closed = close(state);
+    let slot = new_slot[P]();
+    let selected = MutableCell.set_value(state, Some(slot));
+    let socket =
+        open(
+            url,
+            SocketOptions {
+                protocols: [],
+                heartbeatTimeout: 0,
+                maxRetries: 0,
+                onOpen: (() -> socket_opened[D, P](slot, handlers)),
+                onMessage: ((data) -> socket_message[D, P](slot, handlers, data)),
+                onClose: (() -> socket_closed[D, P](state, slot, handlers)),
+                onError: (() -> socket_error[D, P](slot, handlers)),
+            },
+        );
+    if {
+        slot_active(slot) -> SocketSlot.set_socket(slot, Some(socket));
+        true -> socket#Socket.close()
+    }.
+
+send[P](state: MutableCell[SocketSlot[Socket[P]]], message: P): Unit ->
+    let {
+        Some(slot) <- MutableCell.value(state);
+        Some(socket) <- SocketSlot.socket(slot)
+    } else {
+        _ -> Unit
+    };
+    socket#Socket.send(message).
+
+close[P](state: MutableCell[SocketSlot[Socket[P]]]): Unit ->
+    case MutableCell.value(state) {
+        Some(slot) ->
+            let deselected = MutableCell.set_value(state, None);
+            let deactivated = SocketSlot.set_active(slot, false);
+            let closed = SocketSlot.set_open(slot, false);
+            let socket = SocketSlot.socket(slot);
+            let cleared = SocketSlot.set_socket(slot, None);
+            close_socket(socket);
+        None -> Unit
+    }.
+
+close_socket[P](socket: Option[Socket[P]]): Unit ->
+    case socket {
+        Some(value) -> value#Socket.close();
+        None -> Unit
+    }.
+
+active[P](state: MutableCell[SocketSlot[Socket[P]]]): Bool ->
+    case MutableCell.value(state) {
+        Some(slot) -> slot_active(slot);
+        None -> false
+    }.
+
+opened[P](state: MutableCell[SocketSlot[Socket[P]]]): Bool ->
+    case MutableCell.value(state) {
+        Some(slot) -> SocketSlot.open(slot);
+        None -> false
+    }.
+
+socket_opened[D, P](slot: SocketSlot[Socket[P]], handlers: Handlers[D]): Unit ->
+    if {
+        slot_active(slot) -> let opened = SocketSlot.set_open(slot, true);
+        handlers#Handlers.onOpen();
+        true -> Unit
+    }.
+
+socket_message[D, P](slot: SocketSlot[Socket[P]], handlers: Handlers[D], data: D): Unit ->
+    if {
+        slot_active(slot) -> handlers#Handlers.onMessage(data);
+        true -> Unit
+    }.
+
+socket_closed[D, P](
+    state: MutableCell[SocketSlot[Socket[P]]],
+    slot: SocketSlot[Socket[P]],
+    handlers: Handlers[D],
+): Unit ->
+    if {
+        slot_active(slot) -> let deselected = MutableCell.set_value(state, None);
+        let deactivated = SocketSlot.set_active(slot, false);
+        let closed = SocketSlot.set_open(slot, false);
+        let cleared = SocketSlot.set_socket(slot, None);
+        handlers#Handlers.onClose();
+        true -> Unit
+    }.
+
+socket_error[D, P](slot: SocketSlot[Socket[P]], handlers: Handlers[D]): Unit ->
+    if {
+        slot_active(slot) -> handlers#Handlers.onError();
+        true -> Unit
+    }.
+
+slot_active[P](slot: SocketSlot[Socket[P]]): Bool ->
+    SocketSlot.active(slot).

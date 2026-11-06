@@ -1,0 +1,51 @@
+module battleship.client.Configuration.
+
+import battleship.host.{AppConfiguration, BrowserLocation, BrowserWindow, HttpFailure, PromiseRejection}.
+import std.js.{Number, String}.
+
+import type battleship.host.AppConfiguration.{AppConfiguration}.
+import type battleship.host.BrowserWindow.{BrowserWindow}.
+import type battleship.host.HttpFailure.{HttpFailure}.
+import type battleship.host.PromiseRejection.{PromiseRejection}.
+import type std.js.Promise.{Promise}.
+
+pub struct HttpDefaults {
+    withCredentials: Bool,
+}.
+
+pub struct Interceptor[P, E] {
+    responseError: (HttpFailure[P]) -> E,
+}.
+
+pub struct HttpConfiguration[P, E] {
+    defaults: HttpDefaults,
+    interceptors: List[() -> Interceptor[P, E]],
+}.
+
+pub create[P](
+    window: BrowserWindow,
+    rejections: PromiseRejection[HttpFailure[P], Promise[Never]],
+): AppConfiguration[HttpConfiguration[P, Promise[Never]]] ->
+    AppConfiguration.construct(
+        HttpConfiguration {
+            defaults: HttpDefaults {withCredentials: false},
+            interceptors: [
+                () ->
+                    Interceptor {
+                        responseError: ((response) -> reject(window, rejections, response)),
+                    },
+            ],
+        },
+    ).
+
+reject[P](
+    window: BrowserWindow,
+    rejections: PromiseRejection[HttpFailure[P], Promise[Never]],
+    response: HttpFailure[P],
+): Promise[Never] ->
+    let redirected =
+        if {
+            Number.to_float(HttpFailure.status(response)) == 401.0 -> BrowserLocation.set_href(BrowserWindow.location(window), String.from_core("/login"));
+            true -> Unit
+        };
+    PromiseRejection.reject(rejections, response).

@@ -1,4 +1,4 @@
-import appConfig from './configuration.js';
+import { create } from '../../../_build/browser/js/modules/battleship/client/Configuration.js';
 
 describe('appConfig', () => {
   let originalWindow;
@@ -22,7 +22,7 @@ describe('appConfig', () => {
       },
     };
 
-    Object.assign(provider, appConfig().$http);
+    Object.assign(provider, create(globalThis.window, Promise).$http);
 
     expect(provider.defaults.withCredentials).toBe(false);
     expect(provider.interceptors.length).toBe(1);
@@ -32,6 +32,23 @@ describe('appConfig', () => {
       interceptor.responseError({ status: 401, data: 'unauthorized' })
     ).toBeRejectedWith({ status: 401, data: 'unauthorized' });
     expect(globalThis.window.location.href).toBe('/login');
+  });
+
+  it('keeps rejection identity and reads the current browser location', async () => {
+    const browser = { location: { href: '/' } };
+    const configuration = create(browser, Promise);
+    const response = {
+      status: 401,
+      data: { reason: 'expired' },
+      extra: 'retained',
+    };
+    browser.location = { href: '/room/1' };
+    await configuration.$http.interceptors[0]()
+      .responseError(response)
+      .catch((rejected) => {
+        expect(rejected).toBe(response);
+      });
+    expect(browser.location.href).toBe('/login');
   });
 
   it('rejects non-401 responses without redirecting', async () => {
@@ -45,7 +62,7 @@ describe('appConfig', () => {
       },
     };
 
-    Object.assign(provider, appConfig().$http);
+    Object.assign(provider, create(globalThis.window, Promise).$http);
 
     const interceptor = provider.interceptors[0]();
     await expectAsync(

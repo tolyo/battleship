@@ -1,4 +1,4 @@
-import { HeaderController } from './header-ctrl.js';
+import { create } from '../../../_build/browser/js/modules/battleship/client/Header.js';
 
 describe('HeaderController', () => {
   let originalWindow;
@@ -22,7 +22,7 @@ describe('HeaderController', () => {
       },
     };
 
-    new HeaderController(cookieService).logout();
+    Reflect.construct(create, [cookieService, globalThis.window]).logout();
 
     expect(cookieService.remove).toHaveBeenCalledOnceWith('SEC_USER');
     expect(replace).toHaveBeenCalledOnceWith('/login');

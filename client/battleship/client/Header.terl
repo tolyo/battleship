@@ -1,0 +1,20 @@
+module battleship.client.Header.
+
+import battleship.host.{AuthCookies, BrowserLocation, BrowserWindow}.
+import std.js.String.
+
+import type battleship.host.AuthCookies.{AuthCookies}.
+import type battleship.host.BrowserWindow.{BrowserWindow}.
+
+pub type Completion = Unit.
+
+pub struct Controller {
+    logout: () -> Completion,
+}.
+
+pub create(cookies: AuthCookies, window: BrowserWindow): Controller ->
+    Controller {logout: (() -> logout(cookies, window))}.
+
+logout(cookies: AuthCookies, window: BrowserWindow): Unit ->
+    let removed = AuthCookies.remove(cookies, String.from_core("SEC_USER"));
+    BrowserLocation.replace(BrowserWindow.location(window), String.from_core("/login")).

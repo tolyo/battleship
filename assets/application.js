@@ -12,9 +12,9 @@ import {
   setup_page,
 } from '../_build/browser/js/modules/battleship/browser/Components.js';
 import { create as createSetupPage } from '../_build/browser/js/modules/battleship/client/SetupPage.js';
-import appConfig from './configuration.js';
+import { create as createConfiguration } from '../_build/browser/js/modules/battleship/client/Configuration.js';
 import { create as createDashboard } from '../_build/browser/js/modules/battleship/client/Dashboard.js';
-import { HeaderController } from './layout/header-ctrl.js';
+import { create as createHeader } from '../_build/browser/js/modules/battleship/client/Header.js';
 import { MatchStateService } from './game/services/match-state-service.js';
 import { create as createRoomClient } from '../_build/browser/js/modules/battleship/client/RoomClient.js';
 import {
@@ -35,7 +35,7 @@ import { create as createRoomRestore } from '../_build/browser/js/modules/battle
 import { create as createTimeout } from '../_build/browser/js/modules/battleship/client/OperationTimeout.js';
 import { create as createRoomEvents } from '../_build/browser/js/modules/battleship/client/RoomEvents.js';
 import unitComponent from './game/components/unit.js';
-import { ConnectionService } from './transport/connection-service.js';
+import { create as createTransport } from '../_build/browser/js/modules/battleship/client/Transport.js';
 import { RoomStoreService } from './room-store/room-store-service.js';
 
 /**
@@ -44,10 +44,10 @@ import { RoomStoreService } from './room-store/room-store-service.js';
 export function configureBattleship(angular) {
   return angular
     .module('battleship', [])
-    .config(appConfig())
+    .config(createConfiguration(globalThis.window, Promise))
     .router(routes())
     .service('matchState', MatchStateService)
-    .service('connection', ConnectionService)
+    .service('connection', ['$websocket', createTransport])
     .service('roomStore', RoomStoreService)
     .service('setup', SetupService)
     .service('target', ['matchState', createTarget])
@@ -101,7 +101,7 @@ export function configureBattleship(angular) {
       'roomProtocol',
       createRoomClient,
     ])
-    .controller('HeaderController', HeaderController)
+    .controller('HeaderController', ['$cookie', '$window', createHeader])
     .component('targetBoard', target_board())
     .component('boardGrid', board_grid())
     .component('dashboard', dashboard(['$rootScope', createDashboard]))

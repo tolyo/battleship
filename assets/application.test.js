@@ -18,10 +18,11 @@ describe('configureBattleship', () => {
       project: jasmine.any(Function),
     });
     expect(module.value).toHaveBeenCalledTimes(2);
-    expect(module.controller).toHaveBeenCalledWith(
-      'HeaderController',
-      jasmine.any(Function)
-    );
+    expect(module.controller).toHaveBeenCalledWith('HeaderController', [
+      '$cookie',
+      '$window',
+      jasmine.any(Function),
+    ]);
     expect(module.component).toHaveBeenCalledTimes(11);
   });
 });

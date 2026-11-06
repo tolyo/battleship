@@ -55,3 +55,39 @@ export interface RoomEventEnvelope<Entry, View> {
   readonly view?: View;
   readonly reason?: string | null;
 }
+
+export interface MutableCell<Value> {
+  value?: Value;
+}
+
+export interface SocketSlot<Handle> {
+  socket?: Handle;
+  active: boolean;
+  open: boolean;
+}
+
+export interface BrowserLocation {
+  href: string;
+  replace(url: string): void;
+}
+
+export interface BrowserWindow {
+  readonly location: BrowserLocation;
+}
+
+export interface AuthCookies {
+  remove(name: string): void;
+}
+
+export interface HttpFailure<Payload> {
+  readonly status: number;
+  readonly data?: Payload;
+}
+
+export interface PromiseRejection<Failure, Rejected> {
+  reject(reason: Failure): Rejected;
+}
+
+export interface AppConfiguration<Http> {
+  $http: Http;
+}
