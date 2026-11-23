@@ -91,3 +91,35 @@ export interface PromiseRejection<Failure, Rejected> {
 export interface AppConfiguration<Http> {
   $http: Http;
 }
+
+export interface SetupMatchState<Data> {
+  readonly isSetup: boolean;
+  readonly data: Data;
+  boardState: string[][];
+}
+
+/** Function.call keeps Angular's handler as the callback receiver. */
+export interface UnaryCallback<Receiver, Argument> {
+  call(receiver: Receiver, value: Argument): void;
+}
+
+export interface NullaryCallback<Receiver> {
+  call(receiver: Receiver): void;
+}
+
+export interface SetupRefreshHandler<Data> {
+  readonly _checkListenersForAllKeys?: UnaryCallback<
+    SetupRefreshHandler<Data>,
+    Data
+  >;
+  readonly _flushScheduledTasks?: NullaryCallback<SetupRefreshHandler<Data>>;
+}
+
+export interface SetupScope<Handler> {
+  readonly $handler?: Handler;
+}
+
+/** Reads the live unit binding without allocating a request on every pointer move. */
+export interface UnitPlacementSource<Value> {
+  readonly unit?: Value;
+}

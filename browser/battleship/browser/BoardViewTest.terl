@@ -22,7 +22,9 @@ pub target_board_hides_ship_identity(): Bool ->
 
 @test
 pub groups_coordinates_by_ship_identifier(): Bool ->
-    let [ship | []] <- BoardView.unit_coordinates([["3", "3"]]) else {
+    when {
+        [ship | []] <- BoardView.unit_coordinates([["3", "3"]])
+    } else {
         _ -> false
     };
     unit_matches(ship).
@@ -36,7 +38,9 @@ pub touching_live_ship_keeps_cluster_active(): Bool ->
 
 @test
 pub adjacent_vertical_hits_form_one_sunk_cluster(): Bool ->
-    let [cluster | []] <- BoardView.sunk_clusters([["+"], ["+"]]) else {
+    when {
+        [cluster | []] <- BoardView.sunk_clusters([["+"], ["+"]])
+    } else {
         _ -> false
     };
     vertical_cluster_matches(cluster).

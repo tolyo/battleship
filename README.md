@@ -95,10 +95,15 @@ restore deadlines, and incoming room event dispatch. `ConnectionLifecycle.terl`
 handles connection close and error callbacks through typed service ports. Browser
 host controllers live under `client/battleship/client`;
 `SetupPage.terl` restores the current room on initialization and closes it on teardown.
+`SetupController.terl` owns setup commands and refreshes Angular after mutations.
+It uses the injected state directly and generated bindings for optional scope
+callbacks, preserving each callback's receiver and placement result.
+`UnitPlacement.terl` forwards preview, placement, commit, and clear actions from
+the live unit binding to that controller.
 Make generates Angular bindings from its pinned TypeScript declarations under
-`_build/bindings/angular`. Generated `OnInit.with_members` and
-`OnDestroy.with_members` attach the lifecycle callbacks using Angular's original
-JavaScript names while preserving the Terlan controller's fields. These host
+`_build/bindings/angular`. The Angular package's `Lifecycle.attach` supplies
+the lifecycle callbacks using Angular's original JavaScript names while
+preserving the Terlan controller's fields. These host
 modules compile to JavaScript separately from the portable VM models. Their
 interop tests live beside them and run with the frontend unit suite.
 

@@ -68,8 +68,10 @@ pub replay_requests(history: String, first_request: String, second_request: Stri
     replay_events(String.split(history, ";"), initial).
 
 pub view_json(match: Match, role: Int): String ->
-    Json.object().put("type", Json.string("room_update")).put("view", public_view(match, role))
-    |> Json.to_string().
+    Json.object()
+        .put("type", Json.string("room_update"))
+        .put("view", public_view(match, role))
+        .to_string().
 
 pub matched_json(room_id: String, role: Int, first_request: String, second_request: String): String ->
     room_view_json("match_found", room_id, "", role, first_request, second_request).
@@ -93,12 +95,12 @@ room_view_json(
 ): String ->
     let match = replay_requests(history, first_request, second_request);
     Json.object()
-    .put("type", Json.string(kind))
-    .put("room_id", Json.string(room_id))
-    .put("player_id", Json.string(player_id(role)))
-    .put("opponent_id", Json.string(player_id(opposite_role(role))))
-    .put("view", public_view(match, role))
-    |> Json.to_string().
+        .put("type", Json.string(kind))
+        .put("room_id", Json.string(room_id))
+        .put("player_id", Json.string(player_id(role)))
+        .put("opponent_id", Json.string(player_id(opposite_role(role))))
+        .put("view", public_view(match, role))
+        .to_string().
 
 public_view(match: Match, role: Int): Json ->
     let viewer_id = player_id(role);
@@ -145,7 +147,7 @@ addressed_error(history: String, role: Int, reason: String): {String, String, St
     }.
 
 parse_frame(frame: String): Option[ClientFrame] ->
-    let {
+    when {
         Ok(value) <- Json.parse(frame);
         Ok(kind_value) <- value.get("type");
         Ok(kind) <- kind_value.as_string()
@@ -159,7 +161,7 @@ parse_frame(frame: String): Option[ClientFrame] ->
     }.
 
 parse_move(value: Json): Option[ClientFrame] ->
-    let {
+    when {
         Ok(row_value) <- value.get("row");
         Ok(row) <- row_value.as_int();
         Ok(column_value) <- value.get("column");
@@ -250,7 +252,7 @@ replay_events(events: List[String], match: Match): Match ->
     }.
 
 replay_event(event: String, match: Match): Match ->
-    let {
+    when {
         [role_text, row_text, column_text] <- String.split(event, ",");
         Some(role) <- from_string(role_text);
         Some(row) <- from_string(row_text);
@@ -261,13 +263,10 @@ replay_event(event: String, match: Match): Match ->
     Match.handle_move(match, player_id(role), row, column).
 
 append_history(history: String, role: Int, row: Int, column: Int): String ->
-    let event =
-        List(to_string(role), ",", to_string(row), ",", to_string(column))
-        |> String.concat();
+    let event = String.concat([to_string(role), ",", to_string(row), ",", to_string(column)]);
     if {
         history == "" -> event;
-        true -> List(history, ";", event)
-        |> String.concat()
+        true -> String.concat([history, ";", event])
     }.
 
 player_id(role: Int): String ->
@@ -331,5 +330,4 @@ move_error(result: MoveResult): String ->
     }.
 
 error_json(reason: String): String ->
-    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
-    |> Json.to_string().
+    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason)).to_string().

@@ -5,7 +5,7 @@ import battleship.host.RoomEventEnvelope.
 import std.core.Option.{None, Option, Some}.
 import std.js.String.
 
-import type battleship.browser.ConnectionContext.{Context}.
+import type battleship.browser.ConnectionContext.{Context as ConnectionContext}.
 import type battleship.client.RoomEntry.{Options}.
 import type battleship.host.RoomEventEnvelope.{RoomEventEnvelope}.
 
@@ -27,11 +27,11 @@ pub struct EntryPort[E] {
 }.
 
 pub struct RestorePort {
-    handleConnectionDisconnect: (Context) -> Bool,
+    handleConnectionDisconnect: (ConnectionContext) -> Bool,
 }.
 
 pub struct Dispatcher[E, V] {
-    dispatch: (RoomEventEnvelope[E, V], Context) -> Completion,
+    dispatch: (RoomEventEnvelope[E, V], ConnectionContext) -> Completion,
 }.
 
 pub create[E, V](
@@ -50,7 +50,7 @@ dispatch[E, V](
     entry: EntryPort[E],
     restore: RestorePort,
     event: RoomEventEnvelope[E, V],
-    context: Context,
+    context: ConnectionContext,
 ): Unit ->
     let kind = String.to_core(RoomEventEnvelope.type_(event));
     if {
@@ -87,7 +87,7 @@ reason[E, V](event: RoomEventEnvelope[E, V]): String ->
         None -> "server_error"
     }.
 
-unavailable(state: MatchPort, restore: RestorePort, context: Context): Unit ->
+unavailable(state: MatchPort, restore: RestorePort, context: ConnectionContext): Unit ->
     if {
         restore#RestorePort.handleConnectionDisconnect(context) -> Unit;
         true -> let ignored = state#MatchPort.roomUnavailable();

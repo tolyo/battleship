@@ -24,7 +24,7 @@ import {
   opposite_orientation as oppositeLayoutOrientation,
   has_placement as hasPlacement,
 } from '../../../_build/browser/js/modules/battleship/browser/UnitLayout.js';
-import { UnitSetupPlacement } from './unit-setup-placement.js';
+import { create as createPlacement } from '../../../_build/browser/js/modules/battleship/client/UnitPlacement.js';
 import {
   initial as initialStyle,
   resized,
@@ -40,7 +40,7 @@ export class UnitController {
 
   /**
    * @param {Element} $element
-   * @param {import('../services/setup-service.js').SetupService} setup
+   * @param {import('../../../_build/browser/js/modules/battleship/client/UnitPlacement.js').SetupPort<import('../domain/match-view-model.js').Coordinate[], Orientation, import('../domain/match-view-model.js').Coordinate[] | undefined>} setup
    */
   constructor($element, setup) {
     this.$element = $element;
@@ -58,7 +58,7 @@ export class UnitController {
     this.layout = initialLayout();
     /** @type {HTMLElement | undefined} */
     this.anchorTile = undefined;
-    this.setup = new UnitSetupPlacement(setup);
+    this.setup = createPlacement(setup, undefined);
     this.style = initialStyle();
     /** @type {PointerEvent | undefined} */
     this.pendingPointer = undefined;
@@ -374,7 +374,7 @@ export class UnitController {
   }
 
   clearMapBlocks() {
-    this.setup.clearUnit(this.unit);
+    this.setup.clearUnit(this);
     this.setup.clearPreview();
     this.clearLayoutPreview();
   }
@@ -410,7 +410,7 @@ export class UnitController {
   }
 
   claimTiles() {
-    this.setup.commit(this.unit, this.layout.previewCoordinates);
+    this.setup.commit(this, this.layout.previewCoordinates);
   }
 
   /**
@@ -420,7 +420,7 @@ export class UnitController {
    * @returns {import('../domain/match-view-model.js').Coordinate[] | undefined}
    */
   previewAt(row, column, orientation) {
-    return this.setup.previewAt(this.unit, row, column, orientation);
+    return this.setup.previewAt(this, row, column, orientation);
   }
 
   /**
@@ -430,7 +430,7 @@ export class UnitController {
    * @returns {import('../domain/match-view-model.js').Coordinate[] | undefined}
    */
   placeAt(row, column, orientation) {
-    return this.setup.placeAt(this.unit, row, column, orientation);
+    return this.setup.placeAt(this, row, column, orientation);
   }
 
   $onDestroy() {

@@ -1,0 +1,92 @@
+module battleship.client.UnitPlacement.
+
+import battleship.host.UnitPlacementSource.
+import std.core.Option.{None, Some}.
+
+import type battleship.browser.Fleet.{Unit as FleetUnit}.
+import type battleship.host.UnitPlacementSource.{UnitPlacementSource}.
+
+pub type Completion = Unit.
+
+pub struct SetupPort[C, O, A] {
+    clearPreview: () -> Completion,
+    clearUnit: (String) -> Completion,
+    placeUnit: (String, C) -> Completion,
+    placeUnitAt: (String, String, String, O, Int) -> A,
+    previewUnitAt: (String, String, String, O, Int) -> A,
+}.
+
+pub struct Controller[C, O, A] {
+    clearUnit: (UnitPlacementSource[FleetUnit]) -> Completion,
+    clearPreview: () -> Completion,
+    previewAt: (UnitPlacementSource[FleetUnit], String, String, O) -> A,
+    placeAt: (UnitPlacementSource[FleetUnit], String, String, O) -> A,
+    commit: (UnitPlacementSource[FleetUnit], C) -> Completion,
+}.
+
+pub create[C, O, A](setup: SetupPort[C, O, A], absent: A): Controller[C, O, A] ->
+    Controller {
+        clearUnit: ((source) -> clear(setup, source)),
+        clearPreview: (() -> setup#SetupPort.clearPreview()),
+        previewAt: ((source, row, column, orientation) -> preview(setup, source, row, column, orientation, absent)),
+        placeAt: ((source, row, column, orientation) -> place(setup, source, row, column, orientation, absent)),
+        commit: ((source, coordinates) -> commit(setup, source, coordinates)),
+    }.
+
+clear[C, O, A](setup: SetupPort[C, O, A], source: UnitPlacementSource[FleetUnit]): Unit ->
+    case UnitPlacementSource.unit(source) {
+        Some(unit) -> setup#SetupPort.clearUnit(unit#FleetUnit.id);
+        None -> Unit
+    }.
+
+preview[C, O, A](
+    setup: SetupPort[C, O, A],
+    source: UnitPlacementSource[FleetUnit],
+    row: String,
+    column: String,
+    orientation: O,
+    absent: A,
+): A ->
+    case UnitPlacementSource.unit(source) {
+        Some(unit) ->
+            setup#SetupPort.previewUnitAt(
+                unit#FleetUnit.id,
+                row,
+                column,
+                orientation,
+                unit#FleetUnit.size,
+            );
+        None -> absent
+    }.
+
+place[C, O, A](
+    setup: SetupPort[C, O, A],
+    source: UnitPlacementSource[FleetUnit],
+    row: String,
+    column: String,
+    orientation: O,
+    absent: A,
+): A ->
+    case UnitPlacementSource.unit(source) {
+        Some(unit) ->
+            setup#SetupPort.placeUnitAt(
+                unit#FleetUnit.id,
+                row,
+                column,
+                orientation,
+                unit#FleetUnit.size,
+            );
+        None -> absent
+    }.
+
+commit[C, O, A](
+    setup: SetupPort[C, O, A],
+    source: UnitPlacementSource[FleetUnit],
+    coordinates: C,
+): Unit ->
+    let selected = UnitPlacementSource.unit(source);
+    let cleared = setup#SetupPort.clearPreview();
+    case selected {
+        Some(unit) -> setup#SetupPort.placeUnit(unit#FleetUnit.id, coordinates);
+        None -> Unit
+    }.

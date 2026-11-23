@@ -436,7 +436,7 @@ describe('UnitController', () => {
     expect(state.style.value.width).toBe('90px');
     expect(state.style.value.left).toBe('12px');
     expect(state.style.value.top).toBe('34px');
-    expect(state.setup.commit).toHaveBeenCalledWith(state.unit, coordinates);
+    expect(state.setup.commit).toHaveBeenCalledWith(state, coordinates);
 
     state.locked = false;
     state.drag.active = true;

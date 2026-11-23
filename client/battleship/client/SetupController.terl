@@ -1,0 +1,88 @@
+module battleship.client.SetupController.
+
+import battleship.host.{NullaryCallback, SetupMatchState, SetupRefreshHandler, SetupScope, UnaryCallback}.
+import std.core.Option.{None, Some}.
+
+import type battleship.host.SetupMatchState.{SetupMatchState}.
+import type battleship.host.SetupRefreshHandler.{SetupRefreshHandler}.
+import type battleship.host.SetupScope.{SetupScope}.
+
+pub type Completion = Unit.
+
+pub struct Operations[D, C, O, A] {
+    randomize: (SetupMatchState[D]) -> Completion,
+    reset: (SetupMatchState[D]) -> Completion,
+    clearUnit: (SetupMatchState[D], String) -> Completion,
+    clearPreview: (SetupMatchState[D]) -> Completion,
+    placeUnit: (SetupMatchState[D], String, C) -> Completion,
+    placeUnitAt: (SetupMatchState[D], String, String, String, O, Int) -> A,
+    previewUnitAt: (SetupMatchState[D], String, String, String, O, Int) -> A,
+    canPlaceUnit: (SetupMatchState[D], String, C) -> Bool,
+}.
+
+pub struct Controller[D, C, O, A] {
+    setupState: SetupMatchState[D],
+    randomize: () -> Completion,
+    reset: () -> Completion,
+    clearUnit: (String) -> Completion,
+    clearPreview: () -> Completion,
+    placeUnit: (String, C) -> Completion,
+    placeUnitAt: (String, String, String, O, Int) -> A,
+    previewUnitAt: (String, String, String, O, Int) -> A,
+    canPlaceUnit: (String, C) -> Bool,
+    refresh: () -> Completion,
+}.
+
+pub create[D, C, O, A](
+    state: SetupMatchState[D],
+    scope: SetupScope[SetupRefreshHandler[D]],
+    operations: Operations[D, C, O, A],
+): Controller[D, C, O, A] ->
+    Controller {
+        setupState: state,
+        randomize: (() ->
+            let changed = operations#Operations.randomize(state);
+            refresh(state, scope)),
+        reset: (() ->
+            let changed = operations#Operations.reset(state);
+            refresh(state, scope)),
+        clearUnit: ((id) ->
+            let changed = operations#Operations.clearUnit(state, id);
+            refresh(state, scope)),
+        clearPreview: (() ->
+            let changed = operations#Operations.clearPreview(state);
+            refresh(state, scope)),
+        placeUnit: ((id, coordinates) ->
+            let changed = operations#Operations.placeUnit(state, id, coordinates);
+            refresh(state, scope)),
+        placeUnitAt: ((id, row, column, orientation, size) ->
+            let coordinates = operations#Operations.placeUnitAt(state, id, row, column, orientation, size);
+            let refreshed = refresh(state, scope);
+            coordinates),
+        previewUnitAt: ((id, row, column, orientation, size) ->
+            let coordinates = operations#Operations.previewUnitAt(state, id, row, column, orientation, size);
+            let refreshed = refresh(state, scope);
+            coordinates),
+        canPlaceUnit: ((id, coordinates) -> operations#Operations.canPlaceUnit(state, id, coordinates)),
+        refresh: (() -> refresh(state, scope)),
+    }.
+
+refresh[D](state: SetupMatchState[D], scope: SetupScope[SetupRefreshHandler[D]]): Unit ->
+    case SetupScope.handler(scope) {
+        Some(handler) ->
+            let checked = check_listeners(handler, SetupMatchState.data(state));
+            flush(handler);
+        None -> Unit
+    }.
+
+check_listeners[D](handler: SetupRefreshHandler[D], data: D): Unit ->
+    case SetupRefreshHandler.check_listeners_for_all_keys(handler) {
+        Some(callback) -> UnaryCallback.call(callback, handler, data);
+        None -> Unit
+    }.
+
+flush[D](handler: SetupRefreshHandler[D]): Unit ->
+    case SetupRefreshHandler.flush_scheduled_tasks(handler) {
+        Some(callback) -> NullaryCallback.call(callback, handler);
+        None -> Unit
+    }.

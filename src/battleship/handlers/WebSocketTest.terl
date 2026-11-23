@@ -24,7 +24,7 @@ pub matched_callback_sends_second_player_view_without_turn(): Bool ->
     matched_view_for_role(2, "player-2", 0).
 
 matched_view_for_role(role: Int, player_id: String, action_count: Int): Bool ->
-    let {
+    when {
         Ok(payload) <- Json.parse(WebSocket.matched("room-1", role, "/ws", "/ws"));
         Ok(kind) <- payload.get("type");
         Ok(entry_id) <- payload.get("player_id");

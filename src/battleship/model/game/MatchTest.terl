@@ -13,9 +13,7 @@ pub constructor_starts_with_first_player_turn(): Bool ->
 @test
 pub first_player_can_move_at_start(): Bool ->
     let match = Match.active_match();
-    match
-    |> Match.allowed_to_move("player-1")
-    |> assert().
+    assert(Match.allowed_to_move(match, "player-1")).
 
 @test
 pub second_player_cannot_move_at_start(): Bool ->
@@ -37,10 +35,7 @@ pub miss_passes_turn_to_opponent(): Bool ->
 
 @test
 pub hit_keeps_turn_with_current_player(): Bool ->
-    let ship =
-        0
-        |> Unit.create(1)
-        |> Unit.place(1, 1, Unit.horizontal());
+    let ship = Unit.place(Unit.create(0, 1), 1, 1, Unit.horizontal());
     let one = Player("player-1", Board(Board.empty_rows()));
     let two = Player("player-2", Board.attach_unit(Board(Board.empty_rows()), ship));
     let match = Match(one, two, one.id, "", List(), Active);
@@ -57,10 +52,7 @@ pub resolved_cell_rejects_followup_move(): Bool ->
 
 @test
 pub final_hit_finishes_match_and_records_winner(): Bool ->
-    let ship =
-        0
-        |> Unit.create(1)
-        |> Unit.place(10, 10, Unit.horizontal());
+    let ship = Unit.place(Unit.create(0, 1), 10, 10, Unit.horizontal());
     let board0 = Board.attach_unit(Board(Board.empty_rows()), ship);
     let board1 = Board.update_cell_at(board0, 1, 1, Cell.hit());
     let board2 = Board.update_cell_at(board1, 1, 2, Cell.hit());

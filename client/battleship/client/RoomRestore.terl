@@ -5,7 +5,7 @@ import battleship.host.RestoreStore.
 import std.core.Option.{None, Some}.
 import std.js.String.
 
-import type battleship.browser.ConnectionContext.{Context, Entry}.
+import type battleship.browser.ConnectionContext.{Context as ConnectionContext, Entry}.
 import type battleship.host.RestoreStore.{RestoreStore}.
 
 pub type Completion = Unit.
@@ -34,8 +34,8 @@ pub struct Restoration {
     startRestore: (Entry) -> Bool,
     startRestoreWithOptions: (Entry, Options) -> Bool,
     clearRestoreTimeout: () -> Completion,
-    handleConnectionDisconnect: (Context) -> Bool,
-    disconnect: (Context, String, Bool) -> Bool,
+    handleConnectionDisconnect: (ConnectionContext) -> Bool,
+    disconnect: (ConnectionContext, String, Bool) -> Bool,
     failRestore: (String, String) -> Completion,
 }.
 
@@ -103,7 +103,7 @@ disconnect(
     state: MatchPort,
     recovery: RecoveryPort,
     timer: TimerPort,
-    context: Context,
+    context: ConnectionContext,
     reason: String,
     active: Bool,
 ): Bool ->

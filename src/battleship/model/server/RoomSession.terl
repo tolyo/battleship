@@ -15,9 +15,7 @@ pub first_player_id(): String -> "player-1".
 pub second_player_id(): String -> "player-2".
 
 pub room_id(sequence: Int): String ->
-    "room-"
-    |> List(std.core.Int.to_string(sequence))
-    |> String.concat().
+    String.concat(["room-", std.core.Int.to_string(sequence)]).
 
 pub player_id(slot: Int): String ->
     if {

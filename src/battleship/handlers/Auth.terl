@@ -27,8 +27,7 @@ pub register_request_valid(body: String): Bool ->
     Account.register_form_valid(body).
 
 pub login_json(): String ->
-    Json.object().put("status", Json.string("ok"))
-    |> Json.to_string().
+    Json.object().put("status", Json.string("ok")).to_string().
 
 pub register_json(): String ->
     register_success_json(local_session_id()).
@@ -43,12 +42,10 @@ pub duplicate_user_json(): String ->
     error_json("user_already_registered").
 
 pub register_success_json(user_id: String): String ->
-    Json.object().put("status", Json.string("ok")).put("user_id", Json.string(user_id))
-    |> Json.to_string().
+    Json.object().put("status", Json.string("ok")).put("user_id", Json.string(user_id)).to_string().
 
 error_json(reason: String): String ->
-    Json.object().put("status", Json.string("error")).put("reason", Json.string(reason))
-    |> Json.to_string().
+    Json.object().put("status", Json.string("error")).put("reason", Json.string(reason)).to_string().
 
 pub login(request: Request): Response ->
     let body = request.body_text();

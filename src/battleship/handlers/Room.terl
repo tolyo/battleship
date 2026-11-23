@@ -11,11 +11,11 @@ import type std.http.{Request, Response}.
 
 pub contract_json(): String ->
     Json.object()
-    .put("protocol", Json.string(RoomProtocol.protocol()))
-    .put("route", Json.string(RoomProtocol.route()))
-    .put("firstPlayerId", Json.string(RoomSession.first_player_id()))
-    .put("secondPlayerId", Json.string(RoomSession.second_player_id()))
-    |> Json.to_string().
+        .put("protocol", Json.string(RoomProtocol.protocol()))
+        .put("route", Json.string(RoomProtocol.route()))
+        .put("firstPlayerId", Json.string(RoomSession.first_player_id()))
+        .put("secondPlayerId", Json.string(RoomSession.second_player_id()))
+        .to_string().
 
 pub protocol(_request: Request): Response ->
     Response.json_text(contract_json()).

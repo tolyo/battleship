@@ -17,9 +17,7 @@ pub unknown_player_slot_is_empty(): Bool ->
 
 @test
 pub restore_accepts_known_player_and_room(): Bool ->
-    "room-1"
-    |> RoomSession.can_restore("player-1")
-    |> assert().
+    assert(RoomSession.can_restore("room-1", "player-1")).
 
 @test
 pub restore_rejects_unknown_player(): Bool ->

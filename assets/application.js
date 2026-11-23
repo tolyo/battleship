@@ -25,7 +25,17 @@ import {
 } from './game/protocol/room-protocol.js';
 import { sync as syncMessage } from '../_build/browser/js/modules/battleship/client/ClientProtocol.js';
 import { create as createConnectionLifecycle } from '../_build/browser/js/modules/battleship/browser/ConnectionLifecycle.js';
-import { SetupService } from './game/services/setup-service.js';
+import { create as createSetup } from '../_build/browser/js/modules/battleship/client/SetupController.js';
+import {
+  canPlaceSetupUnit,
+  clearSetupPreview,
+  clearSetupUnit,
+  placeSetupUnit,
+  placeSetupUnitAt,
+  previewSetupUnitAt,
+  randomizeUnits,
+  resetSetupUnits,
+} from './game/domain/setup-state.js';
 import { create as createTarget } from '../_build/browser/js/modules/battleship/browser/Target.js';
 import { create as createMatchSnapshots } from '../_build/browser/js/modules/battleship/client/MatchSnapshots.js';
 import { matchViewModelFromView } from './game/domain/match-view-model.js';
@@ -49,7 +59,22 @@ export function configureBattleship(angular) {
     .service('matchState', MatchStateService)
     .service('connection', ['$websocket', createTransport])
     .service('roomStore', RoomStoreService)
-    .service('setup', SetupService)
+    .value('setupOperations', {
+      randomize: randomizeUnits,
+      reset: resetSetupUnits,
+      clearUnit: clearSetupUnit,
+      clearPreview: clearSetupPreview,
+      placeUnit: placeSetupUnit,
+      placeUnitAt: placeSetupUnitAt,
+      previewUnitAt: previewSetupUnitAt,
+      canPlaceUnit: canPlaceSetupUnit,
+    })
+    .service('setup', [
+      'matchState',
+      '$rootScope',
+      'setupOperations',
+      createSetup,
+    ])
     .service('target', ['matchState', createTarget])
     .value('snapshotProjection', { project: matchViewModelFromView })
     .service('matchView', [

@@ -82,7 +82,7 @@ connect[D, P](
     }.
 
 send[P](state: MutableCell[SocketSlot[Socket[P]]], message: P): Unit ->
-    let {
+    when {
         Some(slot) <- MutableCell.value(state);
         Some(socket) <- SocketSlot.socket(slot)
     } else {

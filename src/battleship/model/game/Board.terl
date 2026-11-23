@@ -286,7 +286,7 @@ block_adjacent_cells(board: Board, row: Int, column: Int): Board ->
     ).
 
 block_empty_cell(board: Board, row: Int, column: Int): Board ->
-    let {
+    when {
         true <- in_bounds(row, column);
         true <- Cell.is_empty(get_cell_value(board, row, column))
     } else {

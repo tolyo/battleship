@@ -17,7 +17,7 @@ describe('configureBattleship', () => {
     expect(module.value).toHaveBeenCalledWith('snapshotProjection', {
       project: jasmine.any(Function),
     });
-    expect(module.value).toHaveBeenCalledTimes(2);
+    expect(module.value).toHaveBeenCalledTimes(3);
     expect(module.controller).toHaveBeenCalledWith('HeaderController', [
       '$cookie',
       '$window',

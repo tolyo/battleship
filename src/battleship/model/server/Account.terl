@@ -24,7 +24,7 @@ pub credentials_valid(body: String): Bool ->
 credentials_valid_for_email(body: String, email: String): Bool ->
     case form_value(body, "password") {
         Some(password) ->
-            case sql[UserIdRow]{
+            case sql[UserIdRow] {
                 SELECT id::text AS id
                 FROM users
                 WHERE email = ${email}
@@ -47,7 +47,7 @@ pub user_exists(body: String): Bool ->
 user_exists_for_username(body: String, username: String): Bool ->
     case form_value(body, "email") {
         Some(email) ->
-            case sql[UserIdRow]{
+            case sql[UserIdRow] {
                 SELECT id::text AS id
                 FROM users
                 WHERE username = ${username}
@@ -76,7 +76,7 @@ create_user_id_for_username(body: String, username: String): Option[String] ->
 create_user_id_for_email(body: String, username: String, email: String): Option[String] ->
     case form_value(body, "password") {
         Some(password) ->
-            case sql[UserIdRow]{
+            case sql[UserIdRow] {
                 SELECT register_user(${username}, ${email}, ${password})::text AS id
                 LIMIT 1
             } {
@@ -141,7 +141,7 @@ pub form_value(body: String, name: String): Option[String] ->
     }.
 
 pub form_pair_value(pair: String, name: String): Option[String] ->
-    let {
+    when {
         [{key, value} | _rest] <- Uri.query_pairs(pair);
         true <- field_name_matches(key, name)
     } else {

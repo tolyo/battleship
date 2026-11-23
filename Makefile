@@ -148,7 +148,7 @@ terlan-build:
 
 terlan-build-backend: terlan-build-browser
 	@$(TERLC) static emit tools/Shell.terl --out-dir _build/templates
-	@$(TERLC) build . --target terlan-vm --out-dir $(TERLAN_OUT_DIR)
+	@TERLAN_JS_BINDING_MANIFESTS="$(TERLAN_JS_BINDING_MANIFESTS)" $(TERLC) build . --target terlan-vm --out-dir $(TERLAN_OUT_DIR)
 
 angular-compat:
 	@$(MAKE) -C "$(TERLAN_ANGULAR_PACKAGE)" compatibility TERLC="$(TERLC)" RUNTIME_ROOT="$(CURDIR)/node_modules/@angular-wave/angular.ts"

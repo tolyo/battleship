@@ -41,19 +41,17 @@ pub room_update_json(): String ->
             .put("own_player", own)
             .put("opponent", opponent)
             .put("allowed_actions", Json.array().push(action));
-    Json.object().put("type", Json.string("room_update")).put("view", view)
-    |> Json.to_string().
+    Json.object().put("type", Json.string("room_update")).put("view", view).to_string().
 
 pub error_json(reason: String): String ->
-    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason))
-    |> Json.to_string().
+    Json.object().put("type", Json.string("error")).put("reason", Json.string(reason)).to_string().
 
 pub move_json(row: Int, column: Int): String ->
     Json.object()
-    .put("type", Json.string("move"))
-    .put("row", Json.int(row))
-    .put("column", Json.int(column))
-    |> Json.to_string().
+        .put("type", Json.string("move"))
+        .put("row", Json.int(row))
+        .put("column", Json.int(column))
+        .to_string().
 
 pub room_joined_json(room_id: String, player_id: String): String ->
     room_entry_json("room_joined", room_id, player_id, "").
@@ -72,9 +70,7 @@ pub room_entry_json(kind: String, room_id: String, player_id: String, opponent_i
             opponent_id == "" -> entry;
             true -> entry.put("opponent_id", Json.string(opponent_id))
         };
-    completed
-    |> Json.to_string().
+    completed.to_string().
 
 type_json(kind: String): String ->
-    Json.object().put("type", Json.string(kind))
-    |> Json.to_string().
+    Json.object().put("type", Json.string(kind)).to_string().

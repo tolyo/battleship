@@ -17,9 +17,7 @@ pub horizontal_fit_rejects_overflow(): Bool ->
 
 @test
 pub vertical_fit_accepts_last_legal_start(): Bool ->
-    7
-    |> Board.can_fit_vertical(10, 4)
-    |> assert().
+    assert(Board.can_fit_vertical(7, 10, 4)).
 
 @test
 pub empty_board_reads_empty_cells(): Bool ->
@@ -38,51 +36,33 @@ pub count_finds_replaced_cells(): Bool ->
 
 @test
 pub attach_horizontal_unit_marks_occupied_cells(): Bool ->
-    let ship =
-        7
-        |> Unit.create(3)
-        |> Unit.place(2, 3, Unit.horizontal());
+    let ship = Unit.place(Unit.create(7, 3), 2, 3, Unit.horizontal());
     let board = Board.attach_unit(Board(Board.empty_rows()), ship);
     assert_equal(Cell(7), Board.get_cell_value(board, 2, 5)).
 
 @test
 pub attach_vertical_unit_marks_start_cell(): Bool ->
-    let ship =
-        8
-        |> Unit.create(3)
-        |> Unit.place(3, 4, Unit.vertical());
+    let ship = Unit.place(Unit.create(8, 3), 3, 4, Unit.vertical());
     let board = Board.attach_unit(Board(Board.empty_rows()), ship);
     assert_equal(Cell(8), Board.get_cell_value(board, 3, 4)).
 
 @test
 pub attach_vertical_unit_marks_middle_cell(): Bool ->
-    let ship =
-        8
-        |> Unit.create(3)
-        |> Unit.place(3, 4, Unit.vertical());
+    let ship = Unit.place(Unit.create(8, 3), 3, 4, Unit.vertical());
     let board = Board.attach_unit(Board(Board.empty_rows()), ship);
     assert_equal(Cell(8), Board.get_cell_value(board, 4, 4)).
 
 @test
 pub attach_vertical_unit_marks_end_cell(): Bool ->
-    let ship =
-        8
-        |> Unit.create(3)
-        |> Unit.place(3, 4, Unit.vertical());
+    let ship = Unit.place(Unit.create(8, 3), 3, 4, Unit.vertical());
     let board = Board.attach_unit(Board(Board.empty_rows()), ship);
     assert_equal(Cell(8), Board.get_cell_value(board, 5, 4)).
 
 @test
 pub legal_unit_rejects_adjacent_ship(): Bool ->
-    let ship =
-        1
-        |> Unit.create(2)
-        |> Unit.place(2, 2, Unit.horizontal());
+    let ship = Unit.place(Unit.create(1, 2), 2, 2, Unit.horizontal());
     let board = Board.attach_unit(Board(Board.empty_rows()), ship);
-    let adjacent =
-        2
-        |> Unit.create(2)
-        |> Unit.place(3, 2, Unit.horizontal());
+    let adjacent = Unit.place(Unit.create(2, 2), 3, 2, Unit.horizontal());
     assert_equal(false, Board.is_legal(board, adjacent)).
 
 @test
