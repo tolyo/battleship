@@ -1,0 +1,12 @@
+/**
+ * Compiler reproducer for the Angular registration used by assets/application.js.
+ */
+module battleship.probes.AngularRegistration.
+
+import std.js.String.
+import terlan.angular.ng.NgModule.
+
+import type terlan.angular.ng.NgModule.{NgModule}.
+
+pub register_setup[Factory](app: NgModule, factory: Factory): NgModule ->
+    NgModule.service(app, String.from_core("setup"), factory).

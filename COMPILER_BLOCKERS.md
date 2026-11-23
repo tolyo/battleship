@@ -1,6 +1,59 @@
 # Compiler compatibility status
 
-## Current status: application compile succeeds
+## Current blocker: typed Angular application registration
+
+Verified November 24, 2026, with the same freshly rebuilt compiler and generated
+AngularTS 0.32.0 bindings used for the successful application build below.
+`assets/application.js` registers setup and other services using
+`angular.module(...).service(name, factory)`. Moving that registration into
+Terlan requires the generated public `NgModule.service` operation.
+
+The declaration graph is now followed, but registration methods are still
+omitted. The generated `terlan.angular.ng.NgModule` exposes `name`, `config`,
+and `component`; its skipped manifest reports:
+
+```text
+NgModule.service: ts_bindgen.unresolved_type_reference
+member service references unavailable type
+terlan.angular.declarations.file__40types.file_core.file_di.file_ng_2dmodule.file_ng_2dmodule.NamedServiceInjectable
+
+Angular.module: ts_bindgen.unsupported_generic_constraint
+generic method constraints must not be erased
+
+NgModule.router: ts_bindgen.unsupported_generic_constraint
+generic method constraints must not be erased
+```
+
+The installed declaration at
+`node_modules/@angular-wave/angular.ts/@types/core/di/ng-module/ng-module.d.ts`
+declares `service(name: string, serviceFunction: NamedServiceInjectable): this`.
+`NamedServiceInjectable` includes injectable constructors and callback types.
+The compiler must preserve those declaration shapes and generic constraints
+through generated operations. This is a generic TypeScript binding requirement;
+it does not require adding Angular-specific APIs to the compiler.
+
+Minimal reproducer, from the application root after generating bindings:
+
+```sh
+TERLAN_JS_BINDING_MANIFESTS="$PWD/_build/bindings/angular/std/js/manifests/std_js_bindings.json:$PWD/_build/bindings/host/std/js/manifests/std_js_bindings.json" \
+  /home/anatoly/Applications/terlan/terlan/target/debug/terlc check \
+  probes/battleship/probes/AngularRegistration.terl \
+  --cache-dir /tmp/battleship-angular-registration-cache
+```
+
+The probe fails with status 1:
+
+```text
+module `terlan.angular.ng.NgModule` has no public function `service/3`
+```
+
+The probe lives outside the application library roots and deliberately fails
+until this compiler prerequisite is implemented. The existing application
+still compiles and uses its JavaScript registration. Migration work stopped
+at this issue as requested; no handwritten Angular declarations, dynamic
+fallback, runtime shim, or compiler change was introduced.
+
+## Application build and local verification
 
 Verified November 24, 2026, with the current compiler working tree at checkout
 `d4ae16eba` (`terlc 0.0.10`), including concurrent uncommitted compiler edits.
