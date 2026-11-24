@@ -2,26 +2,29 @@
 
 ## Current blocker: typed Angular application registration
 
-Verified November 24, 2026, with the same freshly rebuilt compiler and generated
-AngularTS 0.32.0 bindings used for the successful application build below.
+Rechecked November 24, 2026, using AngularTS 0.37.0 built from the local
+`../ng/angular.ts` checkout (`c9cd165d9`), including its current working tree.
+Battleship now uses `file:../ng/angular.ts`; the npm runtime resolves directly
+to that checkout. Both runtime bundles and TypeScript declarations were rebuilt
+with `make release-build types` before regenerating bindings. All three Angular
+compatibility tests passed. The Terlan compiler and both paired runtimes were
+rebuilt from the current compiler working tree at `d4ae16eba` before this check.
 `assets/application.js` registers setup and other services using
 `angular.module(...).service(name, factory)`. Moving that registration into
 Terlan requires the generated public `NgModule.service` operation.
 
 The declaration graph is now followed, but registration methods are still
 omitted. The generated `terlan.angular.ng.NgModule` exposes `name`, `config`,
-and `component`; its skipped manifest reports:
+`lazy_state`, `service_worker`, `rest`, `sse`, `websocket`, and `web_transport`,
+but no `service` operation. Its skipped manifest reports:
 
 ```text
 NgModule.service: ts_bindgen.unresolved_type_reference
 member service references unavailable type
 terlan.angular.declarations.file__40types.file_core.file_di.file_ng_2dmodule.file_ng_2dmodule.NamedServiceInjectable
 
-Angular.module: ts_bindgen.unsupported_generic_constraint
-generic method constraints must not be erased
-
 NgModule.router: ts_bindgen.unsupported_generic_constraint
-generic method constraints must not be erased
+only closed required-field constraints can be represented as structural implications
 ```
 
 The installed declaration at
@@ -48,12 +51,13 @@ module `terlan.angular.ng.NgModule` has no public function `service/3`
 ```
 
 The probe lives outside the application library roots and deliberately fails
-until this compiler prerequisite is implemented. The existing application
-still compiles and uses its JavaScript registration. Migration work stopped
-at this issue as requested; no handwritten Angular declarations, dynamic
-fallback, runtime shim, or compiler change was introduced.
+until this compiler prerequisite is implemented. Migration work stopped at
+this issue as requested; no handwritten Angular declarations, dynamic
+fallback, runtime shim, or compiler change was introduced. The full application
+build and browser flows have not been revalidated with the new local runtime;
+the earlier successful application build below used AngularTS 0.32.0.
 
-## Application build and local verification
+## Previous application build and local verification (AngularTS 0.32.0)
 
 Verified November 24, 2026, with the current compiler working tree at checkout
 `d4ae16eba` (`terlc 0.0.10`), including concurrent uncommitted compiler edits.
@@ -63,8 +67,9 @@ Verified November 24, 2026, with the current compiler working tree at checkout
 cargo build -p terlan --bin terlc --bin terlan-vm --bin terlan-native-worker
 ```
 
-Host and Angular bindings were regenerated with those binaries. The complete
-application build passes:
+Before switching to the local Angular runtime, Host and AngularTS 0.32.0
+bindings were regenerated with those binaries. The complete application build
+passed:
 
 ```sh
 make compile TERLC=/home/anatoly/Applications/terlan/terlan/target/debug/terlc

@@ -10,7 +10,7 @@
     "test:coverage": "c8 --all --include 'assets/**/*.js' --exclude 'assets/**/*.test.js' --exclude 'assets/index.js' --exclude 'assets/live_reload.js' --reporter=text --check-coverage --lines 100 --functions 100 --branches 100 --statements 100 jasmine --reporter=./tools/jasmine/tap-reporter.cjs 'assets/**/*.test.js' 'browser/**/*Test.js' 'client/**/*Test.js'"
   },
   "dependencies": {
-    "@angular-wave/angular.ts": "0.32.0",
+    "@angular-wave/angular.ts": "file:../ng/angular.ts",
     "modern-normalize": "latest",
     "pollen-css": "latest"
   },

@@ -11,9 +11,10 @@ The application does not own a process-level `main()` function. The native execu
 
 ## Development
 
-Requirements: a local Terlan checkout at `../terlan/terlan`, Node.js, Docker
-Compose. Database migrations run through `terlc db`. Build the compiler and its
-paired runtimes with the default PostgreSQL features:
+Requirements: local checkouts of Terlan at `../terlan/terlan` and Angular Wave
+at `../ng/angular.ts`, Node.js, and Docker Compose. Database migrations run
+through `terlc db`. Build the compiler and its paired runtimes with the default
+PostgreSQL features:
 
 ```sh
 cargo build --manifest-path ../terlan/terlan/Cargo.toml -p terlan \
@@ -100,8 +101,8 @@ It uses the injected state directly and generated bindings for optional scope
 callbacks, preserving each callback's receiver and placement result.
 `UnitPlacement.terl` forwards preview, placement, commit, and clear actions from
 the live unit binding to that controller.
-Make generates Angular bindings from its pinned TypeScript declarations under
-`_build/bindings/angular`. The Angular package's `Lifecycle.attach` supplies
+Make generates Angular bindings from the local checkout's TypeScript
+declarations under `_build/bindings/angular`. The Angular package's `Lifecycle.attach` supplies
 the lifecycle callbacks using Angular's original JavaScript names while
 preserving the Terlan controller's fields. These host
 modules compile to JavaScript separately from the portable VM models. Their
@@ -175,7 +176,9 @@ and apply Terlan migrations. Files use timestamped names and `-- +terlan Up` /
 `make db-rebuild` explicitly recreates the local development schema. The initial
 migration also supports existing installations without deleting account rows.
 
-The app pins Angular Wave 0.32.0 and uses its declarative router, state-machine,
-and WebSocket APIs. `npm install` and web builds apply the reproducible object
-input identity backport described in `patches/README.txt`. The backport is
-implemented and checked by `tools/AngularCompatibilityTest.terl`.
+The app uses Angular Wave directly from `../ng/angular.ts` through a local npm
+file dependency. `make compile` rebuilds its runtime and TypeScript declarations
+when the local source changes, then generates Terlan bindings from those same
+declarations. Runtime JavaScript, styles, and bindings therefore use the same
+checkout. The current checkout reports version 0.37.0. Angular compatibility
+checks live in its `integrations/terlan` package.

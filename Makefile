@@ -19,6 +19,9 @@ TERLAN_EXECUTABLE = $(TERLAN_OUT_DIR)/bin/battleship
 TERLAN_INTEGRATION_PORT ?= 18080
 TERLAN_BROWSER_TEST_PORT ?= 4000
 TERLAN_ANGULAR_PACKAGE ?= $(abspath ../ng/angular.ts/integrations/terlan)
+TERLAN_ANGULAR_RUNTIME ?= $(abspath $(TERLAN_ANGULAR_PACKAGE)/../..)
+TERLAN_ANGULAR_INPUTS = $(shell rg --files "$(TERLAN_ANGULAR_RUNTIME)/src" "$(TERLAN_ANGULAR_RUNTIME)/css" -g '*.ts' -g '*.css' -g '!*.test.ts' -g '!*.spec.ts') $(addprefix $(TERLAN_ANGULAR_RUNTIME)/,Makefile package.json rollup.config.js tsconfig.base.json tsconfig.build.json tsconfig.types.json integrations/closure/externs/angular.js utils/check-default-bundle-boundaries.mjs)
+TERLAN_ANGULAR_OUTPUTS = $(addprefix $(TERLAN_ANGULAR_RUNTIME)/,dist/angular-ts.esm.js dist/angular.css @types/namespace.d.ts @types/interface.d.ts)
 TERLAN_ANGULAR_BINDINGS = $(TERLAN_OUT_DIR)/bindings/angular
 TERLAN_JS_BINDING_MANIFEST = $(CURDIR)/$(TERLAN_ANGULAR_BINDINGS)/std/js/manifests/std_js_bindings.json
 TERLAN_HOST_BINDINGS = $(TERLAN_OUT_DIR)/bindings/host
@@ -36,7 +39,7 @@ export TERLAN_DATABASE_URL ?= $(DATABASE_URL)
 export TERLAN_SERVE_TRUSTED_HOST_CAPABILITIES ?= 1
 TERLAN_SERVE_RUNTIME_ONLY ?= 1
 
-.PHONY: angular-compat all clean setup compile compile-backend compile-web start format lint check unit-test unit-test-tap test coverage functional-test browser-test-server integration-test quality help db-start db-up db-down db-rebuild db-validate db-status terlan-check terlan-grouped-binding-check terlan-function-reference-check terlan-build terlan-build-backend terlan-build-browser terlan-build-web terlan-test vm-contract-check
+.PHONY: angular-runtime angular-compat all clean setup compile compile-backend compile-web start format lint check unit-test unit-test-tap test coverage functional-test browser-test-server integration-test quality help db-start db-up db-down db-rebuild db-validate db-status terlan-check terlan-grouped-binding-check terlan-function-reference-check terlan-build terlan-build-backend terlan-build-browser terlan-build-web terlan-test vm-contract-check
 
 all: compile
 
@@ -150,13 +153,19 @@ terlan-build-backend: terlan-build-browser
 	@$(TERLC) static emit tools/Shell.terl --out-dir _build/templates
 	@TERLAN_JS_BINDING_MANIFESTS="$(TERLAN_JS_BINDING_MANIFESTS)" $(TERLC) build . --target terlan-vm --out-dir $(TERLAN_OUT_DIR)
 
-angular-compat:
-	@$(MAKE) -C "$(TERLAN_ANGULAR_PACKAGE)" compatibility TERLC="$(TERLC)" RUNTIME_ROOT="$(CURDIR)/node_modules/@angular-wave/angular.ts"
+$(TERLAN_ANGULAR_OUTPUTS) &: $(TERLAN_ANGULAR_INPUTS)
+	@$(MAKE) -C "$(TERLAN_ANGULAR_RUNTIME)" release-build types
 
-$(TERLAN_ANGULAR_BINDINGS)/.complete: $(TERLC) $(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs node_modules/@angular-wave/angular.ts/@types/namespace.d.ts node_modules/@angular-wave/angular.ts/@types/interface.d.ts
+angular-runtime: $(TERLAN_ANGULAR_OUTPUTS)
+	@test "$(realpath node_modules/@angular-wave/angular.ts)" = "$(realpath $(TERLAN_ANGULAR_RUNTIME))" || { echo "Angular must use the local checkout at $(TERLAN_ANGULAR_RUNTIME); run npm install." >&2; exit 1; }
+
+angular-compat: angular-runtime
+	@$(MAKE) -C "$(TERLAN_ANGULAR_PACKAGE)" compatibility TERLC="$(TERLC)" RUNTIME_ROOT="$(TERLAN_ANGULAR_RUNTIME)"
+
+$(TERLAN_ANGULAR_BINDINGS)/.complete: $(TERLC) $(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs $(TERLAN_ANGULAR_OUTPUTS) | angular-runtime
 	@mkdir -p $(TERLAN_OUT_DIR)/bindings
 	@set -eu; bindings_stage=$$(mktemp -d "$(TERLAN_OUT_DIR)/bindings/angular.stage.XXXXXX"); \
-		node "$(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs" --compiler "$(TERLC)" --runtime-root "$(CURDIR)/node_modules/@angular-wave/angular.ts" --out "$$bindings_stage"; \
+		node "$(TERLAN_ANGULAR_PACKAGE)/tool/bindings.mjs" --compiler "$(TERLC)" --runtime-root "$(TERLAN_ANGULAR_RUNTIME)" --out "$$bindings_stage"; \
 		if [ -d "$(TERLAN_ANGULAR_BINDINGS)" ]; then mv "$(TERLAN_ANGULAR_BINDINGS)" "$$bindings_stage.previous"; fi; \
 		mv "$$bindings_stage" "$(TERLAN_ANGULAR_BINDINGS)"
 	@touch $@
