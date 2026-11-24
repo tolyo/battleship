@@ -1,155 +1,108 @@
 # Compiler compatibility status
 
-## Previous recheck: compiler build failure (resolved)
+## Current build blocker: shared target inference in the Angular package
 
-An earlier November 24 retry could not produce a current compiler. This command
-exited with status 101 in the compiler working tree at `d4ae16eba`, including
-its uncommitted TypeScript binding changes:
-
-```sh
-cargo build -p terlan --bin terlc --bin terlan-vm --bin terlan-native-worker
-```
-
-The Rust errors are in
-`crates/terlan/src/commands/bind/ts_parser_adapter/conditional_types.rs`:
+The latest `make compile` reaches the Angular integration library build and
+fails at Makefile's `terlan-build-browser` target:
 
 ```text
-E0432 at line 4: unresolved import super::types
-E0433 at line 148: cannot find ts_type_mapping in super
-E0599 at line 214: no method named unrestricted_signature found for &conditional_types::Evaluator
+terlc build target inference error: explicit target `js.shared` cannot satisfy browser-only typed evidence
 ```
 
-The build ends with `could not compile terlan (lib) due to 3 previous errors`.
-A subsequent rebuild from the current working tree succeeded in 1 minute
-33 seconds. `terlc`, `terlan-vm`, and `terlan-native-worker` were rebuilt together;
-the compiler binary is dated November 24 at 17:42. The successful build log is
-`/tmp/battleship-latest-toolchain-build.log`. No compiler source was changed by
-this application migration. Both binding sets were regenerated with that new
-binary, and the Angular registration probe below was rerun and still fails.
-
-## Current blocker: typed Angular application registration
-
-Rechecked November 24, 2026, using AngularTS 0.37.0 built from the local
-`../ng/angular.ts` checkout (`c9cd165d9`), including its current working tree.
-Battleship now uses `file:../ng/angular.ts`; the npm runtime resolves directly
-to that checkout. Both runtime bundles and TypeScript declarations were rebuilt
-with `make release-build types` before regenerating bindings. All three Angular
-compatibility tests passed. The Terlan compiler and both paired runtimes were
-rebuilt from the current compiler working tree at `d4ae16eba` before this check.
-The latest successful rebuild completed at 17:42; after regeneration, the same
-registration probe again exited with status 1 and the missing `service/3` error.
-`assets/application.js` registers setup and other services using
-`angular.module(...).service(name, factory)`. Moving that registration into
-Terlan requires the generated public `NgModule.service` operation.
-
-The declaration graph is now followed, but registration methods are still
-omitted. The generated `terlan.angular.ng.NgModule` exposes `name`, `config`,
-`lazy_state`, `service_worker`, `rest`, `sse`, `websocket`, and `web_transport`,
-but no `service` operation. Its skipped manifest reports:
-
-```text
-NgModule.service: ts_bindgen.unresolved_type_reference
-member service references unavailable type
-terlan.angular.declarations.file__40types.file_core.file_di.file_ng_2dmodule.file_ng_2dmodule.NamedServiceInjectable
-
-NgModule.router: ts_bindgen.unsupported_generic_constraint
-only closed required-field constraints can be represented as structural implications
-```
-
-The installed declaration at
-`node_modules/@angular-wave/angular.ts/@types/core/di/ng-module/ng-module.d.ts`
-declares `service(name: string, serviceFunction: NamedServiceInjectable): this`.
-`NamedServiceInjectable` includes injectable constructors and callback types.
-The compiler must preserve those declaration shapes and generic constraints
-through generated operations. This is a generic TypeScript binding requirement;
-it does not require adding Angular-specific APIs to the compiler.
-
-Minimal reproducer, from the application root after generating bindings:
+The failing command is:
 
 ```sh
 TERLAN_JS_BINDING_MANIFESTS="$PWD/_build/bindings/angular/std/js/manifests/std_js_bindings.json:$PWD/_build/bindings/host/std/js/manifests/std_js_bindings.json" \
-  /home/anatoly/Applications/terlan/terlan/target/debug/terlc check \
-  probes/battleship/probes/AngularRegistration.terl \
-  --cache-dir /tmp/battleship-angular-registration-cache
+  /home/anatoly/Applications/terlan/terlan/target/debug/terlc build \
+  ../ng/angular.ts/integrations/terlan/src --target js.shared \
+  --out-dir _build/browser --cache-dir .terlan --declarations
 ```
 
-The probe fails with status 1:
+The integration working tree now includes `src/terlan/angular/Runtime.terl`,
+which imports the generated Angular interface and exposes an injector facade.
+The package Makefile still builds this `src` library as `js.shared`, with its
+browser library built separately. The precise source of the browser evidence
+has not been established. No target override or application workaround was
+introduced. Work stopped at this new compatibility issue as requested.
 
-```text
-module `terlan.angular.ng.NgModule` has no public function `service/3`
-```
+The full log is `/tmp/battleship-service-application-compile.log`. A complete
+application build passed earlier in this work, before the subsequent Angular
+package changes and final application API updates. That earlier executable was
+not treated as verification of the final source.
 
-The probe lives outside the application library roots and deliberately fails
-until this compiler prerequisite is implemented. Migration work stopped at
-this issue as requested; no handwritten Angular declarations, dynamic
-fallback, runtime shim, or compiler change was introduced. The full application
-build and browser flows have not been revalidated with the new local runtime;
-the earlier successful application build below used AngularTS 0.32.0.
+## Resolved: typed Angular service registration
 
-## Previous application build and local verification (AngularTS 0.32.0)
+Verified November 24, 2026, with the current compiler working tree and local
+AngularTS 0.37.0 at `../ng/angular.ts`. The compiler, VM, and native worker were
+rebuilt together. Bindings were regenerated from that checkout's declarations.
 
-Verified November 24, 2026, with the current compiler working tree at checkout
-`d4ae16eba` (`terlc 0.0.10`), including concurrent uncommitted compiler edits.
-`terlc`, `terlan-vm`, and `terlan-native-worker` were rebuilt together with:
+The public `NgModule.service` operation is now generated with its callback,
+constructor, and dependency-annotated array alternatives preserved. The compiler
+uses checked callable references for broad rest signatures. They preserve the
+original function at runtime and cannot be created from arbitrary data or
+`Dynamic`. No handwritten Angular declarations or custom runtime shim were added.
+
+Two related generator/resolver bugs were fixed:
+
+- A union containing a generic alias was incorrectly interpreted as one generic
+  instance, producing malformed members and type arguments.
+- A module exporting a same-named trait lost its ordinary function imports.
+  This hid the checked callable conversion functions. Grouped and aliased
+  imports now work while trait-only import behavior is preserved.
+
+`probes/battleship/probes/AngularRegistration.terl` is now a positive probe. It
+registers a checked factory and an annotated factory through the generated
+public API. Its factory type has an explicit callable bound; it does not accept
+an unconstrained arbitrary value.
 
 ```sh
-cargo build -p terlan --bin terlc --bin terlan-vm --bin terlan-native-worker
+TERLAN_JS_BINDING_MANIFESTS="$PWD/_build/bindings/angular/std/js/manifests/std_js_bindings.json:$PWD/_build/bindings/host/std/js/manifests/std_js_bindings.json" \
+  /home/anatoly/Applications/terlan/terlan/target/debug/terlc build \
+  probes/battleship/probes/AngularRegistration.terl --target js.shared \
+  --out-dir _build/probes --cache-dir /tmp/battleship-service-probe-cache
 ```
 
-Before switching to the local Angular runtime, Host and AngularTS 0.32.0
-bindings were regenerated with those binaries. The complete application build
-passed:
+That build passes. Local compiler validation passed 33 TypeScript binding tests,
+the new mixed trait/module import regression, and both existing collapsed import
+checks. The Angular package integration checks also exercised real service
+registration, constructors, annotations, and lifecycle hooks successfully in
+Chromium, Firefox, and WebKit. These results precede the separate shared-target
+failure above; they do not establish complete Angular binding coverage.
 
-```sh
-make compile TERLC=/home/anatoly/Applications/terlan/terlan/target/debug/terlc
-```
+Logs:
 
-This includes Angular compatibility, browser modules, native application
-packaging, and the web router preflight. The resulting executable was built
-November 24 and was used for browser verification. No compiler changes were
-made by this application migration.
+- `/tmp/battleship-typescript-binding-tests.log`
+- `/tmp/battleship-callable-import-test.log`
+- `/tmp/battleship-trait-import-compat-tests.log`
+- `/tmp/battleship-service-probe.log`
+- `/tmp/battleship-service-angular-integration-chromium.log`
+- `/tmp/battleship-service-angular-integration-other-browsers.log`
 
-Local verification passed 84 focused JavaScript tests, the TypeScript check,
-and 52 native model tests. Room entry and restoration pass in Chromium,
-Firefox, and WebKit. Fleet placement, scrolling, random, reset, and ready pass
-in Firefox and WebKit; Chromium failed its first drag during the initial run
-and passed when rerun alone with tracing. The intermittent failure's cause is
-unconfirmed; the first run overlapped native compilation tests.
+## Application compatibility updates
 
-The application migration remains incomplete: authored JavaScript and CSS
-still remain. Keep reporting compiler blockers and stopping if a new compiler
-issue appears. Always rebuild the current checkout before compatibility checks;
-the version string alone does not establish freshness.
+Battleship uses `file:../ng/angular.ts`, not an older published runtime.
+The application now calls `createModule`, replacing Angular's removed `module`
+API. Its Terlan HTTP configuration uses the Fetch `credentials: "same-origin"`
+setting with a literal type, replacing the retired `withCredentials` default.
+PostCSS is declared directly because the application loads it through
+`postcss.config.cjs` and Autoprefixer.
 
-## Previous blocker: staged local dependency paths (resolved)
+The four focused application/configuration tests and `tsc --noEmit` pass.
+Fleet placement and room restoration remain to be rerun after resolving the
+current package build failure. The first browser run identified the removed
+`module` call and was stopped; it is not reported as passing.
 
-With freshly rebuilt compiler checkout `53bee4c48` on November 22, native
-application packaging failed to resolve the Angular dependency from the web
-staging directory:
+## Earlier compiler failures (resolved)
 
-```text
-terlc build local path dependency `angular` cannot be resolved:
-/home/anatoly/Applications/battleship/_build/.terlan/application/web.staging/../ng/angular.ts/integrations/terlan
-(No such file or directory (os error 2))
-```
+- An earlier November 24 compiler rebuild failed with Rust errors E0432, E0433,
+  and E0599 in `ts_parser_adapter/conditional_types.rs`. Subsequent rebuilds of
+  all three binaries pass without changing compiler source for those errors.
+- The November 22 staged relative dependency failure resolved with the current
+  compiler. The Angular dependency remains relative to the application root;
+  no path workaround was introduced.
+- The `OperationTimeout.terl` JavaScript emission failure resolved in compiler
+  commit `53bee4c48`, without an application workaround.
 
-The declared path `../ng/angular.ts/integrations/terlan` exists relative to the
-application root. The latest build succeeds with that same declaration and no
-application path workaround.
-
-The backend Make target now supplies `TERLAN_JS_BINDING_MANIFESTS`, as required
-by the Angular integration package. Application sources use explicit calls in
-place of retired pipeline syntax and grouped `when` for refutable bindings.
-
-## Previous blocker: OperationTimeout (resolved)
-
-Before compiler commit `53bee4c48`, the unchanged
-`client/battleship/client/OperationTimeout.terl` passed type checking but failed
-JavaScript emission with `error[js_emit_unsupported]` at gate `J0.3`.
-It creates timeout callbacks over generated `TimerState[JsNumber]` state and
-uses `Some`/`None` to manage the timer ID. The failure was reproduced with a
-fresh compiler build from `034841901` at 16:38 on November 22.
-
-Commit `53bee4c48` fixes JavaScript option casts with lexical payloads. The
-module now builds without an application change, and all four existing timeout
-tests pass with the rebuilt compiler.
+Authored JavaScript and CSS still remain, so the complete migration is not
+finished. Continue to rebuild the latest compiler before compatibility checks
+and report new compiler blockers rather than bypassing them.

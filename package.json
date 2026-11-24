@@ -30,6 +30,7 @@
     "jasmine": "^6.2.0",
     "jasmine-reporters": "^2.5.2",
     "playwright": "latest",
+    "postcss": "^8.5.33",
     "prettier": "latest",
     "sql-formatter": "15.8.2",
     "typescript": "latest"

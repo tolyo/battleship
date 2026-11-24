@@ -53,7 +53,7 @@ import { RoomStoreService } from './room-store/room-store-service.js';
  */
 export function configureBattleship(angular) {
   return angular
-    .module('battleship', [])
+    .createModule('battleship', [])
     .config(createConfiguration(globalThis.window, Promise))
     .router(routes())
     .service('matchState', MatchStateService)

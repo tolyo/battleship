@@ -10,7 +10,7 @@ import type battleship.host.PromiseRejection.{PromiseRejection}.
 import type std.js.Promise.{Promise}.
 
 pub struct HttpDefaults {
-    withCredentials: Bool,
+    credentials: Atom["same-origin"],
 }.
 
 pub struct Interceptor[P, E] {
@@ -28,12 +28,12 @@ pub create[P](
 ): AppConfiguration[HttpConfiguration[P, Promise[Never]]] ->
     AppConfiguration.construct(
         HttpConfiguration {
-            defaults: HttpDefaults {withCredentials: false},
+            defaults: HttpDefaults {credentials: Atom["same-origin"]},
             interceptors: [
-                () ->
+                (() ->
                     Interceptor {
                         responseError: ((response) -> reject(window, rejections, response)),
-                    },
+                    }),
             ],
         },
     ).

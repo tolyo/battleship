@@ -24,7 +24,7 @@ describe('appConfig', () => {
 
     Object.assign(provider, create(globalThis.window, Promise).$http);
 
-    expect(provider.defaults.withCredentials).toBe(false);
+    expect(provider.defaults.credentials).toBe('same-origin');
     expect(provider.interceptors.length).toBe(1);
 
     const interceptor = provider.interceptors[0]();

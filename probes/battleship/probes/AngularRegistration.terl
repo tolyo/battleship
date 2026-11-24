@@ -1,12 +1,28 @@
 /**
- * Compiler reproducer for the Angular registration used by assets/application.js.
+ * Typed factory registration against the generated public Angular bindings.
  */
 module battleship.probes.AngularRegistration.
 
-import std.js.String.
+import std.js.{Array, Callable, String}.
+import terlan.angular.interfaces.AnnotatedFactory.
 import terlan.angular.ng.NgModule.
 
+import type std.js.String.{JsString}.
 import type terlan.angular.ng.NgModule.{NgModule}.
 
-pub register_setup[Factory](app: NgModule, factory: Factory): NgModule ->
-    NgModule.service(app, String.from_core("setup"), factory).
+pub register_setup[Factory](
+    app: NgModule,
+    factory: Factory,
+)[std.js.Callable.Callable[Factory]]: NgModule ->
+    NgModule.service(app, String.from_core("setup"), Callable.from_function(factory)).
+
+pub register_annotated[Factory](
+    app: NgModule,
+    dependencies: List[JsString],
+    factory: Factory,
+)[std.js.Callable.Callable[Factory]]: NgModule ->
+    NgModule.service(
+        app,
+        String.from_core("annotatedSetup"),
+        AnnotatedFactory.pack(Array.from_list(dependencies), Callable.from_function(factory)),
+    ).
