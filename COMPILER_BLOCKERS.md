@@ -1,5 +1,30 @@
 # Compiler compatibility status
 
+## Latest recheck: compiler build fails
+
+The next November 24 retry could not produce a current compiler. This command
+exited with status 101 in the compiler working tree at `d4ae16eba`, including
+its uncommitted TypeScript binding changes:
+
+```sh
+cargo build -p terlan --bin terlc --bin terlan-vm --bin terlan-native-worker
+```
+
+The Rust errors are in
+`crates/terlan/src/commands/bind/ts_parser_adapter/conditional_types.rs`:
+
+```text
+E0432 at line 4: unresolved import super::types
+E0433 at line 148: cannot find ts_type_mapping in super
+E0599 at line 214: no method named unrestricted_signature found for &conditional_types::Evaluator
+```
+
+The build ends with `could not compile terlan (lib) due to 3 previous errors`.
+The build log is `/tmp/battleship-latest-toolchain-build.log`. No compiler source
+was changed here. The existing older binary was not used to retry bindings or
+application checks. The Angular registration failure below is the last verified
+probe result, rather than a result from this failed compiler build.
+
 ## Current blocker: typed Angular application registration
 
 Rechecked November 24, 2026, using AngularTS 0.37.0 built from the local
