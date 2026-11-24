@@ -1,34 +1,42 @@
 # Compiler compatibility status
 
-## Current build blocker: shared target inference in the Angular package
+## Current build blocker: native packaging inherits JavaScript target evidence
 
-The latest `make compile` reaches the Angular integration library build and
-fails at Makefile's `terlan-build-browser` target:
+The latest `make compile` passes the Angular shared-library build, portable
+browser models, client modules, shell emission, and three compatibility checks.
+It then fails in `terlan-build-backend` while building the native application:
 
 ```text
-terlc build target inference error: explicit target `js.shared` cannot satisfy browser-only typed evidence
+terlc build target inference error: explicit target `vm` conflicts with typed target evidence for `js.shared`
 ```
 
-The failing command is:
+The failing backend command, after the frontend build, is:
 
 ```sh
 TERLAN_JS_BINDING_MANIFESTS="$PWD/_build/bindings/angular/std/js/manifests/std_js_bindings.json:$PWD/_build/bindings/host/std/js/manifests/std_js_bindings.json" \
-  /home/anatoly/Applications/terlan/terlan/target/debug/terlc build \
-  ../ng/angular.ts/integrations/terlan/src --target js.shared \
-  --out-dir _build/browser --cache-dir .terlan --declarations
+  /home/anatoly/Applications/terlan/terlan/target/debug/terlc build . \
+  --target terlan-vm --out-dir _build
 ```
 
-The integration working tree now includes `src/terlan/angular/Runtime.terl`,
-which imports the generated Angular interface and exposes an injector facade.
-The package Makefile still builds this `src` library as `js.shared`, with its
-browser library built separately. The precise source of the browser evidence
-has not been established. No target override or application workaround was
-introduced. Work stopped at this new compatibility issue as requested.
+The application's native source roots are `src` and `browser`; neither directly
+imports `std.js` or `terlan.angular`. Angular is a package dependency used by
+its client build. The changed integration also contains a shared
+`src/terlan/angular/Runtime.terl` injector facade using JavaScript host types.
+The exact origin of the backend's inferred JavaScript evidence has not yet
+been established. Native packaging must retain the VM backend while building
+its separate JavaScript assets. No profile override, dependency removal, or
+application workaround was introduced. Work stopped at this new compiler
+compatibility issue as requested.
 
-The full log is `/tmp/battleship-service-application-compile.log`. A complete
-application build passed earlier in this work, before the subsequent Angular
-package changes and final application API updates. That earlier executable was
-not treated as verification of the final source.
+The full log is `/tmp/battleship-service-application-compile.log`. The preceding
+`js.shared` versus browser-evidence error no longer reproduces: library builds
+pass from both the package and application directories, using fresh and existing
+caches, including declaration generation. The latest native-packaging failure
+supersedes that earlier report.
+
+A complete application build passed earlier in this work, before subsequent
+integration changes and final application API updates. That earlier executable
+was not treated as verification of the final source.
 
 ## Resolved: typed Angular service registration
 
@@ -41,6 +49,11 @@ constructor, and dependency-annotated array alternatives preserved. The compiler
 uses checked callable references for broad rest signatures. They preserve the
 original function at runtime and cannot be created from arbitrary data or
 `Dynamic`. No handwritten Angular declarations or custom runtime shim were added.
+
+The two follow-up fixes are pushed to compiler `main` as `f4389a3cc` and
+`3343106a3`. Verification also uses the existing staged declaration-generator
+work in that checkout; those broader changes were preserved and are not
+included in these two commits.
 
 Two related generator/resolver bugs were fixed:
 
