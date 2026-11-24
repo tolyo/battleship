@@ -1,8 +1,8 @@
 # Compiler compatibility status
 
-## Latest recheck: compiler build fails
+## Previous recheck: compiler build failure (resolved)
 
-The next November 24 retry could not produce a current compiler. This command
+An earlier November 24 retry could not produce a current compiler. This command
 exited with status 101 in the compiler working tree at `d4ae16eba`, including
 its uncommitted TypeScript binding changes:
 
@@ -20,10 +20,12 @@ E0599 at line 214: no method named unrestricted_signature found for &conditional
 ```
 
 The build ends with `could not compile terlan (lib) due to 3 previous errors`.
-The build log is `/tmp/battleship-latest-toolchain-build.log`. No compiler source
-was changed here. The existing older binary was not used to retry bindings or
-application checks. The Angular registration failure below is the last verified
-probe result, rather than a result from this failed compiler build.
+A subsequent rebuild from the current working tree succeeded in 1 minute
+33 seconds. `terlc`, `terlan-vm`, and `terlan-native-worker` were rebuilt together;
+the compiler binary is dated November 24 at 17:42. The successful build log is
+`/tmp/battleship-latest-toolchain-build.log`. No compiler source was changed by
+this application migration. Both binding sets were regenerated with that new
+binary, and the Angular registration probe below was rerun and still fails.
 
 ## Current blocker: typed Angular application registration
 
@@ -34,6 +36,8 @@ to that checkout. Both runtime bundles and TypeScript declarations were rebuilt
 with `make release-build types` before regenerating bindings. All three Angular
 compatibility tests passed. The Terlan compiler and both paired runtimes were
 rebuilt from the current compiler working tree at `d4ae16eba` before this check.
+The latest successful rebuild completed at 17:42; after regeneration, the same
+registration probe again exited with status 1 and the missing `service/3` error.
 `assets/application.js` registers setup and other services using
 `angular.module(...).service(name, factory)`. Moving that registration into
 Terlan requires the generated public `NgModule.service` operation.
